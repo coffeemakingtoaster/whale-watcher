@@ -3,45 +3,29 @@ package runner
 import (
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 )
 
-type Runner struct {
-	utilImport string
-	exec       string
+type Runner interface {
+	Run(string) error
+	ToString() string
 }
 
-func (r *Runner) Run(command string) error {
-	command = r.utilImport + "\n" + command
-	cmd := exec.Command(r.exec, "-c", command)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-	return nil
-
-}
-
-func NewPythonRunner(target string) (*Runner, error) {
-	runner := &Runner{
+func NewPythonRunner(target string) (Runner, error) {
+	runner := &PythonRunner{
 		exec: "python3",
 	}
 	switch target {
 	case "command":
-		runner.utilImport = "from command_util.commandutil import *"
+		runner.utilImport = "from command_util_build.commandutil import *"
+		runner.fs = cmdutil
 	case "fs":
-		runner.utilImport = "from fs_util.fsutil import *"
+		runner.utilImport = "from fs_util_build.fsutil import *"
+		runner.fs = fsutil
 	case "os":
-		runner.utilImport = "from os_util.osutil import *"
+		runner.utilImport = "from os_util_build.osutil import *"
+		runner.fs = osutil
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported target: %s! Supported targets are: command, fs, os", target))
 	}
 	return runner, nil
-}
-
-func (r Runner) ToString() string {
-	return fmt.Sprintf("Exec: %s with preamble %s", r.exec, r.utilImport)
 }

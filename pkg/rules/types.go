@@ -1,8 +1,6 @@
 package rules
 
 import (
-	"fmt"
-
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
 )
 
@@ -22,7 +20,7 @@ type Rule struct {
 	Description string `yaml:"description"`
 	Id          string `yaml:"id"`
 	Target      string `yaml:"target"`
-	Runner      *runner.Runner
+	Runner      runner.Runner
 }
 
 func (r *Rule) AddRunner() error {

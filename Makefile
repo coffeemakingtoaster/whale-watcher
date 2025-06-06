@@ -1,3 +1,6 @@
+# Logging added by chatgpt
+# Every other makefile war crime commited in here is my fault :)
+
 # Define common paths
 BUILD_DIR = ./build
 CMD_DIR = ./cmd/whale-watcher
@@ -21,24 +24,24 @@ $(BUILD_DIR):
 	@echo "\n$(BLUE)$(DELIM) Creating build directory $(DELIM)$(RESET)"
 	mkdir -p $(BUILD_DIR)
 
-cmd_lib: $(BUILD_DIR)/command_util/__init__.py
+cmd_lib: $(PKG_DIR)/command_util_build/__init__.py
 
 # Targets for libraries with the build directory as a prerequisite
-$(BUILD_DIR)/command_util/__init__.py: $(PKG_DIR)/command_util/command_util.go | $(BUILD_DIR)
+$(PKG_DIR)/command_util_build/__init__.py: $(PKG_DIR)/command_util/command_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building command_util library $(DELIM)$(RESET)"
-	gopy build -output=$(BUILD_DIR)/command_util -vm=python3 $(PKG_DIR)/command_util/
+	gopy build -output=$(PKG_DIR)/command_util_build -vm=python3 $(PKG_DIR)/command_util/
 
-fs_lib: $(BUILD_DIR)/fs_util/__init__.py
+fs_lib:  $(PKG_DIR)/fs_util_build/__init__.py
 
-$(BUILD_DIR)/fs_util/__init__.py: $(PKG_DIR)/fs_util/fs_util.go | $(BUILD_DIR)
+$(PKG_DIR)/fs_util_build/__init__.py: $(PKG_DIR)/fs_util/fs_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building fs_util library $(DELIM)$(RESET)"
-	gopy build -output=$(BUILD_DIR)/fs_util -vm=python3 $(PKG_DIR)/fs_util
+	gopy build -output=$(PKG_DIR)/fs_util_build -vm=python3 $(PKG_DIR)/fs_util
 
-os_lib: $(BUILD_DIR)/os_util/__init__.py
+os_lib:  $(PKG_DIR)/os_util_build/__init__.py
 
-$(BUILD_DIR)/os_util/__init__.py: $(PKG_DIR)/os_util/os_util.go | $(BUILD_DIR)
+$(PKG_DIR)/os_util_build/__init__.py: $(PKG_DIR)/os_util/os_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building os_util library $(DELIM)$(RESET)"
-	gopy build -output=$(BUILD_DIR)/os_util -vm=python3 $(PKG_DIR)/os_util
+	gopy build -output=$(PKG_DIR)/os_util_build -vm=python3 $(PKG_DIR)/os_util
 
 # Target for the executable with the build directory as a prerequisite
 exec: $(BUILD_DIR)/whale-watcher
@@ -55,8 +58,9 @@ all: cmd_lib fs_lib os_lib exec
 clean:
 	@echo "\n$(RED)$(DELIM) Cleaning build directory $(DELIM)$(RESET)"
 	rm -rf $(BUILD_DIR)
+	rm -rf $(PKG_DIR)/*_build
 
 # Run test ruleset that doesn't need a container but performs a basic signature check for the utils
 verify: all
 	@echo "\n$(BLUE)$(DELIM) Verifying ruleset $(DELIM)$(RESET)"
-	cd build; ./whale-watcher ../_example/verify_ruleset.yaml
+	./build/whale-watcher ./_example/verify_ruleset.yaml
