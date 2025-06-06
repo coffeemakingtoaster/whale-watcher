@@ -2,7 +2,9 @@ package rules
 
 import (
 	"os"
+	"strings"
 
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,6 +32,9 @@ func LoadRuleSetFromContent(data []byte) (RuleSet, error) {
 		err := v.AddRunner()
 		if err != nil {
 			return RuleSet{}, err
+		}
+		if !strings.Contains(v.Instruction, "assert") {
+			log.Warn().Str("Instruction", v.Instruction).Msg("Instruction does not contain an assert. This rule therefore will never be checked properly")
 		}
 	}
 	return ruleSet, nil

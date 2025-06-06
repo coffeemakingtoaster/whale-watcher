@@ -1,14 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
 )
 
 func main() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	if len(os.Args) < 2 {
 		panic("Please provide a ruleset location")
 	}
@@ -16,10 +18,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Loaded %d rules!\n", len(ruleSet.Rules))
+	log.Info().Msgf("Loaded %d rules!", len(ruleSet.Rules))
 	violations := validator.ValidateRuleset(ruleSet, "", "")
-	fmt.Printf("Total: %d Violations: %d Fixable: %d\n", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
+	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {
-		fmt.Printf("\t- RuleId: %s Problem: %s Fix(if possible): %s\n", violation.RuleId, violation.Description, violation.Fix)
+		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Str("fix", violation.Fix).Send()
 	}
 }

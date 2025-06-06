@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed fs_util_build/*
@@ -27,7 +29,7 @@ type PythonRunner struct {
 func (r *PythonRunner) Run(command string) error {
 	workDir, err := r.makeTmpWithFS()
 	if err != nil {
-		fmt.Printf("Err: %s\n", err.Error())
+		log.Error().Err(err).Send()
 		return err
 	}
 	defer os.RemoveAll(workDir)
@@ -41,7 +43,6 @@ func (r *PythonRunner) Run(command string) error {
 		return err
 	}
 	return nil
-
 }
 
 func (r PythonRunner) ToString() string {
@@ -52,12 +53,12 @@ func (r PythonRunner) ToString() string {
 // This may also profit from caching this/reusing the tmp directories...rules are (for now) not run in parallel so reusing this should save disk space
 // See also https://github.com/kluctl/go-embed-python/tree/main/embed_util
 // Create a temporary directory with the dependency fs mounted
-// THIS EXPECTST THE CALLER TO HANDLE CLEANUP
+// THIS EXPECTS THE CALLER TO HANDLE CLEANUP
 func (r PythonRunner) makeTmpWithFS() (string, error) {
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "embedded")
 	if err != nil {
-		fmt.Println("Error creating temporary directory:", err)
+		log.Error().Err(err).Msg("Could not create temporary directory")
 		return "", err
 	}
 
@@ -90,10 +91,10 @@ func (r PythonRunner) makeTmpWithFS() (string, error) {
 	})
 
 	if err != nil {
-		fmt.Println("Error processing embedded files:", err)
+		log.Error().Err(err).Msg("Could process embedde files")
 		return "", err
 	}
 
-	fmt.Println("Files mounted to temporary directory:", tempDir)
+	log.Debug().Str("tmpDir", tempDir).Msg("Fs mounted to temorary directory")
 	return tempDir, nil
 }
