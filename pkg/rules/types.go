@@ -28,7 +28,6 @@ type Rule struct {
 func (r *Rule) AddRunner() error {
 	var err error
 	r.Runner, err = runner.NewPythonRunner(r.Target)
-	fmt.Println(r.Runner.ToString())
 	return err
 }
 
