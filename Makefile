@@ -1,22 +1,44 @@
-cmd_lib: ./pkg/runner/command_util/library.so
-fs_lib: ./pkg/runner/fs_util/library.so
-os_lib: ./pkg/runner/os_util/library.so
+# Define common paths
+BUILD_DIR = ./build
+CMD_DIR = ./cmd/whale-watcher
+PKG_DIR = ./pkg/runner
 
-./pkg/runner/command_util/library.so: ./pkg/runner/command_util/command_util.go.so
-	go build -buildmode=c-shared -o ./pkg/runner/command_util/library.so ./pkg/runner/command_util/command_util.go.so
+# Phony targets declaration
+.PHONY: all clean cmd_lib fs_lib os_lib exec
 
-./pkg/runner/fs_util/library.so: ./pkg/runner/fs_util/fs_util.go.so
-	go build -buildmode=c-shared -o ./pkg/runner/fs_util/library.so ./pkg/runner/fs_util/fs_util.go.so
+# Ensure the build directory exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-./pkg/runner/os_util/library.so: ./pkg/runner/os_util/os_util.go.so
-	go build -buildmode=c-shared -o ./pkg/runner/os_util/library.so ./pkg/runner/os_util/os_util.go.so
+cmd_lib: $(BUILD_DIR)/command_util/__init__.py
 
-exec: ./whale-watcher
+# Targets for libraries with the build directory as a prerequisite
+$(BUILD_DIR)/command_util/__init__.py: $(PKG_DIR)/command_util/command_util.go | $(BUILD_DIR)
+	gopy build -output=$(BUILD_DIR)/command_util -vm=python3 $(PKG_DIR)/command_util/
 
-./whale-watcher: main.go
-	go build -o ./whale-watcher ./cmd/whale-watcher/whale-watcher.go
+fs_lib: $(BUILD_DIR)/fs_util/__init__.py
 
+$(BUILD_DIR)/fs_util/__init__.py: $(PKG_DIR)/fs_util/fs_util.go | $(BUILD_DIR)
+	gopy build -output=$(BUILD_DIR)/fs_util -vm=python3 $(PKG_DIR)/fs_util
+
+os_lib: $(BUILD_DIR)/os_util/__init__.py
+
+$(BUILD_DIR)/os_util/__init__.py: $(PKG_DIR)/os_util/os_util.go | $(BUILD_DIR)
+	gopy build -output=$(BUILD_DIR)/os_util -vm=python3 $(PKG_DIR)/os_util
+
+# Target for the executable with the build directory as a prerequisite
+exec: $(BUILD_DIR)/whale-watcher
+
+$(BUILD_DIR)/whale-watcher: $(CMD_DIR)/whale-watcher.go | $(BUILD_DIR)
+	go build -o $(BUILD_DIR)/whale-watcher $(CMD_DIR)/whale-watcher.go
+
+# Define the main target
 all: cmd_lib fs_lib os_lib exec
 
+# Clean target to remove the build directory
 clean:
-	rm ./whale-watcher && rm ./pkg/runner/*_util/*.{so,h}
+	rm -rf $(BUILD_DIR)
+
+# Run test ruleset that doesn't need a container but performs a basic signature check for the utils
+verify: all
+	cd build; ./whale-watcher ../_example/verify_ruleset.yaml

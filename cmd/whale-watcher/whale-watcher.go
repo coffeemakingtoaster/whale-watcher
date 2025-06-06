@@ -19,4 +19,7 @@ func main() {
 	fmt.Printf("Loaded %d rules!\n", len(ruleSet.Rules))
 	violations := validator.ValidateRuleset(ruleSet, "", "")
 	fmt.Printf("Total: %d Violations: %d Fixable: %d\n", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
+	for _, violation := range violations.Violations {
+		fmt.Printf("\t- RuleId: %s Problem: %s Fix(if possible): %s\n", violation.RuleId, violation.Description, violation.Fix)
+	}
 }

@@ -1,0 +1,26 @@
+# Ruleset for validating util imports
+# This doesn't actually do anything with containers
+# Allowed scopes: output, buildtime
+# Allowed categories: negative, positived
+# Allowed target: command, os, fs
+
+rules:
+  - scope: output
+    category: Negative
+    instruction: assert(Name() == "os_util")
+    description: Ensure the os util import works properly
+    id: validate os lib
+    target: os
+  - scope: output
+    category: Negative
+    instruction: assert(Name() == "fs_util")
+    description: Ensure the fs util import works properly
+    id: validate fs lib
+    target: fs
+  - scope: output
+    category: Negative
+    instruction: assert(Name() == "command_util")
+    description: Ensure the cmd util import works properly
+    id: validate command lib
+    target: command
+

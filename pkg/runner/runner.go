@@ -31,13 +31,13 @@ func NewPythonRunner(target string) (*Runner, error) {
 	}
 	switch target {
 	case "command":
-		runner.utilImport = "from command_util import *"
+		runner.utilImport = "from command_util.commandutil import *"
 	case "fs":
-		runner.utilImport = "from fs_util import *"
+		runner.utilImport = "from fs_util.fsutil import *"
 	case "os":
-		runner.utilImport = "from os_util import *"
+		runner.utilImport = "from os_util.osutil import *"
 	default:
-		return nil, errors.New(fmt.Sprintf("Unsupported target: %s! Supported targets are command, fs, os", target))
+		return nil, errors.New(fmt.Sprintf("Unsupported target: %s! Supported targets are: command, fs, os", target))
 	}
 	return runner, nil
 }
