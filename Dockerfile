@@ -13,13 +13,13 @@ python3 -m pip install pybindgen --break-system-packages && \
 # Clean is not necessary here...but better safe than sorry
 RUN make clean all verify
 
-FROM scratch AS runtime
+FROM debian AS runtime
 
 WORKDIR /app
 
-COPY --from=build /build/build/whale-watcher .
+COPY --from=build /build/build/whale-watcher ./whale
 
-CMD ["./whale-watcher"]
+ENTRYPOINT ["/app/whale"]
 
 
 

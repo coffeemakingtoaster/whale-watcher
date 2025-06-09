@@ -17,7 +17,7 @@ RESET = \033[0m
 DELIM = ************
 
 # Phony targets declaration
-.PHONY: all clean cmd_lib fs_lib os_lib exec
+.PHONY: all clean cmd_lib fs_lib os_lib exec docker
 
 # Ensure the build directory exists
 $(BUILD_DIR):
@@ -67,3 +67,6 @@ docker:
 verify: all
 	@echo "\n$(BLUE)$(DELIM) Verifying ruleset $(DELIM)$(RESET)"
 	./build/whale-watcher ./_example/verify_ruleset.yaml
+
+docker-verify: docker
+	docker run --rm -v $$(pwd)/_example/verify_ruleset.yaml:/app/verify_ruleset.yaml -it whale-watcher:latest "/app/verify_ruleset.yaml"
