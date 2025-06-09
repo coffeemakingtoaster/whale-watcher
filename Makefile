@@ -60,6 +60,9 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(PKG_DIR)/*_build
 
+docker:
+	docker build -t whale-watcher:latest .
+
 # Run test ruleset that doesn't need a container but performs a basic signature check for the utils
 verify: all
 	@echo "\n$(BLUE)$(DELIM) Verifying ruleset $(DELIM)$(RESET)"
