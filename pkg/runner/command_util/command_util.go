@@ -34,7 +34,8 @@ func (cu CommandUtils) GetAstDepth() int {
 		curr = curr.Subsequent
 		depth++
 	}
-	return depth
+	// First node is root node, i.e. subtract 1
+	return depth - 1
 }
 
 func (cu CommandUtils) Name() string {

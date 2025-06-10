@@ -1,0 +1,14 @@
+# Ruleset for validating util imports
+# This doesn't actually do anything with containers
+# Allowed scopes: output, buildtime
+# Allowed categories: negative, positived
+# Allowed target: command, os, fs
+
+rules:
+  - scope: output
+    category: Negative
+    instruction: assert(command_util.GetAstDepth() == 2)
+    description: Ensure the cmd util import works properly
+    id: validate command lib
+    target: command
+

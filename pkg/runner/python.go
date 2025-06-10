@@ -77,7 +77,8 @@ func (r PythonRunner) ToString() string {
 func (r PythonRunner) addFileToTmp(srcFilePath, tmpDirPath string) error {
 	fileName := filepath.Base(srcFilePath)
 	dest := filepath.Join(tmpDirPath, fileName)
-	return os.Symlink(srcFilePath, dest)
+	// Note: this is not container friendly
+	return os.Link(srcFilePath, dest)
 }
 
 // TODO: Clean this up
