@@ -7,19 +7,19 @@
 rules:
   - scope: output
     category: Negative
-    instruction: assert(Name() == "os_util")
+    instruction: assert(os_util.Name() == "os_util")
     description: Ensure the os util import works properly
     id: validate os lib
     target: os
   - scope: output
     category: Negative
-    instruction: assert(Name() == "fs_util")
+    instruction: assert(fs_util.Name() == "fs_util")
     description: Ensure the fs util import works properly
     id: validate fs lib
     target: fs
   - scope: output
     category: Negative
-    instruction: assert(Name() == "command_util")
+    instruction: assert(command_util.Name() == "command_util")
     description: Ensure the cmd util import works properly
     id: validate command lib
     target: command

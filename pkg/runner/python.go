@@ -1,12 +1,15 @@
 package runner
 
 import (
+	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"text/template"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,32 +24,60 @@ var osutil embed.FS
 var cmdutil embed.FS
 
 type PythonRunner struct {
-	utilImport string
+	utilImport *template.Template
 	exec       string
 	fs         embed.FS
 }
 
-func (r *PythonRunner) Run(command string) error {
+type TemplateData struct {
+	DockerfilePath string
+	Image          string
+}
+
+func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 	workDir, err := r.makeTmpWithFS()
 	if err != nil {
 		log.Error().Err(err).Send()
 		return err
 	}
 	defer os.RemoveAll(workDir)
-	command = r.utilImport + "\n" + command
+
+	err = r.addFileToTmp(contextData.DockerfilePath, workDir)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return err
+	}
+	contextData.DockerfilePath = "./Dockerfile"
+
+	var buffer bytes.Buffer
+	r.utilImport.Execute(&buffer, contextData)
+
+	command = buffer.String() + "\n" + command
 	cmd := exec.Command(r.exec, "-c", command)
 	cmd.Dir = workDir
+	var errorOutput bytes.Buffer
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
+	cmd.Stderr = &errorOutput
 	err = cmd.Run()
 	if err != nil {
+		log.Error().Err(err).Str("stderr", errorOutput.String()).Send()
 		return err
+	}
+	if len(errorOutput.String()) > 0 {
+		log.Error().Err(err).Send()
+		return errors.New(errorOutput.String())
 	}
 	return nil
 }
 
 func (r PythonRunner) ToString() string {
-	return fmt.Sprintf("Exec: %s with preamble %s", r.exec, r.utilImport)
+	return fmt.Sprintf("Exec: %s with preamble %s", r.exec, r.utilImport.Root.String())
+}
+
+func (r PythonRunner) addFileToTmp(srcFilePath, tmpDirPath string) error {
+	fileName := filepath.Base(srcFilePath)
+	dest := filepath.Join(tmpDirPath, fileName)
+	return os.Symlink(srcFilePath, dest)
 }
 
 // TODO: Clean this up
@@ -74,8 +105,8 @@ func (r PythonRunner) makeTmpWithFS() (string, error) {
 			if err != nil {
 				return err
 			}
-
 			tempFilePath := filepath.Join(tempDir, path)
+			log.Debug().Str("filepath", tempFilePath).Send()
 			err = os.MkdirAll(filepath.Dir(tempFilePath), os.ModePerm)
 			if err != nil {
 				return err
@@ -95,6 +126,6 @@ func (r PythonRunner) makeTmpWithFS() (string, error) {
 		return "", err
 	}
 
-	log.Debug().Str("tmpDir", tempDir).Msg("Fs mounted to temorary directory")
+	log.Debug().Str("tmpDir", tempDir).Msg("Fs mounted to temporary directory")
 	return tempDir, nil
 }

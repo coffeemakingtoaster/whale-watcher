@@ -1,5 +1,7 @@
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250522155934-fa73f14efc38 h1:jYeU/s5sSBSRnrX1yvneOuS7OG4JQinANVcQJ1pP7UQ=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250522155934-fa73f14efc38/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610144551-e096487dacd3 h1:mywwig+5u4aM8tiXnDRSOC7MBBufhl6su0vxsviTs/U=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610144551-e096487dacd3/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/go-python/gopy v0.4.10 h1:Ec3x+NTSzLsw9f6FTdDLwQCQlmlNmJIu4J6nSnyugqE=
 github.com/go-python/gopy v0.4.10/go.mod h1:zMV/gSSYa9u/8Zp0WYR+L/z+kOIqIUtMg/a1/GRy5uw=
@@ -17,6 +19,7 @@ golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.12.0 h1:CM0HF96J0hcLAwsHPJZjfdNzs0gftsLfgKt57wWHJ0o=
 golang.org/x/sys v0.12.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

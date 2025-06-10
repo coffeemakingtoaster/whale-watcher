@@ -30,7 +30,7 @@ func (r *Rule) AddRunner() error {
 }
 
 func (r *Rule) Validate(imageName, dockerFilepath string) (bool, ViolationInfo) {
-	err := r.Runner.Run(r.Instruction)
+	err := r.Runner.Run(runner.TemplateData{DockerfilePath: dockerFilepath, Image: imageName}, r.Instruction)
 	if err != nil {
 		return false, ViolationInfo{Details: err.Error()}
 	}

@@ -66,7 +66,7 @@ docker:
 # Run test ruleset that doesn't need a container but performs a basic signature check for the utils
 verify: all
 	@echo "\n$(BLUE)$(DELIM) Verifying ruleset $(DELIM)$(RESET)"
-	./build/whale-watcher ./_example/verify_ruleset.yaml
+	./build/whale-watcher $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile ""
 
 docker-verify: docker
-	docker run --rm -v $$(pwd)/_example/verify_ruleset.yaml:/app/verify_ruleset.yaml -it whale-watcher:latest "/app/verify_ruleset.yaml"
+	docker run --rm -v $$(pwd)/_example/verify_ruleset.yaml:/app/verify_ruleset.yaml -v $$(pwd)/Dockerfile:/app/Dockerfile -it whale-watcher:latest "/app/verify_ruleset.yaml" "/app/Dockerfile" "whale-watcher:latest"
