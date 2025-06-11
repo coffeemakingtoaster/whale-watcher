@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Caller().Logger()
 	if len(os.Args) < 4 {
 		panic("Please provide a ruleset location, dockerfilepath and image name")
 	}

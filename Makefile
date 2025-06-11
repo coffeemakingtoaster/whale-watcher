@@ -59,14 +59,25 @@ clean:
 	@echo "\n$(RED)$(DELIM) Cleaning build directory $(DELIM)$(RESET)"
 	rm -rf $(BUILD_DIR)
 	rm -rf $(PKG_DIR)/*_build
+	rm -rf ./out
 
 docker:
 	docker build -t whale-watcher:latest .
 
+test:
+	go test ./...
+
+./out/out.tar:
+	mkdir -p out
+	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
+	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip .
+
+oci-export: ./out/out.tar
+
 # Run test ruleset that doesn't need a container but performs a basic signature check for the utils
-verify: all
+verify: all test oci-export
 	@echo "\n$(BLUE)$(DELIM) Verifying ruleset $(DELIM)$(RESET)"
-	./build/whale-watcher $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile ""
+	./build/whale-watcher $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
 
 docker-verify: docker
 	docker run --rm -v $$(pwd)/_example/verify_ruleset.yaml:/app/verify_ruleset.yaml -v $$(pwd)/Dockerfile:/app/Dockerfile -it whale-watcher:latest "/app/verify_ruleset.yaml" "/app/Dockerfile" "whale-watcher:latest"

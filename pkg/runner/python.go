@@ -3,7 +3,6 @@ package runner
 import (
 	"bytes"
 	"embed"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -47,7 +46,15 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 		log.Error().Err(err).Send()
 		return err
 	}
+
+	err = r.addFileToTmp(contextData.Image, workDir)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return err
+	}
+
 	contextData.DockerfilePath = "./Dockerfile"
+	contextData.Image = "./out.tar"
 
 	var buffer bytes.Buffer
 	r.utilImport.Execute(&buffer, contextData)
@@ -55,18 +62,19 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 	command = buffer.String() + "\n" + command
 	cmd := exec.Command(r.exec, "-c", command)
 	cmd.Dir = workDir
+
 	var errorOutput bytes.Buffer
-	cmd.Stdout = cmd.Stderr
+	var stdOutput bytes.Buffer
+
+	cmd.Stdout = &stdOutput
 	cmd.Stderr = &errorOutput
+
 	err = cmd.Run()
 	if err != nil {
-		log.Error().Err(err).Str("stderr", errorOutput.String()).Send()
+		log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
 		return err
 	}
-	if len(errorOutput.String()) > 0 {
-		log.Error().Err(err).Send()
-		return errors.New(errorOutput.String())
-	}
+
 	return nil
 }
 
@@ -77,6 +85,8 @@ func (r PythonRunner) ToString() string {
 func (r PythonRunner) addFileToTmp(srcFilePath, tmpDirPath string) error {
 	fileName := filepath.Base(srcFilePath)
 	dest := filepath.Join(tmpDirPath, fileName)
+	log.Debug().Str("filepath", dest).Send()
+
 	// Note: this is not container friendly
 	return os.Link(srcFilePath, dest)
 }

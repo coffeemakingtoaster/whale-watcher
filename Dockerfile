@@ -11,7 +11,7 @@ python3 -m pip install pybindgen --break-system-packages && \
 COPY . .
 
 # Clean is not necessary here...but better safe than sorry
-RUN make clean all verify
+RUN make clean all 
 
 FROM python:3.10-bookworm AS runtime
 
