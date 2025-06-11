@@ -1,7 +1,5 @@
-github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250522155934-fa73f14efc38 h1:jYeU/s5sSBSRnrX1yvneOuS7OG4JQinANVcQJ1pP7UQ=
-github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250522155934-fa73f14efc38/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
-github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610144551-e096487dacd3 h1:mywwig+5u4aM8tiXnDRSOC7MBBufhl6su0vxsviTs/U=
-github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610144551-e096487dacd3/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610180102-6bcda0dac5dc h1:+nFwxDiFFWRUtMhWkMpUaNqB+GLw12yYYpRq2QKQJVI=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610180102-6bcda0dac5dc/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/go-python/gopy v0.4.10 h1:Ec3x+NTSzLsw9f6FTdDLwQCQlmlNmJIu4J6nSnyugqE=
 github.com/go-python/gopy v0.4.10/go.mod h1:zMV/gSSYa9u/8Zp0WYR+L/z+kOIqIUtMg/a1/GRy5uw=

@@ -18,13 +18,13 @@ func NewPythonRunner(target string) (Runner, error) {
 	importTemplate := ""
 	switch target {
 	case "command":
-		importTemplate = "from command_util_build import commandutil; command_util = commandutil.SetupFromPath('{{ .DockerfilePath }}')"
+		importTemplate = "from command_util_build import commandutil; command_util = commandutil.setup_from_path('{{ .DockerfilePath }}')"
 		runner.fs = cmdutil
 	case "fs":
-		importTemplate = "from fs_util_build import fsutil; fs_util = fsutil.Setup()"
+		importTemplate = "from fs_util_build import fsutil; fs_util = fsutil.setup()"
 		runner.fs = fsutil
 	case "os":
-		importTemplate = "from os_util_build import osutil; os_util = osutil.Setup()"
+		importTemplate = "from os_util_build import osutil; os_util = osutil.setup()"
 		runner.fs = osutil
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported target: %s! Supported targets are: command, fs, os", target))

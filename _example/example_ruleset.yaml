@@ -7,8 +7,11 @@
 rules:
   - scope: output
     category: Negative
-    instruction: assert(command_util.GetAstDepth() == 2)
-    description: Ensure the cmd util import works properly
-    id: validate command lib
+    instruction: |
+      depth = command_util.get_ast_depth()
+      print(command_util.get_stage_node_at(0).name)
+      assert(all([command_util.get_stage_node_at(index).name > 0 for index in range(depth)]))
+    description: Ensure all stages are named
+    id: stage_name
     target: command
 

@@ -56,7 +56,7 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 	cmd := exec.Command(r.exec, "-c", command)
 	cmd.Dir = workDir
 	var errorOutput bytes.Buffer
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = cmd.Stderr
 	cmd.Stderr = &errorOutput
 	err = cmd.Run()
 	if err != nil {

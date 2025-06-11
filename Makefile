@@ -29,19 +29,19 @@ cmd_lib: $(PKG_DIR)/command_util_build/__init__.py
 # Targets for libraries with the build directory as a prerequisite
 $(PKG_DIR)/command_util_build/__init__.py: $(PKG_DIR)/command_util/command_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building command_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/command_util_build -vm=python3 $(PKG_DIR)/command_util/
+	gopy build -output=$(PKG_DIR)/command_util_build -vm="python3" -rename=true $(PKG_DIR)/command_util/
 
 fs_lib:  $(PKG_DIR)/fs_util_build/__init__.py
 
 $(PKG_DIR)/fs_util_build/__init__.py: $(PKG_DIR)/fs_util/fs_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building fs_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/fs_util_build -vm=python3 $(PKG_DIR)/fs_util
+	gopy build -output=$(PKG_DIR)/fs_util_build -vm="python3" -rename=true $(PKG_DIR)/fs_util
 
 os_lib:  $(PKG_DIR)/os_util_build/__init__.py
 
 $(PKG_DIR)/os_util_build/__init__.py: $(PKG_DIR)/os_util/os_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building os_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/os_util_build -vm=python3 $(PKG_DIR)/os_util
+	gopy build -output=$(PKG_DIR)/os_util_build -vm="python3" -rename=true $(PKG_DIR)/os_util
 
 # Target for the executable with the build directory as a prerequisite
 exec: $(BUILD_DIR)/whale-watcher
