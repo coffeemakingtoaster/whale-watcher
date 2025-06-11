@@ -38,6 +38,11 @@ func (cu *CommandUtils) GetStageNodeAt(index int) *ast.StageNode {
 	return curr
 }
 
+// This is a temporary solution...I need a better way to expose the data
+func (cu *CommandUtils) GetStageName(sn ast.StageNode) string {
+	return sn.Name
+}
+
 func (cu *CommandUtils) GetEveryNodeOfInstruction(wantedInstruction string) []ast.Node {
 	wantedInstruction = strings.ToUpper(wantedInstruction)
 	res := []ast.Node{}

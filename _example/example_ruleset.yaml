@@ -9,8 +9,11 @@ rules:
     category: Negative
     instruction: |
       depth = command_util.get_ast_depth()
-      print(command_util.get_stage_node_at(0).name)
-      assert(all([command_util.get_stage_node_at(index).name > 0 for index in range(depth)]))
+      assert(
+        all(
+          [len(command_util.get_stage_name(command_util.get_stage_node_at(index))) > 0 for index in range(depth)]
+        )
+      )
     description: Ensure all stages are named
     id: stage_name
     target: command
