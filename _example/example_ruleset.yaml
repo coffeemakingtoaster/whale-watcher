@@ -3,7 +3,7 @@
 # Allowed scopes: output, buildtime
 # Allowed categories: negative, positived
 # Allowed target: command, os, fs
-
+name: Example ruleset
 rules:
   - scope: output
     category: Negative

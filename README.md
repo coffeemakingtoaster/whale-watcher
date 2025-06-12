@@ -16,9 +16,9 @@ Build:
 make all
 ```
 
-Run tool: 
+Use tool: 
 ```sh
-./build/whale-watcher <path to rule yaml> <path to dockerfile> <path to oci tarball>
+./build/whale-watcher help
 ```
 
 The Dockerfile can be utilized for testing and the `_examples` directory contains sample rulesets.

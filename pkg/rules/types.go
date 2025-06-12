@@ -10,6 +10,7 @@ type ViolationInfo struct {
 }
 
 type RuleSet struct {
+	Name  string  `yaml:"name"`
 	Rules []*Rule `yaml:"rules"`
 }
 
