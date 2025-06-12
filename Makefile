@@ -1,6 +1,3 @@
-# Logging added by chatgpt
-# Every other makefile war crime commited in here is my fault :)
-
 # Define common paths
 BUILD_DIR = ./build
 CMD_DIR = ./cmd/whale-watcher
@@ -16,14 +13,41 @@ RESET = \033[0m
 
 DELIM = ************
 
+# Get the version from the latest git tag or default to "alpha"
+VERSION = $(shell git describe --tags --abbrev=0 2>/dev/null || echo "alpha")
+
 # Phony targets declaration
-.PHONY: all clean cmd_lib fs_lib os_lib exec docker
+.PHONY: help
+help:
+	@echo "Whale Watcher - Version: $(VERSION)"
+	@echo "Available targets:"
+	@echo "  dep-install   - Install necessary dependencies."
+	@echo "  clean         - Remove build artifacts."
+	@echo "  all           - Build all targets."
+	@echo "  verify        - Verify ruleset."
+	@echo "\t--- internal ---"
+	@echo "  cmd_lib       - Build the command_util library."
+	@echo "  fs_lib        - Build the fs_util library."
+	@echo "  os_lib        - Build the os_util library."
+	@echo "  exec          - Build the whale-watcher executable."
+	@echo "  test          - Run tests."
+	@echo "  oci-export    - Export OCI image."
+	@echo "\t--- not supported yet ---"
+	@echo "  docker        - Build the Docker image."
+	@echo "  docker-verify - Verify ruleset using Docker."
+
+.PHONY: dep-install
+dep-install:
+	python3 -m pip install pybindgen
+	go install golang.org/x/tools/cmd/goimports@latest
+	go install github.com/go-python/gopy@latest
 
 # Ensure the build directory exists
 $(BUILD_DIR):
 	@echo "\n$(BLUE)$(DELIM) Creating build directory $(DELIM)$(RESET)"
 	mkdir -p $(BUILD_DIR)
 
+.PHONY: cmd_lib
 cmd_lib: $(PKG_DIR)/command_util_build/__init__.py
 
 # Targets for libraries with the build directory as a prerequisite
@@ -31,29 +55,33 @@ $(PKG_DIR)/command_util_build/__init__.py: $(PKG_DIR)/command_util/command_util.
 	@echo "\n$(PURPLE)$(DELIM) Building command_util library $(DELIM)$(RESET)"
 	gopy build -output=$(PKG_DIR)/command_util_build -vm="python3" -rename=true $(PKG_DIR)/command_util/
 
-fs_lib:  $(PKG_DIR)/fs_util_build/__init__.py
+.PHONY: fs_lib
+fs_lib: $(PKG_DIR)/fs_util_build/__init__.py
 
 $(PKG_DIR)/fs_util_build/__init__.py: $(PKG_DIR)/fs_util/fs_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building fs_util library $(DELIM)$(RESET)"
 	gopy build -output=$(PKG_DIR)/fs_util_build -vm="python3" -rename=true $(PKG_DIR)/fs_util
 
-os_lib:  $(PKG_DIR)/os_util_build/__init__.py
+.PHONY: os_lib
+os_lib: $(PKG_DIR)/os_util_build/__init__.py
 
 $(PKG_DIR)/os_util_build/__init__.py: $(PKG_DIR)/os_util/os_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building os_util library $(DELIM)$(RESET)"
 	gopy build -output=$(PKG_DIR)/os_util_build -vm="python3" -rename=true $(PKG_DIR)/os_util
 
-# Target for the executable with the build directory as a prerequisite
+.PHONY: exec
 exec: $(BUILD_DIR)/whale-watcher
 
 $(BUILD_DIR)/whale-watcher: $(CMD_DIR)/whale-watcher.go | $(BUILD_DIR)
 	@echo "\n$(PURPLE)$(DELIM) Building whale-watcher executable $(DELIM)$(RESET)"
 	go build -o $(BUILD_DIR)/whale-watcher $(CMD_DIR)/whale-watcher.go
 
+.PHONY: all
 # Define the main target
 all: cmd_lib fs_lib os_lib exec
 	@echo "\n$(GREEN)$(DELIM) All targets built successfully! $(DELIM)$(RESET)"
 
+.PHONY: clean
 # Clean target to remove the build directory
 clean:
 	@echo "\n$(RED)$(DELIM) Cleaning build directory $(DELIM)$(RESET)"
@@ -61,9 +89,11 @@ clean:
 	rm -rf $(PKG_DIR)/*_build
 	rm -rf ./out
 
+.PHONY: docker
 docker:
 	docker build -t whale-watcher:latest .
 
+.PHONY: test
 test:
 	go test ./...
 
@@ -72,12 +102,15 @@ test:
 	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
 	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip .
 
+.PHONY: oci-export
 oci-export: ./out/out.tar
 
-# Run test ruleset that doesn't need a container but performs a basic signature check for the utils
+.PHONY: verify
 verify: all test oci-export
+	# Verify util signature, not actually perform rule validation
 	@echo "\n$(BLUE)$(DELIM) Verifying ruleset $(DELIM)$(RESET)"
 	./build/whale-watcher $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
 
+.PHONY: docker-verify
 docker-verify: docker
 	docker run --rm -v $$(pwd)/_example/verify_ruleset.yaml:/app/verify_ruleset.yaml -v $$(pwd)/Dockerfile:/app/Dockerfile -it whale-watcher:latest "/app/verify_ruleset.yaml" "/app/Dockerfile" "whale-watcher:latest"
