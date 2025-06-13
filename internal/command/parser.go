@@ -13,7 +13,7 @@ func getContext(args []string) (*RunContext, error) {
 	}
 	runContext := RunContext{Instruction: args[0]}
 	switch runContext.Instruction {
-	case "verify":
+	case "validate":
 		err := runContext.parseVerify(args[1:])
 		if err != nil {
 			return nil, err
@@ -34,7 +34,7 @@ func getContext(args []string) (*RunContext, error) {
 
 func (rc *RunContext) parseVerify(args []string) error {
 	if len(args) < 3 {
-		return errors.New("Not enough arguments for verify. Needs <ruleset location> <Dockerfile path> <OCI tarball path>.")
+		return errors.New("Not enough arguments for validate. Needs <ruleset location> <Dockerfile path> <OCI tarball path>.")
 	}
 	rc.RuleSetEntrypoint = args[0]
 	rc.DockerFile = args[1]

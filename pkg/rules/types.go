@@ -1,8 +1,18 @@
 package rules
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"slices"
+	"strings"
+
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
 )
+
+var allowedCategories = []string{"negative", "positive"}
+var allowedScopes = []string{"output", "buildtime"}
+var allowedTargets = []string{"command", "os", "fs"}
 
 type ViolationInfo struct {
 	Details string
@@ -10,8 +20,9 @@ type ViolationInfo struct {
 }
 
 type RuleSet struct {
-	Name  string  `yaml:"name"`
-	Rules []*Rule `yaml:"rules"`
+	Name       string  `yaml:"name"`
+	Rules      []*Rule `yaml:"rules"`
+	tmpDirPath string
 }
 
 type Rule struct {
@@ -36,4 +47,38 @@ func (r *Rule) Validate(imageName, dockerFilepath string) (bool, ViolationInfo) 
 		return false, ViolationInfo{Details: err.Error()}
 	}
 	return true, ViolationInfo{}
+}
+
+// Cleanup if this was loaded from git
+func (rs *RuleSet) Close() {
+	if len(rs.tmpDirPath) > 0 {
+		os.RemoveAll(rs.tmpDirPath)
+	}
+}
+
+func (r *Rule) Verify() error {
+	// TODO: Add instruction verify as soon as helper format is clear
+	if len(r.Id) == 0 {
+		return errors.New("No id set for rule")
+	}
+	r.Category = strings.ToLower(r.Category)
+	if err := isInAllowed(r.Category, allowedCategories); err != nil {
+		return errors.New(fmt.Sprintf("Category: %s", err.Error()))
+	}
+	r.Scope = strings.ToLower(r.Scope)
+	if err := isInAllowed(r.Scope, allowedScopes); err != nil {
+		return errors.New(fmt.Sprintf("Scope: %s", err.Error()))
+	}
+	r.Target = strings.ToLower(r.Target)
+	if err := isInAllowed(r.Target, allowedTargets); err != nil {
+		return errors.New(fmt.Sprintf("Target: %s", err.Error()))
+	}
+	return nil
+}
+
+func isInAllowed(value string, allowList []string) error {
+	if !slices.Contains(allowList, value) {
+		return errors.New(fmt.Sprintf("Invalid value %s (Allowed: %+q)", value, allowList))
+	}
+	return nil
 }

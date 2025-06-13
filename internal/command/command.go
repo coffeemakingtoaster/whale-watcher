@@ -20,7 +20,7 @@ var helpText = `
 Whale watcher!
 Valid commands:
 	- help -> its this one :)
-	- verify <ruleset> <dockerfile> <oci image tarball> -> verify the ruleset against the given container artifacts
+	- validate <ruleset> <dockerfile> <oci image tarball> -> validate the ruleset against the given container artifacts
 	- docs <ruleset> -> pretty pring a ruleset
 	`
 
@@ -33,7 +33,7 @@ func Run(args []string) {
 		fmt.Println(helpText)
 		return
 	}
-	ruleSet, err := rules.LoadRuleSetFromFile(runContext.RuleSetEntrypoint)
+	ruleSet, err := rules.LoadRuleset(runContext.RuleSetEntrypoint)
 	if err != nil {
 		panic(err)
 	}
