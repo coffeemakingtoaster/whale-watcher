@@ -3,7 +3,7 @@ module iteragit.iteratec.de/max.herkenhoff/whale-watcher
 go 1.24.0
 
 require (
-	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250610180102-6bcda0dac5dc
+	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250614131857-dc1ca04c4f45
 	github.com/go-python/gopy v0.4.10
 	github.com/rs/zerolog v1.34.0
 	gopkg.in/yaml.v3 v3.0.1
