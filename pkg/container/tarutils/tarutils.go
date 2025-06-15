@@ -55,27 +55,29 @@ func GetAvailabeInTar(data []byte) ([]string, error) {
 	return available, nil
 }
 
-func getBlobByPattern(reader *tar.Reader, searchValue string, headerNameTransformer func(string) string) (*tar.Header, *tar.Reader, error) {
+func getBlobByPattern(reader *tar.Reader, searchValue string, headerNameTransformer func(string) string) ([]byte, error) {
 	for true {
 		header, err := reader.Next()
 		if err != nil {
 			if err == io.EOF {
-				break
+				return []byte{}, ValueNotFound{digest: searchValue, tarPath: "in place"}
 			}
-			return nil, nil, err
 		}
-		log.Debug().Str("name", header.Name).Str("format", header.Format.String()).Int("type", int(header.Typeflag)).Send()
 		if headerNameTransformer(header.Name) == searchValue {
-			return header, reader, nil
+			break
 		}
 	}
-	return nil, nil, ValueNotFound{digest: searchValue, tarPath: "in place"}
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return []byte{}, err
+	}
+	return data, nil
 }
 
-func GetBlobFromFileByName(tarpath, searchValue string) (*tar.Header, *tar.Reader, error) {
+func GetBlobFromFileByName(tarpath, searchValue string) ([]byte, error) {
 	f, err := os.Open(tarpath)
 	if err != nil {
-		return nil, nil, err
+		return []byte{}, err
 	}
 	defer f.Close()
 	reader := tar.NewReader(f)
@@ -83,22 +85,22 @@ func GetBlobFromFileByName(tarpath, searchValue string) (*tar.Header, *tar.Reade
 	return getBlobByPattern(reader, searchValue, func(s string) string { return s })
 }
 
-func GetBlobFromFileByDigest(tarpath, digest string) (*tar.Header, *tar.Reader, error) {
+func GetBlobFromFileByDigest(tarpath, digest string) ([]byte, error) {
 	f, err := os.Open(tarpath)
 	if err != nil {
-		return nil, nil, err
+		return []byte{}, err
 	}
 	defer f.Close()
 	reader := tar.NewReader(f)
 	return getBlobByPattern(reader, digest, nameToBlobDigest)
 }
 
-func GetBlobFromDataByDigest(data []byte, digest string) (*tar.Header, *tar.Reader, error) {
+func GetBlobFromDataByDigest(data []byte, digest string) ([]byte, error) {
 	reader := bytes.NewReader(data)
 	return getBlobByPattern(tar.NewReader(reader), digest, nameToBlobDigest)
 }
 
-func GetBlobFromDataByName(data []byte, name string) (*tar.Header, *tar.Reader, error) {
+func GetBlobFromDataByName(data []byte, name string) ([]byte, error) {
 	reader := bytes.NewReader(data)
 	return getBlobByPattern(tar.NewReader(reader), name, func(s string) string { return s })
 }

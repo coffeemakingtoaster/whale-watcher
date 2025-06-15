@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -11,5 +12,6 @@ import (
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Caller().Logger()
 	ociLocation := os.Args[1]
-	container.ParseImage(ociLocation)
+	c, _ := container.ContainerImageFromOCITar(ociLocation)
+	fmt.Println(c.ToString())
 }

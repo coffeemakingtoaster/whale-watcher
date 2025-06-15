@@ -2,6 +2,7 @@ package layerfs
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"time"
@@ -65,11 +66,7 @@ func (lfs LayerFS) Open(name string) (fs.File, error) {
 	if _, ok := lfs.lookupRadix.Get(name); !ok {
 		return nil, errors.New("File not found")
 	}
-	_, reader, err := tarutils.GetBlobFromFileByDigest(lfs.tarPath, lfs.digest)
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(reader)
+	data, err := tarutils.GetBlobFromFileByDigest(lfs.tarPath, lfs.digest)
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +76,7 @@ func (lfs LayerFS) Open(name string) (fs.File, error) {
 			return nil, err
 		}
 	}
-	_, reader, err = tarutils.GetBlobFromDataByDigest(data, name)
-	if err != nil {
-		return nil, err
-	}
-	fileData, err := io.ReadAll(reader)
+	fileData, err := tarutils.GetBlobFromDataByDigest(data, name)
 	if err != nil {
 		return nil, err
 	}
@@ -102,11 +95,7 @@ func (lfs *LayerFS) Ls(path string) []string {
 }
 
 func getAllFiles(tarpath, digest string, isGzip bool) ([]string, error) {
-	_, reader, err := tarutils.GetBlobFromFileByDigest(tarpath, digest)
-	if err != nil {
-		return nil, err
-	}
-	data, err := io.ReadAll(reader)
+	data, err := tarutils.GetBlobFromFileByDigest(tarpath, digest)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +108,13 @@ func getAllFiles(tarpath, digest string, isGzip bool) ([]string, error) {
 	return tarutils.GetAvailabeInTar(data)
 }
 
+func (lfs *LayerFS) ToString() string {
+	return fmt.Sprintf("FS with %d files!", lfs.lookupRadix.Len())
+}
+
 func NewLayerFS(tarPath, digest string, isGzip bool) LayerFS {
 	availableFiles, _ := getAllFiles(tarPath, digest, isGzip)
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	for _, v := range availableFiles {
 		m[v] = 1
 	}

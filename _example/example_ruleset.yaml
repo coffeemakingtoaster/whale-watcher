@@ -17,4 +17,11 @@ rules:
     description: Ensure all stages are named
     id: stage_name
     target: command
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(fs_util.ls_layer("/etc/apt/sources.list/") == 0)
+    description: Ensure apt sources are empty
+    id: apt sources empty
+    target: fs
 

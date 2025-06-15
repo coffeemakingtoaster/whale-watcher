@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -16,34 +17,34 @@ type ContainerImage struct {
 }
 
 func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
-	_, reader, err := tarutils.GetBlobFromFileByName(ociPath, "index.json")
+	raw, err := tarutils.GetBlobFromFileByName(ociPath, "index.json")
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image index")
 		return nil, err
 	}
-	imageIndex, err := tarutils.ParseJsonReaderIntoInterface[OCIImageIndex](reader)
+	imageIndex, err := tarutils.ParseJsonBytesIntoInterface[OCIImageIndex](raw)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse image index into struct")
 		return nil, err
 	}
 
-	_, reader, err = tarutils.GetBlobFromFileByDigest(ociPath, imageIndex.Manifests[0].Digest)
+	raw, err = tarutils.GetBlobFromFileByDigest(ociPath, imageIndex.Manifests[0].Digest)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image manifest")
 		return nil, err
 	}
-	manifest, err := tarutils.ParseJsonReaderIntoInterface[OCIImageManifest](reader)
+	manifest, err := tarutils.ParseJsonBytesIntoInterface[OCIImageManifest](raw)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed parse manifest into struct")
 		return nil, err
 	}
 
-	_, reader, err = tarutils.GetBlobFromFileByDigest(ociPath, manifest.Config.Digest)
+	raw, err = tarutils.GetBlobFromFileByDigest(ociPath, manifest.Config.Digest)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image manifest")
 		return nil, err
 	}
-	metadata, err := tarutils.ParseJsonReaderIntoInterface[ImageMetadata](reader)
+	metadata, err := tarutils.ParseJsonBytesIntoInterface[ImageMetadata](raw)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed parse manifest into struct")
 		return nil, err
@@ -65,4 +66,13 @@ func (ci *ContainerImage) buildLayers() error {
 		ci.Layers[index] = NewLayer(ci.OciPath, digest.Digest, strings.HasSuffix(digest.MediaType, "+gzip"))
 	}
 	return nil
+}
+
+func (ci *ContainerImage) ToString() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%s\n", ci.OciPath))
+	for index, layer := range ci.Layers {
+		sb.WriteString(fmt.Sprintf("%d.\t%s\n", index, layer.ToString()))
+	}
+	return sb.String()
 }
