@@ -1,19 +1,16 @@
 package fsutil
 
 import (
-	"os"
-
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
 )
 
 type FsUtils struct {
-	// TODO: Implement me
 	OCI container.ContainerImage
 }
 
 // Setup function used for instantiating util struct
 func Setup(ociTarpath string) FsUtils {
-	image, err := container.ParseImage(ociTarpath)
+	image, err := container.ContainerImageFromOCITar(ociTarpath)
 	if err != nil {
 		panic(err)
 	}
@@ -22,12 +19,13 @@ func Setup(ociTarpath string) FsUtils {
 	}
 }
 
-func (ou FsUtils) Dir_content_count(dirPath string) int {
-	res, err := os.ReadDir(dirPath)
-	if err != nil {
-		return -1
-	}
-	return len(res)
+func (fu *FsUtils) Dir_content_count(dirPath string) int {
+	files := fu.OCI.Layers[len(fu.OCI.Layers)-1].FileSystem.Ls(dirPath)
+	return len(files)
+}
+
+func (fu *FsUtils) Ls_Layer(dirPath string, layerIndex int) []string {
+	return fu.OCI.Layers[layerIndex].FileSystem.Ls(dirPath)
 }
 
 func (ou FsUtils) Name() string {

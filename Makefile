@@ -112,14 +112,14 @@ remote-verify: all oci-export
 	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying remote ruleset $(DELIM)$(RESET)"
-	./build/whale-watcher verify https://github.com/coffeemakingtoaster/whale-watcher-target.git $$(pwd)/Dockerfile "./out/out.tar"
+	./build/whale-watcher validate https://github.com/coffeemakingtoaster/whale-watcher-target.git $$(pwd)/Dockerfile "./out/out.tar"
 
 .PHONY: local-verify
 local-verify: all oci-export
  	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying local ruleset $(DELIM)$(RESET)"
-	./build/whale-watcher verify $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
+		./build/whale-watcher validate $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
 
 .PHONY: verify
 verify: local-verify remote-verify test

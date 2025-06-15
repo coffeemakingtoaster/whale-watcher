@@ -5,3 +5,4 @@
 - [ ] add config file
 - [ ] add git add and push for fixes
 - [ ] add simple fix for directory removal or sth...just to check if this approach can actually work well
+- [ ] add OCI tar parsing
