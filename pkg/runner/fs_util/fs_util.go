@@ -19,12 +19,16 @@ func Setup(ociTarpath string) FsUtils {
 	}
 }
 
-func (fu *FsUtils) Dir_content_count(dirPath string) int {
+func (fu *FsUtils) GetLayerCount() int {
+	return len(fu.OCI.Layers)
+}
+
+func (fu *FsUtils) DirContentCount(dirPath string) int {
 	files := fu.OCI.Layers[len(fu.OCI.Layers)-1].FileSystem.Ls(dirPath)
 	return len(files)
 }
 
-func (fu *FsUtils) Ls_Layer(dirPath string, layerIndex int) []string {
+func (fu *FsUtils) LsLayer(dirPath string, layerIndex int) []string {
 	return fu.OCI.Layers[layerIndex].FileSystem.Ls(dirPath)
 }
 
