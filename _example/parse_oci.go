@@ -14,4 +14,7 @@ func main() {
 	ociLocation := os.Args[1]
 	c, _ := container.ContainerImageFromOCITar(ociLocation)
 	fmt.Println(c.ToString())
+	for i, layer := range c.Layers {
+		fmt.Printf("%d - %s\n", i, layer.Command)
+	}
 }

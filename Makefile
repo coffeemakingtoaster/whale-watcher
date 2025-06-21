@@ -40,7 +40,8 @@ help:
 
 .PHONY: dep-install
 dep-install:
-	python3 -m pip install pybindgen
+	@echo "$(RED)Pip install uses break system packages...this should not be problem. If it is, don't blame me :)$(RESET)"
+	python3 -m pip install pybindgen --break-system-packages
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/go-python/gopy@latest
 
@@ -102,7 +103,7 @@ test:
 ./out/out.tar:
 	mkdir -p out
 	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
-	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip .
+	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip -f ./_example/example.Dockerfile
 
 .PHONY: oci-export
 oci-export: ./out/out.tar

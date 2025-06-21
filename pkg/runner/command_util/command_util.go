@@ -1,6 +1,7 @@
 package commandutil
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
@@ -73,6 +74,32 @@ func (cu *CommandUtils) GetAstDepth() int {
 	}
 	// First node is root node, i.e. subtract 1
 	return depth - 1
+}
+
+// Given a command, try to get the last instruction from the ast that matches the command
+// This approximates and COULD fail
+// This does not support parser annotations
+// This is the fast version -> A slow version may just lex + parse the command
+func (cu *CommandUtils) GetLastInstructionNodeInStageByCommand(command string, stage int) *ast.InstructionNode {
+	var result *ast.InstructionNode //start with nil
+	if stage >= cu.GetAstDepth() {
+		return result
+	}
+
+	currentNode := cu.astRoot
+
+	for range stage + 1 {
+		currentNode = currentNode.Subsequent
+	}
+
+	for _, instruction := range currentNode.Instructions {
+		fmt.Println(instruction.Reconstruct())
+		if command != instruction.Reconstruct()[0] {
+			continue
+		}
+		result = &instruction
+	}
+	return result
 }
 
 func (cu *CommandUtils) Name() string {

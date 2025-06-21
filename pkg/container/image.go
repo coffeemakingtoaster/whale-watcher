@@ -57,13 +57,24 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 		Layers:   make([]*Layer, len(manifest.Layers)),
 		OciPath:  ociPath,
 	}
-	containerImage.buildLayers()
+	nonEmtpyHistoryEntries := 0
+	commands := make([]string, len(manifest.Layers))
+	for _, entry := range metadata.History {
+		if !entry.EmptyLayer {
+			commands[nonEmtpyHistoryEntries] = entry.CreatedBy
+			nonEmtpyHistoryEntries++
+		}
+	}
+	containerImage.buildLayers(commands)
+	if len(containerImage.Layers) != nonEmtpyHistoryEntries {
+		log.Warn().Int("layercount", len(containerImage.Layers)).Int("nonEmptyhistory", nonEmtpyHistoryEntries).Msg("The amount of detected layers and non empty history entries differ! This could throw off layer <-> Dockerfile Instruction bridge.")
+	}
 	return &containerImage, nil
 }
 
-func (ci *ContainerImage) buildLayers() error {
+func (ci *ContainerImage) buildLayers(commands []string) error {
 	for index, digest := range ci.Manifest.Layers {
-		ci.Layers[index] = NewLayer(ci.OciPath, digest.Digest, strings.HasSuffix(digest.MediaType, "+gzip"))
+		ci.Layers[index] = NewLayer(ci.OciPath, digest.Digest, commands[index], strings.HasSuffix(digest.MediaType, "+gzip"))
 	}
 	return nil
 }

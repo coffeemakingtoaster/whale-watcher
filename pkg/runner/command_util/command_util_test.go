@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
 	commandutil "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner/command_util"
 )
 
@@ -77,5 +78,20 @@ func TestGetEveryNodeOfInstruction(t *testing.T) {
 				t.Errorf("Instruction result mismatch: Expected %s Got %s", actualKey, node.Instruction())
 			}
 		}
+	}
+}
+
+func TestGetLastInstructionNodeInStageByCommand(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	index := cu.GetAstDepth() - 1
+	command := cu.GetStageNodeAt(index).Instructions[1].Reconstruct()[0]
+	valid := cu.GetLastInstructionNodeInStageByCommand(command, index)
+
+	if valid == nil {
+		t.Fatalf("Instruction result mismatch: Expected InstructionNode Got Nil (Searched for %s)", command)
+	}
+
+	if _, ok := (*valid).(*ast.CopyInstructionNode); !ok {
+		t.Errorf("Instruction result mismatch: Expected CopyInstructionNode Got Something else (Searched for %s)", command)
 	}
 }
