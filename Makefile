@@ -103,7 +103,7 @@ test:
 ./out/out.tar:
 	mkdir -p out
 	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
-	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip -f ./_example/example.Dockerfile
+	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip -f ./_example/example.Dockerfile ./_example/
 
 .PHONY: oci-export
 oci-export: ./out/out.tar

@@ -1,6 +1,6 @@
 # This file is bogus and meant to violate policies
-FROM debian:lastest AS runtime
+FROM debian:latest AS runtime
 
-RUN apt-get update && apt-get install curl vim
+RUN apt-get update && apt-get install -y curl vim
 
 ENTRYPOINT ["vim"]
