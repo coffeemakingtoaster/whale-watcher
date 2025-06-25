@@ -30,3 +30,8 @@ Requirements:
 
 - [gopy](https://github.com/go-python/gopy/tree/master)
 - [python3](https://www.python.org)
+
+## Troubleshooting
+
+Building on modern MacOs  is broken due to LLVM versions not supporting old flags.
+This requires altering and rebuilding gopy...

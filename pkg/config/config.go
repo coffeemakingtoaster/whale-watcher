@@ -30,7 +30,7 @@ func LoadConfigFromFile(configPath string) *Config {
 }
 
 func handleEnvOverrides(config *Config) *Config {
-	err := env.ParseWithOptions(&config, env.Options{Prefix: envPrefix})
+	err := env.ParseWithOptions(config, env.Options{Prefix: envPrefix})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to read env variables for config overrides")
 	}

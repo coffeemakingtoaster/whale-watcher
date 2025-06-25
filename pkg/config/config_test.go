@@ -52,7 +52,7 @@ func TestNewYamlConfigEnvOverride(t *testing.T) {
 		},
 	}
 
-	t.Setenv("WHALE_WATCHER_GH_PAT", "byebyte world")
+	t.Setenv("WHALE_WATCHER_GH_PAT", "byebye world")
 
 	actual := config.LoadConfigFromData([]byte(yamlConfig))
 	if !reflect.DeepEqual(&expected, actual) {
