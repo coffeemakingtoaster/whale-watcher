@@ -26,13 +26,14 @@ type RuleSet struct {
 }
 
 type Rule struct {
-	Scope       string `yaml:"scope"`
-	Category    string `yaml:"category"`
-	Instruction string `yaml:"instruction"`
-	Description string `yaml:"description"`
-	Id          string `yaml:"id"`
-	Target      string `yaml:"target"`
-	Runner      runner.Runner
+	Scope          string `yaml:"scope"`
+	Category       string `yaml:"category"`
+	Instruction    string `yaml:"instruction"`
+	Description    string `yaml:"description"`
+	Id             string `yaml:"id"`
+	Target         string `yaml:"target"`
+	Runner         runner.Runner
+	FixInstruction string `yaml:"fix_instruction"`
 }
 
 func (r *Rule) AddRunner() error {
@@ -72,6 +73,13 @@ func (r *Rule) Verify() error {
 	r.Target = strings.ToLower(r.Target)
 	if err := isInAllowed(r.Target, allowedTargets); err != nil {
 		return errors.New(fmt.Sprintf("Target: %s", err.Error()))
+	}
+	return nil
+}
+
+func (r *Rule) PerformFix() error {
+	if r.FixInstruction == "" {
+		return errors.New("No fixinstruction present")
 	}
 	return nil
 }

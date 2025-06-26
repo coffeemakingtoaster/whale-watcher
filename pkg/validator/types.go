@@ -11,4 +11,5 @@ type Violation struct {
 	RuleId      string
 	Description string
 	Fix         string
+	AutoFixed   bool
 }
