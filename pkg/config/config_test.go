@@ -22,7 +22,7 @@ func TestNewYamlConfig(t *testing.T) {
 	}
 
 	actual := config.LoadConfigFromData([]byte(yamlConfig))
-	if !reflect.DeepEqual(&expected, actual) {
+	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("config mismatch: Expected %v Got %v", expected, actual)
 	}
 }
@@ -39,7 +39,7 @@ func TestNewYamlFromENVConfig(t *testing.T) {
 	t.Setenv("WHALE_WATCHER_GH_USER_NAME", "envtest")
 
 	actual := config.LoadConfigFromData([]byte{})
-	if !reflect.DeepEqual(&expected, actual) {
+	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("config mismatch: Expected %v Got %v", expected, actual)
 	}
 }
@@ -55,7 +55,7 @@ func TestNewYamlConfigEnvOverride(t *testing.T) {
 	t.Setenv("WHALE_WATCHER_GH_PAT", "byebye world")
 
 	actual := config.LoadConfigFromData([]byte(yamlConfig))
-	if !reflect.DeepEqual(&expected, actual) {
+	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("config mismatch: Expected %v Got %v", expected, actual)
 	}
 }
