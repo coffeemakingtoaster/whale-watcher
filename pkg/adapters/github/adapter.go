@@ -42,10 +42,8 @@ func NewGithubPullRequestAdapter(repositoryURL string) (*GithubPullRequestAdapte
 }
 
 func parseGitHubRepo(repoURL string) (user, repo string, err error) {
-	// Trim any trailing .git
 	repoURL = strings.TrimSuffix(repoURL, ".git")
 
-	// Handle SSH format: git@github.com:user/repo
 	if strings.HasPrefix(repoURL, "git@") {
 		re := regexp.MustCompile(`git@github\.com:([^/]+)/(.+)`)
 		matches := re.FindStringSubmatch(repoURL)
@@ -55,7 +53,6 @@ func parseGitHubRepo(repoURL string) (user, repo string, err error) {
 		return "", "", errors.New("invalid SSH GitHub URL format")
 	}
 
-	// Handle HTTPS format: https://github.com/user/repo
 	parsedURL, err := url.Parse(repoURL)
 	if err != nil {
 		return "", "", err

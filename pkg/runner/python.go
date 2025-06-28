@@ -2,9 +2,7 @@ package runner
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,19 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:embed fs_util_build/*
-var fsutil embed.FS
-
-//go:embed os_util_build/*
-var osutil embed.FS
-
-//go:embed command_util_build/*
-var cmdutil embed.FS
-
 type PythonRunner struct {
-	utilImport *template.Template
-	exec       string
-	fs         embed.FS
+	utilImport       *template.Template
+	exec             string
+	workingDirectory *RunnerWorkingDirectory
 }
 
 type TemplateData struct {
@@ -34,24 +23,10 @@ type TemplateData struct {
 }
 
 func (r *PythonRunner) Run(contextData TemplateData, command string) error {
-	workDir, err := r.makeTmpWithFS()
-	if err != nil {
-		log.Error().Err(err).Send()
-		return err
-	}
-	defer os.RemoveAll(workDir)
 
-	err = r.addFileToTmp(contextData.DockerfilePath, workDir)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return err
-	}
+	defer r.workingDirectory.Free()
 
-	err = r.addFileToTmp(contextData.Image, workDir)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return err
-	}
+	r.workingDirectory.Populate(contextData.DockerfilePath, contextData.Image)
 
 	contextData.DockerfilePath = "./Dockerfile"
 	contextData.Image = "./out.tar"
@@ -61,7 +36,7 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 
 	command = buffer.String() + "\n" + command
 	cmd := exec.Command(r.exec, "-c", command)
-	cmd.Dir = workDir
+	cmd.Dir = r.workingDirectory.tmpDirPath
 
 	var errorOutput bytes.Buffer
 	var stdOutput bytes.Buffer
@@ -69,7 +44,7 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 	cmd.Stdout = &stdOutput
 	cmd.Stderr = &errorOutput
 
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
 		return err
@@ -89,54 +64,4 @@ func (r PythonRunner) addFileToTmp(srcFilePath, tmpDirPath string) error {
 
 	// Note: this is not container friendly
 	return os.Link(srcFilePath, dest)
-}
-
-// TODO: Clean this up
-// This may also profit from caching this/reusing the tmp directories...rules are (for now) not run in parallel so reusing this should save disk space
-// See also https://github.com/kluctl/go-embed-python/tree/main/embed_util
-// Create a temporary directory with the dependency fs mounted
-// THIS EXPECTS THE CALLER TO HANDLE CLEANUP
-func (r PythonRunner) makeTmpWithFS() (string, error) {
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "embedded")
-	if err != nil {
-		log.Error().Err(err).Msg("Could not create temporary directory")
-		return "", err
-	}
-
-	// Walk through the embedded files
-	err = fs.WalkDir(r.fs, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !d.IsDir() {
-			// Read the file from embed.FS
-			data, err := r.fs.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			tempFilePath := filepath.Join(tempDir, path)
-			log.Debug().Str("filepath", tempFilePath).Send()
-			err = os.MkdirAll(filepath.Dir(tempFilePath), os.ModePerm)
-			if err != nil {
-				return err
-			}
-
-			err = os.WriteFile(tempFilePath, data, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		log.Error().Err(err).Msg("Could process embedde files")
-		return "", err
-	}
-
-	log.Debug().Str("tmpDir", tempDir).Msg("Fs mounted to temporary directory")
-	return tempDir, nil
 }
