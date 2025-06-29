@@ -59,6 +59,10 @@ func GetConfig() Config {
 		lock.Lock()
 		loadedConfig := loadConfigFromFile(configPath)
 		config = &loadedConfig
+		err := config.Validate()
+		if err != nil {
+			log.Error().Err(err).Msg("Invalid config!")
+		}
 		lock.Unlock()
 	}
 	return *config

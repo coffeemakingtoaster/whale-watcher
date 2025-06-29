@@ -47,5 +47,4 @@ func Run(args []string) {
 	for _, violation := range violations.Violations {
 		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Str("fix", violation.Fix).Send()
 	}
-
 }

@@ -48,6 +48,7 @@ func GetReferencingWorkingDirectoryInstance() *RunnerWorkingDirectory {
 func (rwd *RunnerWorkingDirectory) Free() {
 	rwd.refCount--
 	if rwd.refCount > 0 {
+		log.Debug().Msgf("Free was called for working directory but ref count has not hit 0")
 		return
 	}
 	err := os.RemoveAll(rwd.tmpDirPath)
@@ -55,6 +56,7 @@ func (rwd *RunnerWorkingDirectory) Free() {
 		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.tmpDirPath)
 		return
 	}
+	log.Debug().Msgf("Working directory cleaned up (ref count was 0)")
 	instance = nil
 }
 
@@ -100,7 +102,7 @@ func newRunnerWorkingDirectory() (*RunnerWorkingDirectory, error) {
 
 	return &RunnerWorkingDirectory{
 		tmpDirPath: dirPath,
-		refCount:   1,
+		refCount:   0,
 	}, nil
 }
 

@@ -234,3 +234,4 @@ build
 
 out
 config.yaml
+**/*.tar

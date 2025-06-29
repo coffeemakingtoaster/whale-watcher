@@ -1,3 +1,9 @@
+target:
+  repository: #url
+  dockerfile: #path
+  image: #image
+  ocipath: #
+  branch: branch
 github:
   pat: abc
   username: testuser
