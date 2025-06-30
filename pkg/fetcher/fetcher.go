@@ -18,18 +18,26 @@ import (
 func FetchContainerFiles() (string, string) {
 	var dockerfilePath string
 	var ociPath string
+	var err error
 
 	cfg := config.GetConfig()
 	if cfg.Target.RepositoryURL == "" {
 		dockerfilePath = cfg.Target.DockerfilePath
 	} else {
-		dockerfilePath, _ = loadDockerfileFromRepository(cfg.Target.RepositoryURL, cfg.Target.Branch, cfg.Target.DockerfilePath)
+		dockerfilePath, err = loadDockerfileFromRepository(cfg.Target.RepositoryURL, cfg.Target.Branch, cfg.Target.DockerfilePath)
+		if err != nil {
+			log.Warn().Err(err).Msg("Could not load dockerfile from repository")
+		}
 	}
 
 	if cfg.Target.Image == "" {
 		ociPath = cfg.Target.OciPath
 	} else {
-		ociPath, _ = loadImageFromRegistry(cfg.Target.Image)
+		ociPath, err = loadImageFromRegistry(cfg.Target.Image)
+		if err != nil {
+			log.Warn().Err(err).Msg("Could not load image from repository")
+		}
+
 	}
 
 	return dockerfilePath, ociPath
@@ -53,15 +61,18 @@ func loadImageFromRegistry(image string) (string, error) {
 func loadDockerfileFromRepository(repositoryURL, branch, dockerfilePath string) (string, error) {
 	data, err := getFileFromRepository(repositoryURL, branch, dockerfilePath)
 	if err != nil {
+		log.Error().Msg("Could not retrieve filedata from repository")
 		return "", err
 	}
 	tmpDirPath, err := os.MkdirTemp("", "filecache")
 	if err != nil {
+		log.Error().Msg("Could not create temporary directory")
 		return "", err
 	}
 	loadedPath := filepath.Join(tmpDirPath, "Dockerfile")
 	err = os.WriteFile(loadedPath, data, 0755)
 	if err != nil {
+		log.Error().Msg("Could not write repository file data to tmp directory")
 		return "", err
 	}
 	return loadedPath, nil
@@ -74,7 +85,7 @@ func getFileFromRepository(repositoryURL, branch, path string) ([]byte, error) {
 	repository, err := git.Clone(
 		storer,
 		fs,
-		&git.CloneOptions{URL: repositoryURL, NoCheckout: true},
+		&git.CloneOptions{URL: repositoryURL},
 	)
 
 	if err != nil {
@@ -90,17 +101,20 @@ func getFileFromRepository(repositoryURL, branch, path string) ([]byte, error) {
 
 	err = w.Checkout(&git.CheckoutOptions{SparseCheckoutDirectories: []string{dockerfileDirectory}, Branch: plumbing.ReferenceName(branchReference)})
 	if err != nil {
+		log.Error().Msg("Could not checkout")
 		return []byte{}, err
 	}
 
-	fileHandle, err := fs.Open(path)
+	fileHandle, err := w.Filesystem.Open(path)
 	if err != nil {
+		log.Error().Str("path", path).Msg("Could not open file in worktree")
 		return []byte{}, err
 	}
 
 	var data bytes.Buffer
 	_, err = io.Copy(&data, fileHandle)
 	if err != nil {
+		log.Error().Msg("Could not copy file data to buffer")
 		return []byte{}, err
 	}
 	return data.Bytes(), nil

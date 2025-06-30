@@ -235,3 +235,4 @@ build
 out
 config.yaml
 **/*.tar
+.DS_Store
