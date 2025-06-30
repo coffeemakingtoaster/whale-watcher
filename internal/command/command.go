@@ -5,8 +5,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/display"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/adapters"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
 )
 
@@ -43,6 +45,8 @@ func Run(args []string) {
 		display.PrettyPrintRules(ruleSet, false)
 		return
 	}
+	// Get ref to prevent directory cleanup
+	ref := runner.GetReferencingWorkingDirectoryInstance()
 	violations := validator.ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFile)
 	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {
@@ -50,5 +54,13 @@ func Run(args []string) {
 	}
 	// should a pr be created?
 	if config.ShouldInteractWithVSC() {
+		err = adapters.CreatePRForFixes(violations, ref.GetAbsolutePath("./Dockerfile"))
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create PR for changes/fixes")
+		}
+	} else {
+		log.Info().Msg("No git context, no interaction with VSC platform needed")
 	}
+	// We dont need the directory anymore
+	ref.Free()
 }

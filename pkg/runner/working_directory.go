@@ -45,6 +45,10 @@ func GetReferencingWorkingDirectoryInstance() *RunnerWorkingDirectory {
 	return instance
 }
 
+func (rwd *RunnerWorkingDirectory) GetAbsolutePath(path string) string {
+	return filepath.Join(rwd.tmpDirPath, path)
+}
+
 func (rwd *RunnerWorkingDirectory) Free() {
 	rwd.refCount--
 	if rwd.refCount > 0 {
