@@ -2,6 +2,7 @@ package ghcr
 
 import (
 	"archive/tar"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -56,7 +57,6 @@ func DownloadOciToPath(image, destination string) error {
 	if downloader == nil {
 		return errors.New("Could not parse provided image, see logs for details ")
 	}
-	log.Debug().Msgf("%s", downloader.ToString())
 	downloader.RefreshToken()
 	/*
 		if downloader.token == "" {
@@ -67,7 +67,6 @@ func DownloadOciToPath(image, destination string) error {
 	if err != nil {
 		return err
 	}
-	log.Debug().Msgf("%v", manifest)
 	// default to first
 	wanted := manifest.Manifests[0]
 	for _, v := range manifest.Manifests {
@@ -76,12 +75,14 @@ func DownloadOciToPath(image, destination string) error {
 		}
 	}
 	man, _ := downloader.GetSpecificManifest(wanted.Digest)
-	log.Debug().Msgf("%v", man)
 	writer := downloader.openTar()
 	defer writer.Close()
 	for i, v := range man.Layers {
 		log.Debug().Int("Current layer", i).Int("total layers", len(man.Layers)).Msg("Pulling image")
-		downloader.addLayerToTar(writer, v)
+		err := downloader.addLayerToTar(writer, v)
+		if err != nil {
+			log.Error().Err(err).Msg("Could not add layer to tar due to an error")
+		}
 	}
 	manifestMetadata := tar.Header{
 		Name:    fmt.Sprintf("blobs/%s", strings.Replace(wanted.Digest, ":", "/", 1)),
@@ -89,6 +90,9 @@ func DownloadOciToPath(image, destination string) error {
 		ModTime: time.Now(),
 	}
 	err = writeStructToTar(writer, &manifestMetadata, man)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not write manifest to tar")
+	}
 	indexMetadata := tar.Header{
 		Name:    "index.json",
 		Mode:    0644,
@@ -96,7 +100,14 @@ func DownloadOciToPath(image, destination string) error {
 	}
 	// only show manifest that was downloaded
 	manifest.Manifests = []container.Manifest{wanted}
-	err = writeStructToTar(writer, &indexMetadata, indexMetadata)
+	err = writeStructToTar(writer, &indexMetadata, manifest)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not write index to tar")
+	}
+	err = downloader.addConfigToTar(writer, man.Config.Digest)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not write metadata to tar")
+	}
 	return nil
 }
 
@@ -166,7 +177,6 @@ func (od *OCIDownloader) GetManifest() (container.OCIImageIndex, error) {
 		log.Error().Err(err).Msg("Could not fetch auth token for container repository")
 		return container.OCIImageIndex{}, err
 	}
-	log.Debug().Msgf("%s", string(data))
 	var parsed container.OCIImageIndex
 	err = json.Unmarshal(data, &parsed)
 	if err != nil {
@@ -199,7 +209,6 @@ func (od *OCIDownloader) GetSpecificManifest(digest string) (container.OCIImageM
 		log.Error().Err(err).Msg("Could not fetch auth token for container repository")
 		return container.OCIImageManifest{}, err
 	}
-	log.Debug().Msgf("%s", string(data))
 	var parsed container.OCIImageManifest
 	err = json.Unmarshal(data, &parsed)
 	if err != nil {
@@ -222,15 +231,20 @@ func (od *OCIDownloader) getLayerData(digest string) ([]byte, error) {
 	client := &http.Client{}
 	req, err := od.getRequest(fmt.Sprintf("%s/%s/blobs/%s", ghcrApiBase, od.image, digest))
 
+	if err != nil {
+		return []byte{}, err
+	}
+
 	req.Header.Add("Accept", "")
+	res, err := client.Do(req)
 
 	if err != nil {
 		return []byte{}, err
 	}
-	_, err = client.Do(req)
 
-	return []byte{}, nil
+	defer res.Body.Close()
 
+	return io.ReadAll(res.Body)
 }
 
 func writeToTar(writer *tar.Writer, header *tar.Header, data []byte) error {
@@ -238,8 +252,9 @@ func writeToTar(writer *tar.Writer, header *tar.Header, data []byte) error {
 		return err
 	}
 
-	// Step 4: Copy response body into tar entry
-	_, err := writer.Write(data)
+	buff := bytes.NewBuffer(data)
+
+	_, err := io.Copy(writer, buff)
 	if err != nil {
 		return err
 	}
@@ -261,8 +276,49 @@ func (od *OCIDownloader) addLayerToTar(writer *tar.Writer, metadata container.La
 	return writeToTar(writer, header, data)
 }
 
+func (od *OCIDownloader) addConfigToTar(writer *tar.Writer, digest string) error {
+	client := &http.Client{}
+	req, err := od.getRequest(fmt.Sprintf("%s/%s/blobs/%s", ghcrApiBase, od.image, digest))
+
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Accept", "")
+	res, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return err
+	}
+
+	var cfg container.ImageMetadata
+
+	err = json.Unmarshal(data, &cfg)
+	if err != nil {
+		return err
+	}
+
+	header := tar.Header{
+		Name:    fmt.Sprintf("blobs/%s", strings.Replace(digest, ":", "/", 1)),
+		Mode:    0644,
+		ModTime: time.Now(),
+	}
+	return writeStructToTar(writer, &header, cfg)
+}
+
 func writeStructToTar[T any](writer *tar.Writer, header *tar.Header, data T) error {
-	content, _ := json.Marshal(data)
+	content, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
 	header.Size = int64(len(content))
 	return writeToTar(writer, header, content)
 }
