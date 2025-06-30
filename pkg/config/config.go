@@ -54,6 +54,11 @@ func handleEnvOverrides() Config {
 	return *config
 }
 
+func ShouldInteractWithVSC() bool {
+	cfg := GetConfig()
+	return len(cfg.Github.PAT) > 0 && len(cfg.Github.Username) > 0
+}
+
 func GetConfig() Config {
 	if config == nil {
 		lock.Lock()

@@ -10,7 +10,9 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/fetcher/ghcr"
 )
 
 func FetchContainerFiles() (string, string) {
@@ -27,10 +29,25 @@ func FetchContainerFiles() (string, string) {
 	if cfg.Target.Image == "" {
 		ociPath = cfg.Target.OciPath
 	} else {
-
+		ociPath, _ = loadImageFromRegistry(cfg.Target.Image)
 	}
 
 	return dockerfilePath, ociPath
+}
+
+func loadImageFromRegistry(image string) (string, error) {
+	tmpDirPath, err := os.MkdirTemp("", "filecache")
+	if err != nil {
+		if !os.IsExist(err) {
+			return "", err
+		}
+	}
+	err = ghcr.DownloadOciToPath(image, filepath.Join(tmpDirPath, "image.tar"))
+	if err != nil {
+		log.Error().Err(err).Msgf("Could not download image %s", image)
+		return "", err
+	}
+	return tmpDirPath, err
 }
 
 func loadDockerfileFromRepository(repositoryURL, branch, dockerfilePath string) (string, error) {

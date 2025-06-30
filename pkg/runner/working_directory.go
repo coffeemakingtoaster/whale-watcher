@@ -65,12 +65,12 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath string)
 		return
 	}
 	var err error
-	err = addFileToWorkingDirectory(dockerFilePath, rwd.tmpDirPath)
+	err = addFileToWorkingDirectory(dockerFilePath, rwd.tmpDirPath, "Dockerfile")
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", dockerFilePath, rwd.tmpDirPath)
 		return
 	}
-	err = addFileToWorkingDirectory(ociImagePath, rwd.tmpDirPath)
+	err = addFileToWorkingDirectory(ociImagePath, rwd.tmpDirPath, "out.tar")
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.tmpDirPath)
 		return
@@ -78,9 +78,8 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath string)
 	rwd.isPopulated = true
 }
 
-func addFileToWorkingDirectory(source, workingDirectory string) error {
-	fileName := filepath.Base(source)
-	dest := filepath.Join(workingDirectory, fileName)
+func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
+	dest := filepath.Join(workingDirectory, newName)
 	log.Debug().Str("filepath", dest).Send()
 
 	// Note: this is not container friendly

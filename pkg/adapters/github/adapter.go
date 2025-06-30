@@ -17,7 +17,8 @@ type GithubPullRequestAdapter struct {
 }
 
 func (ghpra *GithubPullRequestAdapter) CreatePullRequest(currentBranch, targetBranch, title, content string) error {
-	return nil
+	_, err := createPullRequest(ghpra.repoUser, ghpra.repoId, ghpra.pat, title, currentBranch, targetBranch, content)
+	return err
 }
 
 func (ghpra *GithubPullRequestAdapter) UpdatePullRequest(title, content string) error { return nil }

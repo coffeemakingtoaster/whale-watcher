@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/fetcher"
 )
 
 func getContext(args []string) (*RunContext, error) {
@@ -33,12 +34,12 @@ func getContext(args []string) (*RunContext, error) {
 }
 
 func (rc *RunContext) parseVerify(args []string) error {
-	if len(args) < 3 {
-		return errors.New("Not enough arguments for validate. Needs <ruleset location> <Dockerfile path> <OCI tarball path>.")
+	if len(args) < 1 {
+		return errors.New("Not enough arguments for validate. Needs <ruleset location> (other values are set via config)")
 	}
+	// Load from config
+	rc.DockerFile, rc.OCITarballPath = fetcher.FetchContainerFiles()
 	rc.RuleSetEntrypoint = args[0]
-	rc.DockerFile = args[1]
-	rc.OCITarballPath = args[2]
 	return nil
 }
 

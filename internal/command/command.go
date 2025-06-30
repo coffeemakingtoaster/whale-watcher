@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/display"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
 )
@@ -46,5 +47,8 @@ func Run(args []string) {
 	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {
 		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Str("fix", violation.Fix).Send()
+	}
+	// should a pr be created?
+	if config.ShouldInteractWithVSC() {
 	}
 }
