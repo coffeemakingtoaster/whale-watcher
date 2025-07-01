@@ -222,7 +222,10 @@ func (od *OCIDownloader) GetSpecificManifest(digest string) (container.OCIImageM
 
 func (od *OCIDownloader) openTar() *tar.Writer {
 	// TODO: Error handling
-	file, _ := os.Create(od.destination)
+	file, err := os.Create(od.destination)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not create tar file")
+	}
 	writer := tar.NewWriter(file)
 	return writer
 }

@@ -19,6 +19,7 @@ func GetAdapterForRepository(repository string) (PullRequestAdapter, error) {
 func CreatePRForFixes(violations validator.Violations, updatedDockerfilePath string) error {
 	// No fixes -> No Pr
 	if len(violations.Violations) == 0 {
+		log.Debug().Msg("No violations in current run, skipping PR creation")
 		return nil
 	}
 	cfg := config.GetConfig()

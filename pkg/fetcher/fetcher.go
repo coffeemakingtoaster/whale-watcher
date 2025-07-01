@@ -50,12 +50,13 @@ func loadImageFromRegistry(image string) (string, error) {
 			return "", err
 		}
 	}
-	err = ghcr.DownloadOciToPath(image, filepath.Join(tmpDirPath, "image.tar"))
+	destination := filepath.Join(tmpDirPath, "image.tar")
+	err = ghcr.DownloadOciToPath(image, destination)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return "", err
 	}
-	return tmpDirPath, err
+	return destination, err
 }
 
 func loadDockerfileFromRepository(repositoryURL, branch, dockerfilePath string) (string, error) {
