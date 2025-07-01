@@ -16,7 +16,7 @@ func ValidateRuleset(ruleset rules.RuleSet, imageName, dockerFilePath string) Vi
 		violation := Violation{
 			RuleId: rule.Id,
 		}
-		if fix.Fix != "" {
+		if fix.Fix != "" || rule.FixInstruction != "" {
 			violations.FixableCount++
 			violation.Fix = fix.Fix
 			err := rule.PerformFix()

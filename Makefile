@@ -29,6 +29,7 @@ help:
 	@echo "  cmd_lib       - Build the command_util library."
 	@echo "  fs_lib        - Build the fs_util library."
 	@echo "  os_lib        - Build the os_util library."
+	@echo "  fix_lib        - Build the os_util library."
 	@echo "  exec          - Build the whale-watcher executable."
 	@echo "  test          - Run tests."
 	@echo "  oci-export    - Export OCI image."
@@ -71,6 +72,13 @@ os_lib: $(PKG_DIR)/os_util_build/__init__.py
 $(PKG_DIR)/os_util_build/__init__.py: $(PKG_DIR)/os_util/os_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building os_util library $(DELIM)$(RESET)"
 	gopy build -output=$(PKG_DIR)/os_util_build -vm="python3" -rename=true $(PKG_DIR)/os_util
+
+.PHONY: fix_lib
+os_lib: $(PKG_DIR)/fix_util_build/__init__.py
+
+$(PKG_DIR)/fix_util_build/__init__.py: $(PKG_DIR)/fix_util/fix_util.go
+	@echo "\n$(PURPLE)$(DELIM) Building fix_util library $(DELIM)$(RESET)"
+	gopy build -output=$(PKG_DIR)/fix_util_build -vm="python3" -rename=true $(PKG_DIR)/fix_util
 
 .PHONY: exec
 exec: $(BUILD_DIR)/whale-watcher

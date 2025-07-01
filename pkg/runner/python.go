@@ -22,6 +22,38 @@ type TemplateData struct {
 	Image          string
 }
 
+func (r *PythonRunner) RunFix(command string) {
+	log.Info().Msg("Running fix")
+	w := GetReferencingWorkingDirectoryInstance()
+	defer w.Free()
+	importTemplate := "from command_util_build import commandutil; command_util = commandutil.setup_from_path('{{ .DockerfilePath }}');from fix_util_build import fixutil; fix_util = fixutil.setup_from_path('{{ .DockerfilePath }}');"
+
+	contextData := TemplateData{
+		DockerfilePath: "./Dockerfile",
+		Image:          "./out.tar",
+	}
+
+	tpl, _ := template.New("").Parse(importTemplate)
+
+	var buffer bytes.Buffer
+	tpl.Execute(&buffer, contextData)
+
+	command = buffer.String() + "\n" + command
+	cmd := exec.Command(r.exec, "-c", command)
+	cmd.Dir = r.workingDirectory.tmpDirPath
+
+	var errorOutput bytes.Buffer
+	var stdOutput bytes.Buffer
+
+	cmd.Stdout = &stdOutput
+	cmd.Stderr = &errorOutput
+
+	err := cmd.Run()
+	if err != nil {
+		log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
+	}
+}
+
 func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 
 	defer r.workingDirectory.Free()

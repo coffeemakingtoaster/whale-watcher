@@ -81,6 +81,7 @@ func (r *Rule) PerformFix() error {
 	if r.FixInstruction == "" {
 		return errors.New("No fixinstruction present")
 	}
+	r.Runner.RunFix(r.FixInstruction)
 	return nil
 }
 

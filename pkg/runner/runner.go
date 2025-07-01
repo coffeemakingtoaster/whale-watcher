@@ -8,6 +8,7 @@ import (
 
 type Runner interface {
 	Run(TemplateData, string) error
+	RunFix(command string)
 	ToString() string
 }
 

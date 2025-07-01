@@ -13,8 +13,10 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/rs/zerolog/log"
+	localconfig "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 )
 
 func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath string) (string, error) {
@@ -22,17 +24,26 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 	fs := memfs.New()
 	storer := memory.NewStorage()
 
+	cfg := localconfig.GetConfig()
+
+	auth := http.BasicAuth{
+		Username: cfg.Github.Username,
+		Password: cfg.Github.PAT,
+	}
+
 	repository, err := git.Clone(
 		storer,
 		fs,
-		&git.CloneOptions{URL: repoURL, NoCheckout: true},
+		&git.CloneOptions{URL: repoURL, Auth: &auth},
 	)
 
 	if err != nil {
+		log.Error().Msg("Could not checkout Repository")
 		return "", err
 	}
 	w, err := repository.Worktree()
 	if err != nil {
+		log.Error().Msg("Could not get repository worktree")
 		return "", err
 	}
 	dockerfileDirectory := filepath.Dir(repoFilePath)
@@ -41,22 +52,26 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 
 	err = w.Checkout(&git.CheckoutOptions{SparseCheckoutDirectories: []string{dockerfileDirectory}, Branch: plumbing.ReferenceName(branchReference)})
 	if err != nil {
+		log.Error().Msg("Could not checkout file")
 		return "", err
 	}
 
 	f, err := fs.Open(repoFilePath)
 	if err != nil {
+		log.Error().Msg("Could not open in-repository file")
 		return "", err
 	}
 
 	data, err := io.ReadAll(f)
 	if err != nil {
+		log.Error().Msg("Could not read in-repository file data")
 		return "", err
 	}
 
 	hostfileData, err := getFileData(hostFilePath)
 
 	if err != nil {
+		log.Error().Msg("Could not read host file data")
 		return "", err
 	}
 
@@ -76,11 +91,13 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 		Branch: newRef,
 	})
 	if err != nil {
+		log.Error().Msg("Could not create branch")
 		return "", fmt.Errorf("creating new branch: %w", err)
 	}
 
 	dockerFile, err := fs.OpenFile(repoFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
+		log.Error().Msg("Could not open in-repository file for update")
 		return "", err
 	}
 
@@ -91,17 +108,19 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 	// Stage and commit the change
 	_, err = w.Add(repoFilePath)
 	if err != nil {
+		log.Error().Msg("Could not use git add on updated file")
 		return "", fmt.Errorf("adding file to git: %w", err)
 	}
 
 	_, err = w.Commit("Update file from host system", &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  "Auto Commit Bot",
+			Name:  cfg.Github.Username,
 			Email: "bot@example.com",
 			When:  time.Now(),
 		},
 	})
 	if err != nil {
+		log.Error().Msg("Could not git comming the updated file")
 		return "", fmt.Errorf("committing changes: %w", err)
 	}
 
@@ -110,12 +129,14 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 		RefSpecs: []config.RefSpec{
 			config.RefSpec(newRef + ":" + newRef),
 		},
+		Auth: &auth,
 	})
 	if err != nil {
+		log.Error().Msg("Could not git push the fix commit")
 		return "", fmt.Errorf("pushing branch: %w", err)
 	}
 
-	fmt.Printf("Pushed updated file to branch '%s'\n", newBranch)
+	log.Info().Msgf("Pushed updated file to branch '%s'", newBranch)
 	return newBranch, nil
 }
 

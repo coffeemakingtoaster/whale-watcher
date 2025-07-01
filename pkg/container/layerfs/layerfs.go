@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/armon/go-radix"
+	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/tarutils"
 )
 
@@ -105,7 +106,15 @@ func getAllFiles(tarpath, digest string, isGzip bool) ([]string, error) {
 			return nil, err
 		}
 	}
-	return tarutils.GetAvailabeInTar(data)
+	files, err := tarutils.GetAvailabeInTar(data)
+	if err != nil {
+		return nil, err
+	}
+	for i := range files {
+		// extracted files do not have the / at the start so we fix that
+		files[i] = "/" + files[i]
+	}
+	return files, nil
 }
 
 func (lfs *LayerFS) ToString() string {
@@ -113,6 +122,7 @@ func (lfs *LayerFS) ToString() string {
 }
 
 func NewLayerFS(tarPath, digest string, isGzip bool) LayerFS {
+	log.Debug().Msg(digest)
 	availableFiles, _ := getAllFiles(tarPath, digest, isGzip)
 	m := make(map[string]any)
 	for _, v := range availableFiles {

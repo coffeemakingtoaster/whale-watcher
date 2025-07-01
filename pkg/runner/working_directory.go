@@ -19,6 +19,9 @@ var osutil embed.FS
 //go:embed command_util_build/*
 var cmdutil embed.FS
 
+//go:embed fix_util_build/*
+var fixutil embed.FS
+
 var lock = &sync.Mutex{}
 
 type RunnerWorkingDirectory struct {
@@ -98,6 +101,7 @@ func newRunnerWorkingDirectory() (*RunnerWorkingDirectory, error) {
 	err = unpackFsToDir(osutil, dirPath)
 	err = unpackFsToDir(fsutil, dirPath)
 	err = unpackFsToDir(cmdutil, dirPath)
+	err = unpackFsToDir(fixutil, dirPath)
 
 	if err != nil {
 		return nil, err
