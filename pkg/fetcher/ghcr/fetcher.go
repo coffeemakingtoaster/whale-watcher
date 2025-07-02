@@ -58,11 +58,9 @@ func DownloadOciToPath(image, destination string) error {
 		return errors.New("Could not parse provided image, see logs for details ")
 	}
 	downloader.RefreshToken()
-	/*
-		if downloader.token == "" {
-			return errors.New("Could not fetch auth token for repository, see logs for details")
-		}
-	*/
+	if downloader.token == "" {
+		return errors.New("Could not fetch auth token for repository, see logs for details")
+	}
 	manifest, err := downloader.GetManifest()
 	if err != nil {
 		return err
@@ -142,41 +140,36 @@ func (od *OCIDownloader) RefreshToken() {
 	log.Debug().Msg("OCI Downloader auth token refreshed")
 }
 
-func (od *OCIDownloader) getRequest(url string) (*http.Request, error) {
+func (od *OCIDownloader) doRequest(url, acceptHeader string) ([]byte, error) {
 	if od.token == "" {
 		od.RefreshToken()
 		if od.token == "" {
 			return nil, errors.New("Could not refresh token, check logs for details")
 		}
-		return od.getRequest(url)
+		return od.doRequest(url, acceptHeader)
 	}
-	req, _ := http.NewRequest("GET", url, nil)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return []byte{}, err
+	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", od.token))
-	return req, nil
+	req.Header.Add("Accept", acceptHeader)
+	res, err := client.Do(req)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer res.Body.Close()
+	return io.ReadAll(res.Body)
 }
 
 func (od *OCIDownloader) GetManifest() (container.OCIImageIndex, error) {
-	client := &http.Client{}
-	req, err := od.getRequest(fmt.Sprintf("%s/%s/manifests/%s", ghcrApiBase, od.image, od.tag))
-	req.Header.Add("Accept", "application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json")
+	data, err := od.doRequest(fmt.Sprintf("%s/%s/manifests/%s", ghcrApiBase, od.image, od.tag), "application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json")
 	if err != nil {
 		log.Error().Err(err).Msg("Could not fetch manifest for image")
 		return container.OCIImageIndex{}, err
 	}
 
-	res, err := client.Do(req)
-	if err != nil {
-		log.Error().Err(err).Msg("Could not fetch manifest for image")
-		return container.OCIImageIndex{}, err
-	}
-
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Error().Err(err).Msg("Could not fetch auth token for container repository")
-		return container.OCIImageIndex{}, err
-	}
 	var parsed container.OCIImageIndex
 	err = json.Unmarshal(data, &parsed)
 	if err != nil {
@@ -188,27 +181,12 @@ func (od *OCIDownloader) GetManifest() (container.OCIImageIndex, error) {
 }
 
 func (od *OCIDownloader) GetSpecificManifest(digest string) (container.OCIImageManifest, error) {
-	client := &http.Client{}
-	req, err := od.getRequest(fmt.Sprintf("%s/%s/manifests/%s", ghcrApiBase, od.image, digest))
-	req.Header.Add("Accept", "application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json")
+	data, err := od.doRequest(fmt.Sprintf("%s/%s/manifests/%s", ghcrApiBase, od.image, digest), "application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json")
 	if err != nil {
 		log.Error().Err(err).Msg("Could not fetch manifest for image")
 		return container.OCIImageManifest{}, err
 	}
 
-	res, err := client.Do(req)
-	if err != nil {
-		log.Error().Err(err).Msg("Could not fetch manifest for image")
-		return container.OCIImageManifest{}, err
-	}
-
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Error().Err(err).Msg("Could not fetch auth token for container repository")
-		return container.OCIImageManifest{}, err
-	}
 	var parsed container.OCIImageManifest
 	err = json.Unmarshal(data, &parsed)
 	if err != nil {
@@ -231,23 +209,7 @@ func (od *OCIDownloader) openTar() *tar.Writer {
 }
 
 func (od *OCIDownloader) getLayerData(digest string) ([]byte, error) {
-	client := &http.Client{}
-	req, err := od.getRequest(fmt.Sprintf("%s/%s/blobs/%s", ghcrApiBase, od.image, digest))
-
-	if err != nil {
-		return []byte{}, err
-	}
-
-	req.Header.Add("Accept", "")
-	res, err := client.Do(req)
-
-	if err != nil {
-		return []byte{}, err
-	}
-
-	defer res.Body.Close()
-
-	return io.ReadAll(res.Body)
+	return od.doRequest(fmt.Sprintf("%s/%s/blobs/%s", ghcrApiBase, od.image, digest), "")
 }
 
 func writeToTar(writer *tar.Writer, header *tar.Header, data []byte) error {
@@ -280,23 +242,7 @@ func (od *OCIDownloader) addLayerToTar(writer *tar.Writer, metadata container.La
 }
 
 func (od *OCIDownloader) addConfigToTar(writer *tar.Writer, digest string) error {
-	client := &http.Client{}
-	req, err := od.getRequest(fmt.Sprintf("%s/%s/blobs/%s", ghcrApiBase, od.image, digest))
-
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Accept", "")
-	res, err := client.Do(req)
-
-	if err != nil {
-		return err
-	}
-
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
+	data, err := od.doRequest(fmt.Sprintf("%s/%s/blobs/%s", ghcrApiBase, od.image, digest), "")
 
 	if err != nil {
 		return err
