@@ -6,13 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/coffeemakingtoaster/oci-pull-go/pkg/registry"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/fetcher/ghcr"
 )
 
 func FetchContainerFiles() (string, string) {
@@ -51,7 +51,7 @@ func loadImageFromRegistry(image string) (string, error) {
 		}
 	}
 	destination := filepath.Join(tmpDirPath, "image.tar")
-	err = ghcr.DownloadOciToPath(image, destination)
+	err = registry.DownloadOciToPath("https://ghcr.io/v2", image, destination)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return "", err
