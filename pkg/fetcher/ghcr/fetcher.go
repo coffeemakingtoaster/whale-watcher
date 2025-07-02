@@ -57,10 +57,6 @@ func DownloadOciToPath(image, destination string) error {
 	if downloader == nil {
 		return errors.New("Could not parse provided image, see logs for details ")
 	}
-	downloader.RefreshToken()
-	if downloader.token == "" {
-		return errors.New("Could not fetch auth token for repository, see logs for details")
-	}
 	manifest, err := downloader.GetManifest()
 	if err != nil {
 		return err
