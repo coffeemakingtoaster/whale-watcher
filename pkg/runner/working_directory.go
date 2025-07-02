@@ -5,21 +5,22 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
 )
 
-//go:embed fs_util_build/*
+//go:embed _fs_util_build/*
 var fsutil embed.FS
 
-//go:embed os_util_build/*
+//go:embed _os_util_build/*
 var osutil embed.FS
 
-//go:embed command_util_build/*
+//go:embed _command_util_build/*
 var cmdutil embed.FS
 
-//go:embed fix_util_build/*
+//go:embed _fix_util_build/*
 var fixutil embed.FS
 
 var lock = &sync.Mutex{}
@@ -140,6 +141,9 @@ func unpackFsToDir(toUnpack embed.FS, dirPath string) error {
 			if err != nil {
 				return err
 			}
+			// Directories start with _<target>_util_build
+			// This ensures that go utilities ignore the build directories but adds a layer of confusion here
+			path = strings.TrimPrefix(path, "_")
 			tempFilePath := filepath.Join(dirPath, path)
 			log.Debug().Str("filepath", tempFilePath).Send()
 			err = os.MkdirAll(filepath.Dir(tempFilePath), os.ModePerm)

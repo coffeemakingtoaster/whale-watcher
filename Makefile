@@ -52,33 +52,33 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: cmd_lib
-cmd_lib: $(PKG_DIR)/command_util_build/__init__.py
+cmd_lib: $(PKG_DIR)/_command_util_build/__init__.py
 
 # Targets for libraries with the build directory as a prerequisite
-$(PKG_DIR)/command_util_build/__init__.py: $(PKG_DIR)/command_util/command_util.go
+$(PKG_DIR)/_command_util_build/__init__.py: $(PKG_DIR)/command_util/command_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building command_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/command_util_build -vm="python3" -rename=true $(PKG_DIR)/command_util/
+	gopy build -output=$(PKG_DIR)/_command_util_build -vm="python3" -rename=true $(PKG_DIR)/command_util/
 
 .PHONY: fs_lib
-fs_lib: $(PKG_DIR)/fs_util_build/__init__.py
+fs_lib: $(PKG_DIR)/_fs_util_build/__init__.py
 
-$(PKG_DIR)/fs_util_build/__init__.py: $(PKG_DIR)/fs_util/fs_util.go
+$(PKG_DIR)/_fs_util_build/__init__.py: $(PKG_DIR)/fs_util/fs_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building fs_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/fs_util_build -vm="python3" -rename=true $(PKG_DIR)/fs_util
+	gopy build -output=$(PKG_DIR)/_fs_util_build -vm="python3" -rename=true $(PKG_DIR)/fs_util
 
 .PHONY: os_lib
-os_lib: $(PKG_DIR)/os_util_build/__init__.py
+os_lib: $(PKG_DIR)/_os_util_build/__init__.py
 
-$(PKG_DIR)/os_util_build/__init__.py: $(PKG_DIR)/os_util/os_util.go
+$(PKG_DIR)/_os_util_build/__init__.py: $(PKG_DIR)/os_util/os_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building os_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/os_util_build -vm="python3" -rename=true $(PKG_DIR)/os_util
+	gopy build -output=$(PKG_DIR)/_os_util_build -vm="python3" -rename=true $(PKG_DIR)/os_util
 
 .PHONY: fix_lib
-os_lib: $(PKG_DIR)/fix_util_build/__init__.py
+os_lib: $(PKG_DIR)/_fix_util_build/__init__.py
 
-$(PKG_DIR)/fix_util_build/__init__.py: $(PKG_DIR)/fix_util/fix_util.go
+$(PKG_DIR)/_fix_util_build/__init__.py: $(PKG_DIR)/fix_util/fix_util.go
 	@echo "\n$(PURPLE)$(DELIM) Building fix_util library $(DELIM)$(RESET)"
-	gopy build -output=$(PKG_DIR)/fix_util_build -vm="python3" -rename=true $(PKG_DIR)/fix_util
+	gopy build -output=$(PKG_DIR)/_fix_util_build -vm="python3" -rename=true $(PKG_DIR)/fix_util
 
 .PHONY: exec
 exec: $(BUILD_DIR)/whale-watcher
