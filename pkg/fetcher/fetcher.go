@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/coffeemakingtoaster/oci-pull-go/pkg/registry"
+	"github.com/coffeemakingtoaster/oci-pull-go/pkg/pull"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -51,7 +51,7 @@ func loadImageFromRegistry(image string) (string, error) {
 		}
 	}
 	destination := filepath.Join(tmpDirPath, "image.tar")
-	err = registry.DownloadOciToPath("https://ghcr.io/v2", image, destination)
+	err = pull.PullToPath(image, destination)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return "", err

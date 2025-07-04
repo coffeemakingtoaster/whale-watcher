@@ -6,7 +6,7 @@ require (
 	github.com/armon/go-radix v1.0.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250614131857-dc1ca04c4f45
-	github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250702183646-bc5ba03b31da
+	github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250704120924-a946bad52b23
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-python/gopy v0.4.10

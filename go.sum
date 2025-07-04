@@ -17,8 +17,8 @@ github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ
 github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250614131857-dc1ca04c4f45 h1:8jQ6XYOUyFby+cja62naH15YPn6N1zf8OBhxuzMpq/U=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250614131857-dc1ca04c4f45/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
-github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250702183646-bc5ba03b31da h1:zUD5uZ5FXYAHgP4Ba3C1ojeuAHKBgaWTxtxUHxKy828=
-github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250702183646-bc5ba03b31da/go.mod h1:+YsKwbuKr0/A2gmWCRJAsFWXESwKlxCqfvYvTtPaIiE=
+github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250704120924-a946bad52b23 h1:NdDyDUw4ZVK6KdJeeBdPmQWH0JLLTFLpInaGIvtzW58=
+github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250704120924-a946bad52b23/go.mod h1:+AiI86uKo+Hqe4h8Exs9LkhYA8LD7FuwRUblqaffE0k=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
