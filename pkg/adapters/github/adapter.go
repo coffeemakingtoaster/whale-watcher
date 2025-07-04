@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 )
 
@@ -16,9 +17,22 @@ type GithubPullRequestAdapter struct {
 	whaleWatcherUser string
 }
 
+func (ghpra *GithubPullRequestAdapter) IsReady() bool {
+	existingPrId, err := checkForExistingPr(ghpra.repoUser, ghpra.repoId, ghpra.pat)
+	log.Debug().Err(err).Int("prid", int(existingPrId)).Send()
+	// No existing PR and no error -> go ahead
+	return existingPrId == 0 && err == nil
+}
+
 func (ghpra *GithubPullRequestAdapter) CreatePullRequest(currentBranch, targetBranch, title, content string) error {
-	_, err := createPullRequest(ghpra.repoUser, ghpra.repoId, ghpra.pat, title, currentBranch, targetBranch, content)
-	return err
+	existingPrId, err := checkForExistingPr(ghpra.repoUser, ghpra.repoId, ghpra.pat)
+	if existingPrId != 0 && err == nil {
+		_, err := updatePullRequest(existingPrId, ghpra.repoUser, ghpra.repoId, ghpra.pat, title, content)
+		return err
+	} else {
+		_, err := createPullRequest(ghpra.repoUser, ghpra.repoId, ghpra.pat, title, currentBranch, targetBranch, content)
+		return err
+	}
 }
 
 func (ghpra *GithubPullRequestAdapter) UpdatePullRequest(title, content string) error { return nil }
