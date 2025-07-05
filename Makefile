@@ -112,27 +112,36 @@ test:
 	mkdir -p out
 	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
 	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip -f ./_example/example.Dockerfile ./_example/
+	docker buildx prune -a -f
 
 .PHONY: oci-export
 oci-export: ./out/out.tar
 
+
+
 .PHONY: remote-verify
+
+remote-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
+
 remote-verify: all oci-export
 	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying remote ruleset $(DELIM)$(RESET)"
-	WHALE_WATCHER_CONFIG_PATH=./_example/verify.config.yaml ./build/whale-watcher validate https://github.com/coffeemakingtoaster/whale-watcher-target.git $$(pwd)/Dockerfile "./out/out.tar"
+	 ./build/whale-watcher validate https://github.com/coffeemakingtoaster/whale-watcher-target.git $$(pwd)/Dockerfile "./out/out.tar"
 
 .PHONY: local-verify
+
+local-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
+
 local-verify: all oci-export
  	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying local ruleset $(DELIM)$(RESET)"
-	WHALE_WATCHER_CONFIG_PATH=./_example/verify.config.yaml ./build/whale-watcher validate $$(pwd)/_example/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
+	./build/whale-watcher validate $$(pwd)/testdata/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
 
 .PHONY: verify
 verify: local-verify remote-verify test
 
 .PHONY: docker-verify
 docker-verify: docker
-	docker run --rm -v $$(pwd)/_example/verify_ruleset.yaml:/app/verify_ruleset.yaml -v $$(pwd)/Dockerfile:/app/Dockerfile -it whale-watcher:latest "/app/verify_ruleset.yaml" "/app/Dockerfile" "whale-watcher:latest"
+	docker run --rm -v $$(pwd)/testdata/verify_ruleset.yaml:/app/verify_ruleset.yaml -v $$(pwd)/Dockerfile:/app/Dockerfile -it whale-watcher:latest "/app/verify_ruleset.yaml" "/app/Dockerfile" "whale-watcher:latest"

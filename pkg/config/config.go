@@ -19,9 +19,10 @@ var lock = &sync.Mutex{}
 var config *Config
 
 func init() {
-	configPathEnv := os.Getenv(fmt.Sprintf("%sCONFiG_PATH", envPrefix))
+	configPathEnv := os.Getenv(fmt.Sprintf("%sCONFIG_PATH", envPrefix))
 	if len(configPathEnv) != 0 {
-		configPath = configPathEnv
+		log.Warn().Msgf("Config path specified in env! Updating to %s", configPathEnv)
+		SetConfigPath(configPathEnv)
 	}
 }
 
