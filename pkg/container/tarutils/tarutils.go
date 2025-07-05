@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -13,33 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ValueNotFound struct {
-	digest  string
-	tarPath string
-}
-
-func (e ValueNotFound) Error() string {
-	return fmt.Sprintf("Digest %s not found in tarfile %s", e.digest, e.tarPath)
-}
-
-func ParseJsonBytesIntoInterface[T any](data []byte) (T, error) {
-	var parsed T
-	err := json.Unmarshal(data, &parsed)
-	if err != nil {
-		return *new(T), err
-	}
-	return parsed, nil
-}
-
-func ParseJsonReaderIntoInterface[T any](reader *tar.Reader) (T, error) {
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		return *new(T), err
-	}
-	return ParseJsonBytesIntoInterface[T](data)
-}
-
-func GetAvailabeInTar(data []byte) ([]string, error) {
+func GetAvailabeInTarData(data []byte) ([]string, error) {
 	reader := tar.NewReader(bytes.NewReader(data))
 	available := []string{}
 	for true {
@@ -74,25 +47,12 @@ func getBlobByPattern(reader *tar.Reader, searchValue string, headerNameTransfor
 	return data, nil
 }
 
-func GetBlobFromFileByName(tarpath, searchValue string) ([]byte, error) {
-	f, err := os.Open(tarpath)
+func GetBlobFromPathByDigest(path string, digest string) ([]byte, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return []byte{}, err
 	}
-	defer f.Close()
-	reader := tar.NewReader(f)
-
-	return getBlobByPattern(reader, searchValue, func(s string) string { return s })
-}
-
-func GetBlobFromFileByDigest(tarpath, digest string) ([]byte, error) {
-	f, err := os.Open(tarpath)
-	if err != nil {
-		return []byte{}, err
-	}
-	defer f.Close()
-	reader := tar.NewReader(f)
-	return getBlobByPattern(reader, digest, nameToBlobDigest)
+	return getBlobByPattern(tar.NewReader(f), digest, nameToBlobDigest)
 }
 
 func GetBlobFromDataByDigest(data []byte, digest string) ([]byte, error) {
@@ -123,4 +83,21 @@ func UngzipBlob(raw []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	return data, nil
+}
+
+func ParseJsonBytesIntoInterface[T any](data []byte) (T, error) {
+	var parsed T
+	err := json.Unmarshal(data, &parsed)
+	if err != nil {
+		return *new(T), err
+	}
+	return parsed, nil
+}
+
+func ParseJsonReaderIntoInterface[T any](reader *tar.Reader) (T, error) {
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return *new(T), err
+	}
+	return ParseJsonBytesIntoInterface[T](data)
 }

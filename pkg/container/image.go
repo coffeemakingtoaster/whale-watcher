@@ -17,7 +17,9 @@ type ContainerImage struct {
 }
 
 func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
-	raw, err := tarutils.GetBlobFromFileByName(ociPath, "index.json")
+	loadedTar := tarutils.LoadTar(ociPath)
+	defer loadedTar.Unload()
+	raw, err := loadedTar.GetBlobFromFileByName("index.json")
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image index")
 		return nil, err
@@ -28,7 +30,7 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 		return nil, err
 	}
 
-	raw, err = tarutils.GetBlobFromFileByDigest(ociPath, imageIndex.Manifests[0].Digest)
+	raw, err = loadedTar.GetBlobFromFileByDigest(imageIndex.Manifests[0].Digest)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image manifest")
 		return nil, err
@@ -39,7 +41,7 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 		return nil, err
 	}
 
-	raw, err = tarutils.GetBlobFromFileByDigest(ociPath, manifest.Config.Digest)
+	raw, err = loadedTar.GetBlobFromFileByDigest(manifest.Config.Digest)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image manifest")
 		return nil, err
@@ -65,16 +67,16 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 			nonEmtpyHistoryEntries++
 		}
 	}
-	containerImage.buildLayers(commands)
+	containerImage.buildLayers(loadedTar, commands)
 	if len(containerImage.Layers) != nonEmtpyHistoryEntries {
 		log.Warn().Int("layercount", len(containerImage.Layers)).Int("nonEmptyhistory", nonEmtpyHistoryEntries).Msg("The amount of detected layers and non empty history entries differ! This could throw off layer <-> Dockerfile Instruction bridge.")
 	}
 	return &containerImage, nil
 }
 
-func (ci *ContainerImage) buildLayers(commands []string) error {
+func (ci *ContainerImage) buildLayers(loadedTar *tarutils.LoadedTar, commands []string) error {
 	for index, digest := range ci.Manifest.Layers {
-		ci.Layers[index] = NewLayer(ci.OciPath, digest.Digest, commands[index], strings.HasSuffix(digest.MediaType, "+gzip"))
+		ci.Layers[index] = NewLayer(loadedTar, digest.Digest, commands[index], strings.HasSuffix(digest.MediaType, "+gzip"))
 	}
 	return nil
 }

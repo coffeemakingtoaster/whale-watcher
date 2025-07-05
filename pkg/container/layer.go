@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/layerfs"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/tarutils"
 )
 
 type Layer struct {
@@ -17,11 +18,11 @@ func (l *Layer) ToString() string {
 	return fmt.Sprintf("[%s](%s) %s", l.Digest, l.tarPath, l.FileSystem.ToString())
 }
 
-func NewLayer(ociPath, digest, command string, isGzip bool) *Layer {
+func NewLayer(loadedTar *tarutils.LoadedTar, digest, command string, isGzip bool) *Layer {
 	return &Layer{
 		Command:    command,
 		Digest:     digest,
-		tarPath:    ociPath,
-		FileSystem: layerfs.NewLayerFS(ociPath, digest, isGzip),
+		tarPath:    loadedTar.TarPath,
+		FileSystem: layerfs.NewLayerFS(loadedTar, digest, isGzip),
 	}
 }
