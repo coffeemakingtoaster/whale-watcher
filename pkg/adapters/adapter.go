@@ -48,7 +48,6 @@ func CreatePRForFixes(violations validator.Violations, updatedDockerfilePath str
 		return nil
 	}
 
-	// TODO: This should likely actually detect the target branch
-	err = adapter.CreatePullRequest(newBranch, "main", "fixes", "see violation text")
+	err = adapter.CreatePullRequest(newBranch, cfg.Target.Branch, "Autofixes", violations.BuildDescriptionMarkdown())
 	return err
 }
