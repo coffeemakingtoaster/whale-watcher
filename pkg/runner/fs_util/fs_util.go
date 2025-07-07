@@ -1,6 +1,9 @@
 package fsutil
 
 import (
+	"io"
+	"strings"
+
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
 )
 
@@ -32,7 +35,34 @@ func (fu *FsUtils) LsLayer(dirPath string, layerIndex int) []string {
 	return fu.OCI.Layers[layerIndex].FileSystem.Ls(dirPath)
 }
 
-func (FsUtils) Name() string {
+func (fu *FsUtils) OpenFileAtLayer(filePath string, layerIndex int) []string {
+	f, err := fu.OCI.Layers[layerIndex].FileSystem.Open(filePath)
+	if err != nil {
+		panic(err)
+	}
+	data, err := io.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+	return strings.Split(string(data), "\n")
+}
+
+func (fu *FsUtils) lookForFile(path string) int {
+	index := fu.GetLayerCount() - 1
+	for index >= 1 {
+		ok, deletion := fu.OCI.Layers[index].FileSystem.HasFile(path)
+		if ok {
+			if deletion {
+				return -1
+			}
+			return index
+		}
+		index--
+	}
+	return -1
+}
+
+func (ou FsUtils) Name() string {
 	return "fs_util"
 }
 

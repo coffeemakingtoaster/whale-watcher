@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/armon/go-radix"
@@ -64,6 +66,9 @@ func (fi *LayerFSFileInfo) IsDir() bool        { return false }
 func (fi *LayerFSFileInfo) Sys() any           { return nil }
 
 func (lfs LayerFS) Open(name string) (fs.File, error) {
+	if lfs.deletesFile(name) {
+		return nil, errors.New("Layer deletes file")
+	}
 	if _, ok := lfs.lookupRadix.Get(name); !ok {
 		return nil, errors.New("File not found")
 	}
@@ -77,11 +82,33 @@ func (lfs LayerFS) Open(name string) (fs.File, error) {
 			return nil, err
 		}
 	}
-	fileData, err := tarutils.GetBlobFromDataByDigest(data, name)
+	fileData, err := tarutils.GetBlobFromDataByName(data, strings.TrimPrefix(name, "/"))
 	if err != nil {
 		return nil, err
 	}
 	return &LayerFSFile{data: fileData, name: name}, nil
+}
+
+// first return is whether file has entry
+// second return is whether entry is file delete
+func (lfs *LayerFS) HasFile(filePath string) (bool, bool) {
+	if lfs.deletesFile(filePath) {
+		return true, true
+	}
+	if _, ok := lfs.lookupRadix.Get(filePath); !ok {
+		return false, false
+	}
+	return true, false
+}
+
+func (lfs *LayerFS) deletesFile(filePath string) bool {
+	filename := path.Base(filePath)
+	deletionFilePath := fmt.Sprintf("%s.wh.%s", strings.TrimSuffix(filePath, filename), filename)
+	log.Debug().Msg(deletionFilePath)
+	if _, ok := lfs.lookupRadix.Get(deletionFilePath); ok {
+		return true
+	}
+	return false
 }
 
 // Only supports absolute paths

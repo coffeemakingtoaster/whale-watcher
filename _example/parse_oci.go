@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -16,6 +17,18 @@ func main() {
 	fmt.Println(c.ToString())
 	for i, layer := range c.Layers {
 		fmt.Printf("%d - %s\n", i, layer.Command)
+
+		if ok, _ := layer.FileSystem.HasFile("/app/test.txt"); ok {
+			f, err := layer.FileSystem.Open("/app/test.txt")
+			if err != nil {
+				panic(err)
+			}
+			data, err := io.ReadAll(f)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("%s\n", string(data))
+		}
 	}
-	fmt.Println(c.Layers[0].Command)
+	fmt.Print(c.Layers[len(c.Layers)-1].FileSystem.Ls("/"))
 }
