@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/cloudflare/circl/vdaf/prio3/count"
-	"github.com/jezek/xgb/res"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 )
@@ -106,7 +104,7 @@ func GetSortedByPackages(conn *sql.DB, packages []string, versions []string) ([]
 	if err != nil {
 		return []HitInfo{}, nil
 	}
-	var counter map[string]int
+	counter := map[string]int{}
 	for _, entry := range entries {
 		if _, ok := counter[entry.Image]; !ok {
 			counter[entry.Image] = 0
@@ -127,6 +125,38 @@ func GetSortedByPackages(conn *sql.DB, packages []string, versions []string) ([]
 	return result, nil
 }
 
+func AddImagePackage(conn *sql.DB, image, pkg, version string) error {
+	tx, err := conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt := fmt.Sprintf(insertImagePackageStatement, image, pkg, version, "")
+	_, err = tx.Exec(stmt)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func AddImageDigest(conn *sql.DB, image, digest string) error {
+	tx, err := conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt := fmt.Sprintf(insertDigestStatement, image, digest)
+	_, err = tx.Exec(stmt)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
 func DoQuery(conn *sql.DB, query string) ([]BaseImagePackageEntry, error) {
 	rows, err := conn.Query(query)
 	if err != nil {
@@ -145,4 +175,25 @@ func DoQuery(conn *sql.DB, query string) ([]BaseImagePackageEntry, error) {
 		return res, err
 	}
 	return res, nil
+}
+
+func QueryImageByDigest(conn *sql.DB, digest string) ([]string, error) {
+	rows, err := conn.Query(fmt.Sprintf("SELECT image FROM image_digest_lookup WHERE digest = '%s'", digest))
+	if err != nil {
+		return []string{}, err
+	}
+	defer rows.Close()
+	var res []string
+	for rows.Next() {
+		var image string
+		if err := rows.Scan(&image); err != nil {
+			return res, err
+		}
+		res = append(res, image)
+	}
+	if err = rows.Err(); err != nil {
+		return res, err
+	}
+	return res, nil
+
 }

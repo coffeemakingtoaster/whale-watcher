@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/display"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/adapters"
+	baseimagecache "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
@@ -34,6 +35,14 @@ func Run(args []string) {
 	}
 	if runContext.Instruction == "help" {
 		fmt.Println(helpText)
+		return
+	}
+	if runContext.Instruction == "bic" {
+		cfg := config.GetConfig()
+		baseImageCache := baseimagecache.NewBaseImageCache(cfg.BaseImageCache.CacheLocation)
+		for _, img := range cfg.BaseImageCache.BaseImages {
+			baseImageCache.IngestImage(img)
+		}
 		return
 	}
 	ruleSet, err := rules.LoadRuleset(runContext.RuleSetEntrypoint)

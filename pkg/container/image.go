@@ -9,11 +9,12 @@ import (
 )
 
 type ContainerImage struct {
-	Index    OCIImageIndex
-	Metadata ImageMetadata
-	Manifest OCIImageManifest
-	Layers   []*Layer
-	OciPath  string
+	Index          OCIImageIndex
+	Metadata       ImageMetadata
+	Manifest       OCIImageManifest
+	Layers         []*Layer
+	OciPath        string
+	KnownBaseImage string
 }
 
 func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
@@ -71,6 +72,18 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 	if len(containerImage.Layers) != nonEmtpyHistoryEntries {
 		log.Warn().Int("layercount", len(containerImage.Layers)).Int("nonEmptyhistory", nonEmtpyHistoryEntries).Msg("The amount of detected layers and non empty history entries differ! This could throw off layer <-> Dockerfile Instruction bridge.")
 	}
+	/*
+		cfg := config.GetConfig()
+			if len(cfg.BaseImageCache.CacheLocation) > 0 {
+				baseImageCache := baseimagecache.NewBaseImageCache(cfg.BaseImageCache.CacheLocation)
+				baseImage, err := baseImageCache.GetImageByDigest(containerImage.Layers[0].Digest)
+				if err != nil {
+					log.Warn().Err(err).Msg("Error finding known base image")
+				} else {
+					containerImage.KnownBaseImage = baseImage
+				}
+			}
+	*/
 	return &containerImage, nil
 }
 

@@ -19,6 +19,7 @@ func getContext(args []string) (*RunContext, error) {
 		if err != nil {
 			return nil, err
 		}
+	case "bic":
 	case "help":
 	case "docs":
 		err := runContext.parseDocs(args[1:])

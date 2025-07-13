@@ -17,4 +17,5 @@ func main() {
 	for i, layer := range c.Layers {
 		fmt.Printf("%d - %s\n", i, layer.Command)
 	}
+	fmt.Println(c.Layers[0].Command)
 }
