@@ -9,6 +9,7 @@ require (
 	github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250713223235-f6700a597ef0
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
+	github.com/go-python/gopy v0.4.10
 	github.com/google/go-github/v60 v60.0.0
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/rs/zerolog v1.34.0

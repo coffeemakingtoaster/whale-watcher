@@ -80,7 +80,6 @@ func QueryElemByProperties(conn *sql.DB, partial *BaseImagePackageEntry) (BaseIm
 	for i := range properties {
 		query += fmt.Sprintf("%s = '%s'", properties[i], values[i])
 	}
-	log.Debug().Msg(query)
 	res, err := DoQuery(conn, query)
 	if err != nil {
 		return BaseImagePackageEntry{}, err
