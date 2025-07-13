@@ -42,9 +42,22 @@ func (gc *GithubConfig) Validate() error {
 	return nil
 }
 
+type BaseImageCacheConfig struct {
+	BaseImages    []string `yaml:"base_images" env:"BASE_IMAGES"`
+	CacheLocation string   `yaml:"cache_location" env:"CACHE_LOCATION"`
+}
+
+func (bicg *BaseImageCacheConfig) Validate() error {
+	if len(bicg.BaseImages) > 0 && len(bicg.CacheLocation) == 0 {
+		return errors.New("Cache location must be provided")
+	}
+	return nil
+}
+
 type Config struct {
-	Github GithubConfig `yaml:"github" envPrefix:"GH_"`
-	Target TargetConfig `yaml:"target" envPrefix:"TARGET_"`
+	Github         GithubConfig         `yaml:"github" envPrefix:"GH_"`
+	Target         TargetConfig         `yaml:"target" envPrefix:"TARGET_"`
+	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
 }
 
 func (c *Config) Validate() error {

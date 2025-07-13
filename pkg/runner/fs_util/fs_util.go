@@ -32,8 +32,17 @@ func (fu *FsUtils) LsLayer(dirPath string, layerIndex int) []string {
 	return fu.OCI.Layers[layerIndex].FileSystem.Ls(dirPath)
 }
 
-func (ou FsUtils) Name() string {
+func (FsUtils) Name() string {
 	return "fs_util"
+}
+
+func (fu *FsUtils) GetBaseImageIdentifier() string {
+	return ""
+}
+
+// THIS IS JANKY!
+func (fu *FsUtils) GetInstalledPackages() []string {
+	return []string{}
 }
 
 func main() {}
