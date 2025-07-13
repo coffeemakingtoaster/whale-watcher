@@ -5,13 +5,11 @@ go 1.24.3
 require (
 	github.com/armon/go-radix v1.0.0
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/cloudflare/circl v1.6.1
 	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250614131857-dc1ca04c4f45
-	github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250713160357-91c4781974c0
+	github.com/coffeemakingtoaster/oci-pull-go v0.0.0-20250713223235-f6700a597ef0
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/google/go-github/v60 v60.0.0
-	github.com/jezek/xgb v1.1.1
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/oauth2 v0.30.0
@@ -22,6 +20,7 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect

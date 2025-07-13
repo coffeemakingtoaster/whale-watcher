@@ -17,12 +17,17 @@ type BaseImageCache struct {
 }
 
 func (bic *BaseImageCache) IngestImage(image string) error {
-	log.Debug().Str("image", image).Msg("Inserting image into base image cache")
+	log.Info().Str("image", image).Msg("Inserting image into base image cache")
+	elem, err := db.QueryElemByProperties(bic.dbConn, &db.BaseImagePackageEntry{Image: image})
+	if len(elem.Package) > 0 {
+		log.Info().Str("image", image).Msg("Already present")
+		return nil
+	}
 	// Download OCI
 	pwd := runner.GetReferencingWorkingDirectoryInstance()
 	defer pwd.Free()
 	destination := pwd.GetAbsolutePath("image.tar")
-	err := pull.PullToPath(image, destination)
+	err = pull.PullToPath(image, destination)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return err
@@ -44,7 +49,6 @@ func (bic *BaseImageCache) IngestImage(image string) error {
 			}
 		}
 	}
-
 	// Insert into db
 	for k := range packages {
 		err := db.AddImagePackage(bic.dbConn, image, k, "")

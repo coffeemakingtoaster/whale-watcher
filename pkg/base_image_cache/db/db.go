@@ -76,10 +76,11 @@ func QueryElemByProperties(conn *sql.DB, partial *BaseImagePackageEntry) (BaseIm
 		properties = append(properties, "package_version")
 		values = append(values, partial.PackageVersion)
 	}
-	query := "SELECT * FROM image_package_lookup WHERE"
+	query := "SELECT * FROM image_package_lookup WHERE "
 	for i := range properties {
 		query += fmt.Sprintf("%s = '%s'", properties[i], values[i])
 	}
+	log.Debug().Msg(query)
 	res, err := DoQuery(conn, query)
 	if err != nil {
 		return BaseImagePackageEntry{}, err
