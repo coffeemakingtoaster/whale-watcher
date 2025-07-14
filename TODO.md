@@ -10,3 +10,5 @@
 - [x] add OCI tar parsing
 - [ ] OCI image parsing currently reads the file a ton of times...this should be optimized
 - [x] config system
+- [ ] base image scanning
+- [ ] execution in container

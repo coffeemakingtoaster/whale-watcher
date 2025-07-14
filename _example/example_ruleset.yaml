@@ -30,3 +30,10 @@ rules:
       depth = command_util.get_ast_depth()
       fix_util.add_run_instruction(depth - 1, "rm -rf /etc/apt/sources.list.d/*")
       fix_util.finish()
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(os_util.exec_command("whoami") != "root")
+    description: Ensure apt sources are empty
+    id: apt sources empty
+    target: os

@@ -8,7 +8,7 @@ import (
 )
 
 type FsUtils struct {
-	OCI container.ContainerImage
+	OCI *container.ContainerImage
 }
 
 // Setup function used for instantiating util struct
@@ -18,7 +18,7 @@ func Setup(ociTarpath string) FsUtils {
 		panic(err)
 	}
 	return FsUtils{
-		OCI: *image,
+		OCI: image,
 	}
 }
 

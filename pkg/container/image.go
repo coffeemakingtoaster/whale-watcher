@@ -2,7 +2,9 @@ package container
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
 
@@ -92,6 +94,23 @@ func (ci *ContainerImage) GetBaseImage() string {
 		}
 	}
 	return ""
+}
+
+// TODO: This is kinda slow as we have "overdraw" that is fixable
+func (ci *ContainerImage) ExtractToDir(basePath string) error {
+	if err := os.Mkdir(basePath, 0755); os.IsExist(err) {
+		return errors.New("Directory already exists")
+	}
+	for i := range ci.Layers {
+		log.Debug().Int("current", i).Int("total", len(ci.Layers)).Msgf("Extracting layer")
+		err := ci.Layers[i].extractToDir(basePath)
+		if err != nil {
+			// cleanup
+			os.RemoveAll(basePath)
+			return err
+		}
+	}
+	return nil
 }
 
 func (ci *ContainerImage) buildLayers(loadedTar *tarutils.LoadedTar, commands []string) error {

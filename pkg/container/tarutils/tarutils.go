@@ -36,7 +36,6 @@ func getBlobByPattern(reader *tar.Reader, searchValue string, headerNameTransfor
 				return []byte{}, ValueNotFound{digest: searchValue, tarPath: "in place"}
 			}
 		}
-		log.Debug().Msg(header.Name)
 		if headerNameTransformer(header.Name) == searchValue {
 			break
 		}

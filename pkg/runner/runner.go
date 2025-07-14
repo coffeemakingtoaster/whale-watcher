@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"errors"
 	"fmt"
 	"text/template"
 )
@@ -24,14 +23,14 @@ func NewPythonRunner(target string) (Runner, error) {
 	case "fs":
 		importTemplate = "from fs_util_build import fsutil; fs_util = fsutil.setup('{{ .Image }}')"
 	case "os":
-		importTemplate = "from os_util_build import osutil; os_util = osutil.setup()"
+		importTemplate = "from os_util_build import osutil; os_util = osutil.setup('{{ .Image }}')"
 	default:
-		return nil, errors.New(fmt.Sprintf("Unsupported target: %s! Supported targets are: command, fs, os", target))
+		return nil, fmt.Errorf("Unsupported target: %s! Supported targets are: command, fs, os", target)
 	}
 	var err error
 	runner.utilImport, err = template.New("").Parse(importTemplate)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Import template was unrenderable: %s", err.Error()))
+		return nil, fmt.Errorf("Import template was unrenderable: %s", err.Error())
 	}
 
 	return runner, nil

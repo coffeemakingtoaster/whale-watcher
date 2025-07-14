@@ -2,6 +2,9 @@ package container
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/layerfs"
@@ -48,6 +51,46 @@ func (l *Layer) GetInstalledPackagesEstimate() []string {
 		}
 	}
 	return cleanFromParamsAndFlags(packages)
+}
+
+func (l *Layer) extractToDir(dirPath string) error {
+	files := l.FileSystem.Ls("/")
+	for _, file := range files {
+		// Assume that this is a directory
+		// This is very naive and may break
+		if strings.HasSuffix(file, "/") {
+			continue
+		}
+		localPath := filepath.Join(dirPath, fmt.Sprintf(".%s", file))
+		// deletion file
+		if strings.Contains(localPath, ".wh.") {
+			filename := filepath.Base(localPath)
+			deletionpath := filepath.Join(strings.TrimSuffix(localPath, filename), strings.TrimPrefix(filename, ".wh."))
+			os.RemoveAll(deletionpath)
+			continue
+		}
+		localDir := filepath.Dir(localPath)
+		if err := os.MkdirAll(localDir, 0755); err != nil && !os.IsExist(err) {
+			return fmt.Errorf("Error occured for dir creation for file %s: %s", file, err.Error())
+		}
+		localFile, err := os.OpenFile(localPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			return fmt.Errorf("Error occured for file %s: %s", file, err.Error())
+		}
+		ociFile, err := l.FileSystem.Open(file)
+		if err != nil {
+			return fmt.Errorf("Error occured for file %s: %s", file, err.Error())
+		}
+		data, err := io.ReadAll(ociFile)
+		if err != nil {
+			return fmt.Errorf("Error occured for file %s: %s", file, err.Error())
+		}
+		_, err = localFile.Write(data)
+		if err != nil {
+			return fmt.Errorf("Error occured for file %s: %s", file, err.Error())
+		}
+	}
+	return nil
 }
 
 func cleanFromParamsAndFlags(input []string) []string {
