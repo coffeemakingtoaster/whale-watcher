@@ -1,7 +1,9 @@
 package container
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -11,12 +13,11 @@ import (
 )
 
 type ContainerImage struct {
-	Index          OCIImageIndex
-	Metadata       ImageMetadata
-	Manifest       OCIImageManifest
-	Layers         []*Layer
-	OciPath        string
-	KnownBaseImage string
+	Index    OCIImageIndex
+	Metadata ImageMetadata
+	Manifest OCIImageManifest
+	Layers   []*Layer
+	OciPath  string
 }
 
 func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
@@ -74,17 +75,23 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 	if len(containerImage.Layers) != nonEmtpyHistoryEntries {
 		log.Warn().Int("layercount", len(containerImage.Layers)).Int("nonEmptyhistory", nonEmtpyHistoryEntries).Msg("The amount of detected layers and non empty history entries differ! This could throw off layer <-> Dockerfile Instruction bridge.")
 	}
+
+	return &containerImage, nil
+}
+
+func (ci *ContainerImage) GetBaseImage() string {
 	cfg := config.GetConfig()
 	if len(cfg.BaseImageCache.CacheLocation) > 0 {
 		baseImageCache := baseimagecache.NewBaseImageCache(cfg.BaseImageCache.CacheLocation)
-		baseImage, err := baseImageCache.GetImageByDigest(containerImage.Layers[0].Digest)
+		baseImage, err := baseImageCache.GetImageByDigest(ci.Layers[0].Digest)
 		if err != nil {
 			log.Warn().Err(err).Msg("Error finding known base image")
 		} else {
-			containerImage.KnownBaseImage = baseImage
+			log.Debug().Msgf("Detected used base image %s", baseImage)
+			return baseImage
 		}
 	}
-	return &containerImage, nil
+	return ""
 }
 
 func (ci *ContainerImage) buildLayers(loadedTar *tarutils.LoadedTar, commands []string) error {
@@ -101,4 +108,17 @@ func (ci *ContainerImage) ToString() string {
 		sb.WriteString(fmt.Sprintf("%d.\t%s\n", index, layer.ToString()))
 	}
 	return sb.String()
+}
+
+func (ci *ContainerImage) GetPackageList() []string {
+	allPackages := []string{}
+	for _, layer := range ci.Layers {
+		allPackages = append(allPackages, layer.GetInstalledPackagesEstimate()...)
+	}
+	return removeSliceDuplicates(allPackages)
+}
+
+func removeSliceDuplicates[T cmp.Ordered](input []T) []T {
+	slices.Sort(input)
+	return slices.Compact(input)
 }

@@ -22,7 +22,7 @@ rules:
     instruction: |
       layer_count = fs_util.get_layer_count()
       # -2 as the test image seems funky? So we are just trying this for now
-      assert(len(fs_util.ls_layer("/etc/apt/sources.list.d/", layer_count - 2)) == 0)
+      assert(fs_util.look_for_file("/etc/apt/sources.list.d/debian.sources") == -1)
     description: Ensure apt sources are empty
     id: apt sources empty
     target: fs

@@ -95,16 +95,15 @@ func (lfs *LayerFS) HasFile(filePath string) (bool, bool) {
 	if lfs.deletesFile(filePath) {
 		return true, true
 	}
-	if _, ok := lfs.lookupRadix.Get(filePath); !ok {
-		return false, false
+	if _, ok := lfs.lookupRadix.Get(filePath); ok {
+		return true, false
 	}
-	return true, false
+	return false, false
 }
 
 func (lfs *LayerFS) deletesFile(filePath string) bool {
 	filename := path.Base(filePath)
 	deletionFilePath := fmt.Sprintf("%s.wh.%s", strings.TrimSuffix(filePath, filename), filename)
-	log.Debug().Msg(deletionFilePath)
 	if _, ok := lfs.lookupRadix.Get(deletionFilePath); ok {
 		return true
 	}

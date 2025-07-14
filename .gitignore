@@ -237,3 +237,4 @@ config.yaml
 **/*.tar
 .DS_Store
 .cache
+.termdbms

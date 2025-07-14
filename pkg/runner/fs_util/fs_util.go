@@ -47,9 +47,9 @@ func (fu *FsUtils) OpenFileAtLayer(filePath string, layerIndex int) []string {
 	return strings.Split(string(data), "\n")
 }
 
-func (fu *FsUtils) lookForFile(path string) int {
+func (fu *FsUtils) LookForFile(path string) int {
 	index := fu.GetLayerCount() - 1
-	for index >= 1 {
+	for index >= 0 {
 		ok, deletion := fu.OCI.Layers[index].FileSystem.HasFile(path)
 		if ok {
 			if deletion {
@@ -66,13 +66,9 @@ func (ou FsUtils) Name() string {
 	return "fs_util"
 }
 
-func (fu *FsUtils) GetBaseImageIdentifier() string {
-	return ""
-}
-
 // THIS IS JANKY!
 func (fu *FsUtils) GetInstalledPackages() []string {
-	return []string{}
+	return fu.OCI.GetPackageList()
 }
 
 func main() {}

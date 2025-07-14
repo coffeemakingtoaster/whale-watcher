@@ -44,6 +44,7 @@ func FetchContainerFiles() (string, string) {
 }
 
 func loadImageFromRegistry(image string) (string, error) {
+	log.Info().Str("image", image).Msg("Downloading image from registry")
 	tmpDirPath, err := os.MkdirTemp("", "filecache")
 	if err != nil {
 		if !os.IsExist(err) {
@@ -56,6 +57,7 @@ func loadImageFromRegistry(image string) (string, error) {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return "", err
 	}
+	log.Info().Str("image", image).Msg("Successful download")
 	return destination, err
 }
 

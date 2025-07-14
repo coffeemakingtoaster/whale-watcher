@@ -35,7 +35,14 @@ func (ghpra *GithubPullRequestAdapter) CreatePullRequest(currentBranch, targetBr
 	}
 }
 
-func (ghpra *GithubPullRequestAdapter) UpdatePullRequest(title, content string) error { return nil }
+func (ghpra *GithubPullRequestAdapter) UpdatePullRequest(title, content string) error {
+	existingPrId, err := checkForExistingPr(ghpra.repoUser, ghpra.repoId, ghpra.pat)
+	if err != nil {
+		return err
+	}
+	_, err = updatePullRequest(existingPrId, ghpra.repoUser, ghpra.repoId, ghpra.pat, title, content)
+	return err
+}
 
 func NewGithubPullRequestAdapter(repositoryURL string) (*GithubPullRequestAdapter, error) {
 	repoUser, repoId, err := parseGitHubRepo(repositoryURL)

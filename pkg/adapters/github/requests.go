@@ -11,7 +11,7 @@ import (
 
 const prTitlePrefix = "[ww]"
 
-func checkForExistingPr(repoUser, repoID, pat string) (int64, error) {
+func checkForExistingPr(repoUser, repoID, pat string) (int, error) {
 	ctx := context.Background()
 
 	// Setup authentication
@@ -36,14 +36,14 @@ func checkForExistingPr(repoUser, repoID, pat string) (int64, error) {
 	// Check for PR with the given prefix
 	for _, pr := range prs {
 		if pr.Title != nil && strings.HasPrefix(*pr.Title, prTitlePrefix) {
-			return *pr.ID, nil
+			return *pr.Number, nil
 		}
 	}
 
 	return 0, nil
 }
 
-func createPullRequest(repoUser, repoId, pat, title, currentBranch, targetBranch, content string) (int64, error) {
+func createPullRequest(repoUser, repoId, pat, title, currentBranch, targetBranch, content string) (int, error) {
 	ctx := context.Background()
 
 	ts := oauth2.StaticTokenSource(
@@ -66,10 +66,10 @@ func createPullRequest(repoUser, repoId, pat, title, currentBranch, targetBranch
 		return -1, err
 	}
 
-	return *pr.ID, nil
+	return *pr.Number, nil
 }
 
-func updatePullRequest(prId int64, repoUser, repoId, pat, title, body string) (*github.PullRequest, error) {
+func updatePullRequest(prId int, repoUser, repoId, pat, title, body string) (*github.PullRequest, error) {
 	ctx := context.Background()
 
 	ts := oauth2.StaticTokenSource(

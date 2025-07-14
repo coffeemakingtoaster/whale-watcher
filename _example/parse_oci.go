@@ -30,5 +30,18 @@ func main() {
 			fmt.Printf("%s\n", string(data))
 		}
 	}
-	fmt.Print(c.Layers[len(c.Layers)-1].FileSystem.Ls("/"))
+	index := len(c.Layers) - 1
+	for index >= 0 {
+		fmt.Println(c.Layers[index].FileSystem.Ls("/etc/apt/"))
+		ok, deletion := c.Layers[index].FileSystem.HasFile("/etc/apt/sources.list.d/debian.sources")
+		if ok {
+			if deletion {
+				fmt.Print("deleted")
+				return
+			}
+			fmt.Print(index)
+		}
+		index--
+	}
+	fmt.Print("done")
 }

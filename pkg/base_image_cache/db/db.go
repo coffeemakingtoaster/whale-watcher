@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
@@ -94,11 +95,15 @@ func GetSortedByPackages(conn *sql.DB, packages []string, versions []string) ([]
 	if len(versions) > 0 && len(versions) != len(packages) {
 		return []HitInfo{}, errors.New("Amount of versions must either match amount of packages or be 0")
 	}
+	for i := range packages {
+		packages[i] = fmt.Sprintf("'%s'", packages[i])
+	}
 	query := "SELECT * FROM image_package_lookup WHERE"
 	if len(versions) > 0 {
 		log.Warn().Msg("Not implemented!")
 	} else {
-		query += fmt.Sprintf(" package IN (%+q)", packages)
+		packageQuery := strings.Join(packages, ",")
+		query += fmt.Sprintf(" package IN (%s)", packageQuery)
 	}
 	entries, err := DoQuery(conn, query)
 	if err != nil {
@@ -142,6 +147,9 @@ func AddImagePackage(conn *sql.DB, image, pkg, version string) error {
 }
 
 func AddImageDigest(conn *sql.DB, image, digest string) error {
+	if len(image) == 0 || len(digest) == 0 {
+		return nil
+	}
 	tx, err := conn.Begin()
 	if err != nil {
 		return err

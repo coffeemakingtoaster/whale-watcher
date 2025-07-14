@@ -6,8 +6,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/display"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/adapters"
+	baseimagecache "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/ingester"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
@@ -55,6 +57,7 @@ func Run(args []string) {
 	}
 	// Get ref to prevent directory cleanup
 	ref := runner.GetReferencingWorkingDirectoryInstance()
+	defer ref.Free()
 	violations := validator.ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFile)
 	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {
@@ -69,6 +72,35 @@ func Run(args []string) {
 	} else {
 		log.Info().Msg("No git context, no interaction with VSC platform needed")
 	}
-	// We dont need the directory anymore
-	ref.Free()
+	cfg := config.GetConfig()
+	baseImageCache := baseimagecache.NewBaseImageCache(cfg.BaseImageCache.CacheLocation)
+	loadedImage, err := container.ContainerImageFromOCITar(ref.GetAbsolutePath("./out.tar"))
+	if err != nil {
+		log.Warn().Err(err).Msg("Could not parse oci tar")
+		return
+	}
+	if loadedImage.GetBaseImage() != "" {
+		log.Info().Str("base image", loadedImage.GetBaseImage()).Msg("Already uses known base image")
+	}
+	closestBaseImage, err := baseImageCache.GetClosestDependencyImage(loadedImage.GetPackageList())
+	if err != nil || len(closestBaseImage) == 0 {
+		log.Warn().Err(err).Msg("Could not determine closest base image")
+		return
+	}
+	if config.ShouldInteractWithVSC() && violations.ViolationCount > 0 {
+		log.Debug().Msg("Trying to update PR with base image hint")
+		adapter, err := adapters.GetAdapterForRepository(cfg.Target.RepositoryURL)
+		if err != nil {
+			log.Warn().Err(err).Msg("Could not set for adapter")
+			return
+		}
+		description := violations.BuildDescriptionMarkdown()
+		description += fmt.Sprintf("\n⚠️ Recommended Base Image: `%s` ⚠️\n", closestBaseImage)
+		err = adapter.UpdatePullRequest("", description)
+		if err != nil {
+			log.Warn().Err(err).Msg("Could not update PR")
+		}
+
+	}
+	log.Info().Str("base image", closestBaseImage).Msg("Found fitting base image!")
 }
