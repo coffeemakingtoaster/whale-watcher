@@ -12,3 +12,4 @@
 - [x] config system
 - [ ] base image scanning
 - [ ] execution in container
+- [ ]  Add unique constraints to image index

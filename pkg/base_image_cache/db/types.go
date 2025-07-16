@@ -10,4 +10,9 @@ type BaseImagePackageEntry struct {
 type HitInfo struct {
 	Image           string
 	MatchedPackages int
+	TotalPackages   int
+}
+
+func (hi *HitInfo) CalcScore() int {
+	return hi.MatchedPackages * (hi.MatchedPackages / hi.TotalPackages)
 }

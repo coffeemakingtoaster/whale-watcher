@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -18,8 +17,7 @@ func initDb(dbConn *sql.DB) error {
 	return err
 }
 
-func LoadOrInitDB(cacheDir string) (*sql.DB, error) {
-	dbPath := filepath.Join(cacheDir, "base_image_cache.db")
+func LoadOrInitDB(dbPath string) (*sql.DB, error) {
 	needsInit := false
 	if _, err := os.Open(dbPath); os.IsNotExist(err) {
 		log.Info().Msg("Cache did not exist, creating cache...")
@@ -125,7 +123,7 @@ func GetSortedByPackages(conn *sql.DB, packages []string, versions []string) ([]
 		}
 	}
 	sort.Slice(result, func(a, b int) bool {
-		return result[a].MatchedPackages < result[b].MatchedPackages
+		return result[a].CalcScore() < result[b].CalcScore()
 	})
 	return result, nil
 }

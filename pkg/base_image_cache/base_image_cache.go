@@ -3,6 +3,7 @@ package baseimagecache
 import (
 	"database/sql"
 	"errors"
+	"path/filepath"
 
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
 )
@@ -42,7 +43,8 @@ func (bic *BaseImageCache) GetClosestDependencyImageWithBase(base string, packag
 }
 
 func NewBaseImageCache(cachePath string) *BaseImageCache {
-	conn, _ := db.LoadOrInitDB(cachePath)
+	dbPath := filepath.Join(cachePath, "base_image_cache.db")
+	conn, _ := db.LoadOrInitDB(dbPath)
 	return &BaseImageCache{
 		cacheDir: cachePath,
 		dbConn:   conn,

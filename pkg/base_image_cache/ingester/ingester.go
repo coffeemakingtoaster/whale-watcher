@@ -1,6 +1,8 @@
 package ingester
 
 import (
+	"path/filepath"
+
 	"github.com/coffeemakingtoaster/oci-pull-go/pkg/pull"
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
@@ -12,7 +14,7 @@ import (
 func IngestImage(image string) error {
 	log.Info().Str("image", image).Msg("Inserting image into base image cache")
 	cfg := config.GetConfig()
-	dbConn, err := db.LoadOrInitDB(cfg.BaseImageCache.CacheLocation)
+	dbConn, err := db.LoadOrInitDB(filepath.Join(cfg.BaseImageCache.CacheLocation, "base_image_cache.db"))
 	if err != nil {
 		return err
 	}
