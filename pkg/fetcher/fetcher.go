@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/coffeemakingtoaster/oci-pull-go/pkg/pull"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/google/go-containerregistry/pkg/legacy/tarball"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 )
@@ -51,14 +53,39 @@ func loadImageFromRegistry(image string) (string, error) {
 			return "", err
 		}
 	}
+
 	destination := filepath.Join(tmpDirPath, "image.tar")
-	err = pull.PullToPath(image, destination)
+	err = LoadTarToPath(image, destination)
 	if err != nil {
-		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return "", err
 	}
+
 	log.Info().Str("image", image).Msg("Successful download")
-	return destination, err
+	return destination, nil
+}
+
+func LoadTarToPath(image, destination string) error {
+	ref, err := name.ParseReference(image)
+	if err != nil {
+		return err
+	}
+
+	img, err := remote.Image(ref)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+
+	err = tarball.Write(ref, img, file)
+	if err != nil {
+		log.Error().Err(err).Msgf("Could not download image %s", image)
+		return err
+	}
+	return nil
 }
 
 func loadDockerfileFromRepository(repositoryURL, branch, dockerfilePath string) (string, error) {

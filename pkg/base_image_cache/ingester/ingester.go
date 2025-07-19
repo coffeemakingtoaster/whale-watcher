@@ -3,11 +3,11 @@ package ingester
 import (
 	"path/filepath"
 
-	"github.com/coffeemakingtoaster/oci-pull-go/pkg/pull"
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/fetcher"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
 )
 
@@ -27,7 +27,7 @@ func IngestImage(image string) error {
 	pwd := runner.GetReferencingWorkingDirectoryInstance()
 	defer pwd.Free()
 	destination := pwd.GetAbsolutePath("image.tar")
-	err = pull.PullToPath(image, destination)
+	err = fetcher.LoadTarToPath(image, destination)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return err

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
+	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 )
 
 type BaseImageCache struct {
@@ -42,11 +43,12 @@ func (bic *BaseImageCache) GetClosestDependencyImageWithBase(base string, packag
 	return nil
 }
 
-func NewBaseImageCache(cachePath string) *BaseImageCache {
-	dbPath := filepath.Join(cachePath, "base_image_cache.db")
+func NewBaseImageCache() *BaseImageCache {
+	cfg := config.GetConfig()
+	dbPath := filepath.Join(cfg.BaseImageCache.CacheLocation, "base_image_cache.db")
 	conn, _ := db.LoadOrInitDB(dbPath)
 	return &BaseImageCache{
-		cacheDir: cachePath,
+		cacheDir: cfg.BaseImageCache.CacheLocation,
 		dbConn:   conn,
 	}
 }

@@ -72,8 +72,7 @@ func Run(args []string) {
 	} else {
 		log.Info().Msg("No git context, no interaction with VSC platform needed")
 	}
-	cfg := config.GetConfig()
-	baseImageCache := baseimagecache.NewBaseImageCache(cfg.BaseImageCache.CacheLocation)
+	baseImageCache := baseimagecache.NewBaseImageCache()
 	loadedImage, err := container.ContainerImageFromOCITar(ref.GetAbsolutePath("./out.tar"))
 	if err != nil {
 		log.Warn().Err(err).Msg("Could not parse oci tar")
@@ -87,6 +86,7 @@ func Run(args []string) {
 		log.Warn().Err(err).Msg("Could not determine closest base image")
 		return
 	}
+	cfg := config.GetConfig()
 	if config.ShouldInteractWithVSC() && violations.ViolationCount > 0 {
 		log.Debug().Msg("Trying to update PR with base image hint")
 		adapter, err := adapters.GetAdapterForRepository(cfg.Target.RepositoryURL)
