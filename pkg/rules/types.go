@@ -42,8 +42,8 @@ func (r *Rule) AddRunner() error {
 	return err
 }
 
-func (r *Rule) Validate(imageName, dockerFilepath string) (bool, ViolationInfo) {
-	err := r.Runner.Run(runner.TemplateData{DockerfilePath: dockerFilepath, Image: imageName}, r.Instruction)
+func (r *Rule) Validate(ociTarPath, dockerFilepath, dockerTarPath string) (bool, ViolationInfo) {
+	err := r.Runner.Run(runner.TemplateData{DockerfilePath: dockerFilepath, OciImage: ociTarPath, DockerImage: dockerTarPath}, r.Instruction)
 	if err != nil {
 		return false, ViolationInfo{Details: err.Error()}
 	}
@@ -64,15 +64,15 @@ func (r *Rule) Verify() error {
 	}
 	r.Category = strings.ToLower(r.Category)
 	if err := isInAllowed(r.Category, allowedCategories); err != nil {
-		return errors.New(fmt.Sprintf("Category: %s", err.Error()))
+		return fmt.Errorf("Category: %s", err.Error())
 	}
 	r.Scope = strings.ToLower(r.Scope)
 	if err := isInAllowed(r.Scope, allowedScopes); err != nil {
-		return errors.New(fmt.Sprintf("Scope: %s", err.Error()))
+		return fmt.Errorf("Scope: %s", err.Error())
 	}
 	r.Target = strings.ToLower(r.Target)
 	if err := isInAllowed(r.Target, allowedTargets); err != nil {
-		return errors.New(fmt.Sprintf("Target: %s", err.Error()))
+		return fmt.Errorf("Target: %s", err.Error())
 	}
 	return nil
 }

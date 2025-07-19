@@ -4,11 +4,11 @@ import (
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
 )
 
-func ValidateRuleset(ruleset rules.RuleSet, imageName, dockerFilePath string) Violations {
+func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) Violations {
 	violations := Violations{}
 	for _, rule := range ruleset.Rules {
 		violations.CheckedCount++
-		success, fix := rule.Validate(imageName, dockerFilePath)
+		success, fix := rule.Validate(ociTarPath, dockerFilePath, dockerTarPath)
 		if success {
 			continue
 		}

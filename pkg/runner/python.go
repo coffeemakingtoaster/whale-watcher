@@ -19,7 +19,8 @@ type PythonRunner struct {
 
 type TemplateData struct {
 	DockerfilePath string
-	Image          string
+	OciImage       string
+	DockerImage    string
 }
 
 func (r *PythonRunner) RunFix(command string) {
@@ -30,7 +31,8 @@ func (r *PythonRunner) RunFix(command string) {
 
 	contextData := TemplateData{
 		DockerfilePath: "./Dockerfile",
-		Image:          "./out.tar",
+		OciImage:       "./out.tar",
+		DockerImage:    "./out_docker.tar",
 	}
 
 	tpl, _ := template.New("").Parse(importTemplate)
@@ -58,10 +60,11 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 
 	defer r.workingDirectory.Free()
 
-	r.workingDirectory.Populate(contextData.DockerfilePath, contextData.Image)
+	r.workingDirectory.Populate(contextData.DockerfilePath, contextData.OciImage, contextData.DockerImage)
 
 	contextData.DockerfilePath = "./Dockerfile"
-	contextData.Image = "./out.tar"
+	contextData.OciImage = "./out.tar"
+	contextData.DockerImage = "./out_docker.tar"
 
 	var buffer bytes.Buffer
 	r.utilImport.Execute(&buffer, contextData)

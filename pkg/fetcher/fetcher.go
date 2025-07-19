@@ -1,10 +1,13 @@
 package fetcher
 
 import (
+	"archive/tar"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -12,14 +15,18 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/google/go-containerregistry/pkg/legacy/tarball"
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
 )
 
-func FetchContainerFiles() (string, string) {
+func FetchContainerFiles() (string, string, string) {
 	var dockerfilePath string
 	var ociPath string
+	var dockerPath string
 	var err error
 
 	cfg := config.GetConfig()
@@ -34,37 +41,48 @@ func FetchContainerFiles() (string, string) {
 
 	if cfg.Target.Image == "" {
 		ociPath = cfg.Target.OciPath
+		dockerfilePath = cfg.Target.DockerfilePath
 	} else {
-		ociPath, err = loadImageFromRegistry(cfg.Target.Image)
+		ociPath, dockerPath, err = loadImageFromRegistry(cfg.Target.Image)
 		if err != nil {
 			log.Warn().Err(err).Msg("Could not load image from repository")
 		}
-
 	}
 
-	return dockerfilePath, ociPath
+	return dockerfilePath, ociPath, dockerPath
 }
 
-func loadImageFromRegistry(image string) (string, error) {
+func loadImageFromRegistry(image string) (string, string, error) {
 	log.Info().Str("image", image).Msg("Downloading image from registry")
 	tmpDirPath, err := os.MkdirTemp("", "filecache")
 	if err != nil {
 		if !os.IsExist(err) {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	destination := filepath.Join(tmpDirPath, "image.tar")
-	err = LoadTarToPath(image, destination)
+	err = LoadTarToPath(image, destination, "oci")
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+
+	destinationDocker := filepath.Join(tmpDirPath, "image_docker.tar")
+	err = LoadTarToPath(image, destinationDocker, "docker")
+	if err != nil {
+		return "", "", err
 	}
 
 	log.Info().Str("image", image).Msg("Successful download")
-	return destination, nil
+	return destination, destinationDocker, nil
 }
 
-func LoadTarToPath(image, destination string) error {
+func LoadTarToPath(image, destination, format string) error {
+	format = strings.ToLower(format)
+	if format != "oci" && format != "docker" {
+		return fmt.Errorf("unsupported format: %s (supported: 'oci', 'docker')", format)
+	}
+
 	ref, err := name.ParseReference(image)
 	if err != nil {
 		return err
@@ -75,16 +93,126 @@ func LoadTarToPath(image, destination string) error {
 		return err
 	}
 
+	switch format {
+	case "docker":
+		log.Info().Str("image", image).Msg("Saving docker tarball")
+		return saveAsDockerTarball(ref, img, destination)
+	case "oci":
+		log.Info().Str("image", image).Msg("Saving oci tarball")
+		return saveAsOCITarball(img, destination)
+	default:
+		return fmt.Errorf("unsupported format: %s", format)
+	}
+}
+
+// saveAsDockerTarball saves the image as a Docker-compatible tarball
+func saveAsDockerTarball(ref name.Reference, img v1.Image, destination string) error {
 	file, err := os.Create(destination)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	err = tarball.Write(ref, img, file)
 	if err != nil {
-		log.Error().Err(err).Msgf("Could not download image %s", image)
+		log.Error().Err(err).Msgf("Could not create Docker tarball for image %s", ref.String())
 		return err
 	}
+
+	return nil
+}
+
+// saveAsOCITarball saves the image as an OCI-compliant tarball
+func saveAsOCITarball(img v1.Image, destination string) error {
+	// Create a temporary directory for the OCI layout
+	tempDir, err := os.MkdirTemp("", "oci-layout-*")
+	if err != nil {
+		return err
+	}
+
+	// Ensure cleanup of temporary directory
+	defer func() {
+		if removeErr := os.RemoveAll(tempDir); removeErr != nil {
+			log.Warn().Err(removeErr).Msg("Failed to remove temporary directory")
+		}
+	}()
+
+	// Create OCI layout in temp directory
+	layoutPath, err := layout.Write(tempDir, empty.Index)
+	if err != nil {
+		return err
+	}
+
+	// Append the image to the layout
+	err = layoutPath.AppendImage(img)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not append image to OCI layout")
+		return err
+	}
+
+	// Create the destination tar file
+	file, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Create tar writer (uncompressed)
+	tarWriter := tar.NewWriter(file)
+	defer tarWriter.Close()
+
+	// Walk through the OCI layout directory and add files to tar
+	err = filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Get relative path from temp directory
+		relPath, err := filepath.Rel(tempDir, path)
+		if err != nil {
+			return err
+		}
+
+		// Skip the root directory itself
+		if relPath == "." {
+			return nil
+		}
+
+		// Create tar header
+		header, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		header.Name = relPath
+
+		// Write header
+		err = tarWriter.WriteHeader(header)
+		if err != nil {
+			return err
+		}
+
+		// If it's a regular file, write its content
+		if info.Mode().IsRegular() {
+			srcFile, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer srcFile.Close()
+
+			_, err = io.Copy(tarWriter, srcFile)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Error().Err(err).Msg("Could not create OCI-compliant tar")
+		return err
+	}
+
 	return nil
 }
 

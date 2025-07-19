@@ -21,9 +21,9 @@ func NewPythonRunner(target string) (Runner, error) {
 	case "command":
 		importTemplate = "from command_util_build import commandutil; command_util = commandutil.setup_from_path('{{ .DockerfilePath }}')"
 	case "fs":
-		importTemplate = "from fs_util_build import fsutil; fs_util = fsutil.setup('{{ .Image }}')"
+		importTemplate = "from fs_util_build import fsutil; fs_util = fsutil.setup('{{ .OciImage }}')"
 	case "os":
-		importTemplate = "from os_util_build import osutil; os_util = osutil.setup('{{ .Image }}')"
+		importTemplate = "from os_util_build import osutil; os_util = osutil.setup('{{ .DockerImage }}')"
 	default:
 		return nil, fmt.Errorf("Unsupported target: %s! Supported targets are: command, fs, os", target)
 	}

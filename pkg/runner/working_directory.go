@@ -68,7 +68,7 @@ func (rwd *RunnerWorkingDirectory) Free() {
 	instance = nil
 }
 
-func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath string) {
+func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, dockerImagePath string) {
 	if rwd.isPopulated {
 		return
 	}
@@ -79,6 +79,11 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath string)
 		return
 	}
 	err = addFileToWorkingDirectory(ociImagePath, rwd.tmpDirPath, "out.tar")
+	if err != nil {
+		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.tmpDirPath)
+		return
+	}
+	err = addFileToWorkingDirectory(dockerImagePath, rwd.tmpDirPath, "out_docker.tar")
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.tmpDirPath)
 		return

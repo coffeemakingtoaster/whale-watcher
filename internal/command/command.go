@@ -17,6 +17,7 @@ import (
 
 type RunContext struct {
 	OCITarballPath    string
+	DockerTarballPath string
 	DockerFile        string
 	RuleSetEntrypoint string
 	Instruction       string
@@ -58,7 +59,7 @@ func Run(args []string) {
 	// Get ref to prevent directory cleanup
 	ref := runner.GetReferencingWorkingDirectoryInstance()
 	defer ref.Free()
-	violations := validator.ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFile)
+	violations := validator.ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFile, runContext.DockerTarballPath)
 	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {
 		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Str("fix", violation.Fix).Send()

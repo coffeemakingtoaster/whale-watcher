@@ -8,6 +8,7 @@ type TargetConfig struct {
 	Image          string `yaml:"image" env:"IMAGE"`
 	Branch         string `yaml:"branch" env:"BRANCH"`
 	OciPath        string `yaml:"ocipath" env:"OCI_PATH"`
+	DockerPath     string `yaml:"dockerpath" env:"DOCKER_PATH"`
 }
 
 func (tc *TargetConfig) Validate() error {
@@ -15,8 +16,8 @@ func (tc *TargetConfig) Validate() error {
 		return errors.New("RepositoryURL and Dockerfilepath must be set!")
 	}
 
-	if tc.Image == "" && tc.OciPath == "" {
-		return errors.New("Either image identifier or oci path must be set")
+	if tc.Image == "" && (tc.OciPath == "" || tc.DockerPath == "") {
+		return errors.New("Either image identifier or tar paths must be set")
 	}
 
 	if tc.Image != "" && tc.OciPath != "" {

@@ -27,7 +27,7 @@ func IngestImage(image string) error {
 	pwd := runner.GetReferencingWorkingDirectoryInstance()
 	defer pwd.Free()
 	destination := pwd.GetAbsolutePath("image.tar")
-	err = fetcher.LoadTarToPath(image, destination)
+	err = fetcher.LoadTarToPath(image, destination, "oci")
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return err

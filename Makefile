@@ -117,13 +117,20 @@ test:
 .PHONY: oci-export
 oci-export: ./out/out.tar
 
+./out/out_docker.tar:
+	mkdir -p out
+	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
+	docker buildx build -o type=tar,dest=./out/out_docker.tar,compression=gzip -f ./_example/example.Dockerfile ./_example/
+	docker buildx prune -a -f
 
+.PHONY: docker-export
+docker-export: ./out/out_docker.tar
 
 .PHONY: remote-verify
 
 remote-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
 
-remote-verify: all oci-export
+remote-verify: all oci-export docker-export
 	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying remote ruleset $(DELIM)$(RESET)"
@@ -133,7 +140,7 @@ remote-verify: all oci-export
 
 local-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
 
-local-verify: all oci-export
+local-verify: all oci-export docker-export
  	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying local ruleset $(DELIM)$(RESET)"

@@ -3,6 +3,7 @@ target:
   dockerfile: "./_example/example.Dockerfile"
   image: #no value -> use local
   ocipath: ./out/out.tar
+  dockerpath: ./out/out_docker.tar
   branch: #no value -> use local
 github:
   pat: # not needed

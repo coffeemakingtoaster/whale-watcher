@@ -39,7 +39,7 @@ func (rc *RunContext) parseVerify(args []string) error {
 		return errors.New("Not enough arguments for validate. Needs <ruleset location> (other values are set via config)")
 	}
 	// Load from config
-	rc.DockerFile, rc.OCITarballPath = fetcher.FetchContainerFiles()
+	rc.DockerFile, rc.OCITarballPath, rc.DockerTarballPath = fetcher.FetchContainerFiles()
 	rc.RuleSetEntrypoint = args[0]
 	return nil
 }
