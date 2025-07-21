@@ -44,6 +44,16 @@ func (cu *FixUtils) AddRunInstruction(index int, command string) {
 	})
 }
 
+func (cu *FixUtils) SetUser(user string) {
+	curr := cu.astRoot
+	for curr.Subsequent != nil {
+		curr = curr.Subsequent
+	}
+	last := curr.Instructions[len(curr.Instructions)-1]
+	curr.Instructions[len(curr.Instructions)-1] = &ast.UserInstructionNode{User: user}
+	curr.Instructions = append(curr.Instructions, last)
+}
+
 func (fu *FixUtils) Finish() {
 	newContent := fu.astRoot.Reconstruct()
 	if fu.path == "" {

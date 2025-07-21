@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/rs/zerolog/log"
 )
 
 type OsUtils struct {
@@ -36,7 +34,6 @@ func (ou *OsUtils) load() {
 	if ou.loaded {
 		return
 	}
-
 	output := ou.runCommand([]string{"docker", "load", "-i", ou.dockerTarPath})
 
 	lines := strings.Split(output, "\n")
@@ -45,16 +42,18 @@ func (ou *OsUtils) load() {
 			image := strings.Replace(lines[i], "Loaded image:", "", 1)
 			image = strings.TrimSpace(image)
 			ou.image = image
-			return
+			ou.loaded = true
+			break
 		}
 	}
-	panic("Image name not found!")
+	if !ou.loaded {
+		panic("image could not be loaded")
+	}
 }
 
 func (ou *OsUtils) ExecCommand(command string) string {
 	ou.load()
-	log.Debug().Str("command", command).Msg("Executing command")
-	return ou.runCommand([]string{"docker", "run", "--rm", ou.image, command})
+	return ou.runCommand([]string{"docker", "run", "--entrypoint", "/bin/sh", "--rm", ou.image, "-c", command})
 }
 
 func (ou *OsUtils) runCommand(command []string) string {
@@ -72,7 +71,7 @@ func (ou *OsUtils) runCommand(command []string) string {
 		fmt.Println(errorOutput.String())
 		panic(err)
 	}
-	return stdOutput.String()
+	return strings.TrimSpace(stdOutput.String())
 }
 
 func main() {}

@@ -34,6 +34,9 @@ rules:
     category: Negative
     instruction: |
       assert(os_util.exec_command("whoami") != "root")
-    description: Ensure apt sources are empty
-    id: apt sources empty
+    description: Final user should not be root
+    id: user not root
     target: os
+    fix_instruction: |
+      fix_util.set_user("sample")
+      fix_util.finish()
