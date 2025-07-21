@@ -19,7 +19,7 @@ import (
 type LayerFS struct {
 	tarPath              string
 	digest               string
-	fileCache            map[string]*LayerFS
+	fileCache            LRUCache[[]byte]
 	maxFileCacheCapacity int
 	isGzip               bool
 	lookupRadix          radix.Tree
@@ -65,13 +65,19 @@ func (fi *LayerFSFileInfo) ModTime() time.Time { return time.Now() }
 func (fi *LayerFSFileInfo) IsDir() bool        { return false }
 func (fi *LayerFSFileInfo) Sys() any           { return nil }
 
-func (lfs LayerFS) Open(name string) (fs.File, error) {
+func (lfs *LayerFS) Open(name string) (fs.File, error) {
 	if lfs.deletesFile(name) {
 		return nil, errors.New("Layer deletes file")
 	}
 	if _, ok := lfs.lookupRadix.Get(name); !ok {
 		return nil, errors.New("File not found")
 	}
+	cached := lfs.fileCache.Get(name)
+
+	if cached != nil {
+		return &LayerFSFile{data: *cached, name: name}, nil
+	}
+
 	data, err := tarutils.GetBlobFromPathByDigest(lfs.tarPath, lfs.digest)
 	if err != nil {
 		return nil, err
@@ -113,7 +119,7 @@ func (lfs *LayerFS) deletesFile(filePath string) bool {
 // Only supports absolute paths
 func (lfs *LayerFS) Ls(path string) []string {
 	result := []string{}
-	walkFn := func(s string, _ interface{}) bool {
+	walkFn := func(s string, _ any) bool {
 		result = append(result, s)
 		return false
 	}
@@ -155,11 +161,10 @@ func NewLayerFS(loadedTar *tarutils.LoadedTar, digest string, isGzip bool) Layer
 		m[v] = 1
 	}
 	return LayerFS{
-		tarPath:              loadedTar.TarPath,
-		digest:               digest,
-		fileCache:            make(map[string]*LayerFS),
-		maxFileCacheCapacity: 5,
-		isGzip:               isGzip,
-		lookupRadix:          *radix.NewFromMap(m),
+		tarPath:     loadedTar.TarPath,
+		digest:      digest,
+		fileCache:   *NewLRUCache[[]byte](5),
+		isGzip:      isGzip,
+		lookupRadix: *radix.NewFromMap(m),
 	}
 }

@@ -40,8 +40,9 @@ func FetchContainerFiles() (string, string, string) {
 	}
 
 	if cfg.Target.Image == "" {
+		log.Debug().Msg("Using local files for tar paths")
 		ociPath = cfg.Target.OciPath
-		dockerfilePath = cfg.Target.DockerfilePath
+		dockerPath = cfg.Target.DockerPath
 	} else {
 		ociPath, dockerPath, err = loadImageFromRegistry(cfg.Target.Image)
 		if err != nil {

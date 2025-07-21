@@ -48,7 +48,7 @@ func TestValidateFullValidRuleset(t *testing.T) {
 			},
 		},
 	}
-	actual := validator.ValidateRuleset(input, "", "")
+	actual := validator.ValidateRuleset(input, "", "", "")
 	if actual.CheckedCount != 2 {
 		t.Errorf("checkedcount mismatch: Expected %d Got %d", len(input.Rules), actual.CheckedCount)
 	}
@@ -96,7 +96,7 @@ func TestValidateFullUnfixableFailingRuleset(t *testing.T) {
 			},
 		},
 	}
-	actual := validator.ValidateRuleset(input, "", "")
+	actual := validator.ValidateRuleset(input, "", "", "")
 	if actual.CheckedCount != 2 {
 		t.Errorf("checkedcount mismatch: Expected %d Got %d", len(input.Rules), actual.CheckedCount)
 	}
@@ -152,7 +152,7 @@ func TestValidateFullFixableFailingRuleset(t *testing.T) {
 			},
 		},
 	}
-	actual := validator.ValidateRuleset(input, "", "")
+	actual := validator.ValidateRuleset(input, "", "", "")
 	if actual.CheckedCount != 2 {
 		t.Errorf("checkedcount mismatch: Expected %d Got %d", len(input.Rules), actual.CheckedCount)
 	}
