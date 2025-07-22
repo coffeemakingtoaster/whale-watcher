@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/caarlos0/env/v11"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
@@ -24,6 +25,8 @@ func init() {
 		log.Warn().Msgf("Config path specified in env! Updating to %s", configPathEnv)
 		SetConfigPath(configPathEnv)
 	}
+	GetConfig()
+	zerolog.SetGlobalLevel(zerolog.Level(config.LogLevel))
 }
 
 func SetConfigPath(path string) {

@@ -1,0 +1,24 @@
+# Target of validation process
+target:
+  repository: # specify a remote repository. This can be empty for local
+  dockerfile: # specify the dockerfile path. This is either a local path or the location of the Dockerfile in the specified repository
+  image: # image speficier to pull the image from a remote registry. This can be empty for local
+  ocipath: # specify the location of the oci tar file. Not needed if image is pulled from registry
+  dockerpath: # specify the location of the docker tar file. Not needed if image is pulled from registry
+  branch: # specify branch that should be pulled for validation. Only needed if remote repo is used
+# Github integration
+github:
+  pat: # personal access token of account used for creating pr and pushing changes
+  username: # username of account used for creating pr and pushing changes
+# base image cache builder
+base_image_cache:
+  # list of all base images that will be indexed
+  base_images: 
+    - sample1
+  # save location for index (as sqlite db)
+  cache_location: 
+# log level used
+# follows log levels specified by zerolog
+log_level: 
+# list of policy target that will be executed, if empty all policy targets will be ran
+target_list: 

@@ -56,10 +56,11 @@ func (bicg *BaseImageCacheConfig) Validate() error {
 }
 
 type Config struct {
-	Github         GithubConfig         `yaml:"github" envPrefix:"GH_"`
+	Github         GithubConfig         `yaml:"github" envPrefix:"GITHUB_"`
 	Target         TargetConfig         `yaml:"target" envPrefix:"TARGET_"`
 	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
 	TargetList     string               `yaml:"target_list" envPrefix:"TARGET_LIST"`
+	LogLevel       int                  `yaml:"log_level" envPrefix:"LOG_LEVEL"`
 }
 
 func (c *Config) Validate() error {
