@@ -26,14 +26,15 @@ type RuleSet struct {
 }
 
 type Rule struct {
-	Scope          string `yaml:"scope"`
-	Category       string `yaml:"category"`
-	Instruction    string `yaml:"instruction"`
-	Description    string `yaml:"description"`
-	Id             string `yaml:"id"`
-	Target         string `yaml:"target"`
-	Runner         runner.Runner
-	FixInstruction string `yaml:"fix_instruction"`
+	Scope           string `yaml:"scope"`
+	Category        string `yaml:"category"`
+	Instruction     string `yaml:"instruction"`
+	Description     string `yaml:"description"`
+	LongDescription string `yaml:"long_description"`
+	Id              string `yaml:"id"`
+	Target          string `yaml:"target"`
+	Runner          runner.Runner
+	FixInstruction  string `yaml:"fix_instruction"`
 }
 
 func (r *Rule) AddRunner() error {

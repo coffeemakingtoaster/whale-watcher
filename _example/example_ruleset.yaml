@@ -1,3 +1,4 @@
+
 # Ruleset for validating util imports
 # This doesn't actually do anything with containers
 # Allowed scopes: output, buildtime
@@ -17,26 +18,40 @@ rules:
     description: Ensure all stages are named
     id: stage_name
     target: command
+    long_description: |
+      ⚠️ This is AI-generated content.
+
+      Naming all build stages in a multi-stage container build is a best practice for maintainability and clarity. Unnamed stages can make it difficult to reference the correct stage in `COPY --from=...` instructions or to understand the purpose of each stage in complex builds. Named stages also improve debugging and help new developers understand the Dockerfile's structure more easily. Without names, refactoring or optimizing the build process becomes error-prone and harder to automate.
+
   - scope: output
     category: Negative
     instruction: |
       layer_count = fs_util.get_layer_count()
-      # -2 as the test image seems funky? So we are just trying this for now
       assert(fs_util.look_for_file("/etc/apt/sources.list.d/debian.sources") == -1)
     description: Ensure apt sources are empty
-    id: apt sources empty
+    id: apt_sources_empty
     target: fs
     fix_instruction: |
       depth = command_util.get_ast_depth()
       fix_util.add_run_instruction(depth - 1, "rm -rf /etc/apt/sources.list.d/*")
       fix_util.finish()
+    long_description: |
+      ⚠️ This is AI-generated content.
+
+      Leaving APT source files in production containers can unintentionally expose internal mirrors or allow unexpected package installations. These files are typically only needed during the build process to install packages. Removing them ensures that the final image has a smaller attack surface and prevents the possibility of unauthorized or accidental package updates post-deployment. This also contributes to achieving minimal, immutable images that align with security and compliance best practices.
+
   - scope: output
     category: Negative
     instruction: |
       assert(os_util.exec_command("whoami") != "root")
     description: Final user should not be root
-    id: user not root
+    id: user_not_root
     target: os
     fix_instruction: |
       fix_util.set_user("sample")
       fix_util.finish()
+    long_description: |
+      ⚠️ This is AI-generated content.
+
+      Running containers as the `root` user significantly increases the risk of privilege escalation attacks. If an attacker compromises an application running as root, they gain control over the entire container environment, and potentially the host if the container is misconfigured. By configuring a non-root user, you enforce the principle of least privilege, minimizing the potential damage from exploits. It is a widely accepted container security best practice to drop privileges wherever possible before reaching the final runtime stage.
+

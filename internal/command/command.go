@@ -54,7 +54,7 @@ func Run(args []string) {
 	}
 	log.Info().Msgf("Loaded %d rules!", len(ruleSet.Rules))
 	if runContext.Instruction == "docs" {
-		display.PrettyPrintRules(ruleSet, false)
+		display.ServeRules(ruleSet)
 		return
 	}
 	// Get ref to prevent directory cleanup

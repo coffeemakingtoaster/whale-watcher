@@ -1,0 +1,132 @@
+{{define "rule"}}
+  <div class="rule-entry" id="{{ .Id }}">
+    <h2>ID: {{ .Id }}</h2>
+    <dl>
+      <dt>Scope:</dt>
+      <dd>{{ .Scope }}</dd>
+
+      <dt>Category:</dt>
+      <dd>{{ .Category }}</dd>
+
+      <dt>Description:</dt>
+      <dd>{{ .Description }}</dd>
+
+      <dt>Target:</dt>
+      <dd>{{ .Target }}</dd>
+    </dl>
+
+    {{ if .LongDescription }}
+    <details open>
+      <summary><strong>Detailed Description</strong></summary>
+      {{ .LongDescription }}
+    </details>
+    {{ end }}
+
+    {{ if .Instruction }}
+    <details>
+      <summary><strong>Instruction (click to expand)</strong></summary>
+      <pre>{{ .Instruction }}</pre>
+    </details>
+    {{ end }}
+
+    {{ if .FixInstruction }}
+    <details>
+      <summary><strong>Fix Instruction (click to expand)</strong></summary>
+      <pre>{{ .FixInstruction }}</pre>
+    </details>
+    {{ end }}
+  </div>
+{{end}}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ .Name }} - Docs</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2em;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    h1 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 0.5em;
+    }
+
+    .toc {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 1em;
+      margin-bottom: 2em;
+    }
+
+    .toc h2 {
+      margin-top: 0;
+    }
+
+    .toc ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .toc li {
+      margin-bottom: 0.5em;
+    }
+
+    .rule-entry {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 1em;
+      margin-bottom: 2em;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: max-content auto;
+      row-gap: 0.5em;
+      column-gap: 1em;
+    }
+
+    dt {
+      font-weight: bold;
+    }
+
+    pre {
+      background-color: #f0f0f0;
+      padding: 1em;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    summary {
+      cursor: pointer;
+      margin-bottom: 0.5em;
+    }
+  </style>
+</head>
+<body>
+  <h1>{{ .Name }}</h1>
+
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <ul>
+      {{ range .Rules }}
+        <li><a href="#{{ .Id }}">{{ .Id }}</a></li>
+      {{ end }}
+    </ul>
+  </div>
+
+  {{ range .Rules }}
+    {{ template "rule" . }}
+  {{ end }}
+</body>
+</html>
+
