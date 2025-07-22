@@ -35,8 +35,8 @@ func TestNewYamlFromENVConfig(t *testing.T) {
 		},
 	}
 
-	t.Setenv("WHALE_WATCHER_GH_PAT", "env")
-	t.Setenv("WHALE_WATCHER_GH_USER_NAME", "envtest")
+	t.Setenv("WHALE_WATCHER_GITHUB_PAT", "env")
+	t.Setenv("WHALE_WATCHER_GITHUB_USER_NAME", "envtest")
 
 	actual := config.LoadConfigFromData([]byte{})
 	if !reflect.DeepEqual(expected, actual) {
@@ -52,7 +52,7 @@ func TestNewYamlConfigEnvOverride(t *testing.T) {
 		},
 	}
 
-	t.Setenv("WHALE_WATCHER_GH_PAT", "byebye world")
+	t.Setenv("WHALE_WATCHER_GITHUB_PAT", "byebye world")
 
 	actual := config.LoadConfigFromData([]byte(yamlConfig))
 	if !reflect.DeepEqual(expected, actual) {
