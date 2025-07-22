@@ -33,7 +33,7 @@ func SetConfigPath(path string) {
 func LoadConfigFromData(data []byte) Config {
 	err := yaml.Unmarshal(data, &config)
 	if err != nil {
-		log.Error().Err(err).Msg("Could not parse config")
+		log.Error().Err(err).Msg("Could not parse config, initialising empty and trusting env fallback")
 	}
 	return handleEnvOverrides()
 }
@@ -42,6 +42,7 @@ func loadConfigFromFile(configPath string) Config {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not read config file %s", configPath)
+		config = &Config{}
 		return handleEnvOverrides()
 	}
 	return LoadConfigFromData(data)

@@ -2,6 +2,7 @@ package validator_test
 
 import (
 	"errors"
+	"os"
 	"testing"
 
 	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
@@ -26,7 +27,7 @@ func TestValidateFullValidRuleset(t *testing.T) {
 	}
 	input := rules.RuleSet{
 		Rules: []*rules.Rule{
-			&rules.Rule{
+			{
 				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
@@ -36,7 +37,7 @@ func TestValidateFullValidRuleset(t *testing.T) {
 				Runner:         validRunner,
 				FixInstruction: "",
 			},
-			&rules.Rule{
+			{
 				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
@@ -169,5 +170,59 @@ func TestValidateFullFixableFailingRuleset(t *testing.T) {
 
 	if fixExecutionCount != 2 {
 		t.Errorf("fix execution count mismatch: Expected 2 Got %d", fixExecutionCount)
+	}
+}
+
+func TestLimitTargetValidation(t *testing.T) {
+	executionCount := 0
+	validRunner := MockRunner{func(_ bool) error {
+		executionCount++
+		return nil
+	},
+	}
+	input := rules.RuleSet{
+		Rules: []*rules.Rule{
+			{
+				Scope:          "output",
+				Category:       "Negative",
+				Instruction:    "abc",
+				Description:    "def",
+				Id:             "valid test 1",
+				Target:         "fs",
+				Runner:         validRunner,
+				FixInstruction: "",
+			},
+			{
+				Scope:          "output",
+				Category:       "Negative",
+				Instruction:    "abc",
+				Description:    "def",
+				Id:             "valid test 2",
+				Target:         "cmd",
+				Runner:         validRunner,
+				FixInstruction: "",
+			},
+			{
+				Scope:          "output",
+				Category:       "Negative",
+				Instruction:    "abc",
+				Description:    "def",
+				Id:             "valid test 3",
+				Target:         "os",
+				Runner:         validRunner,
+				FixInstruction: "",
+			},
+		},
+	}
+	os.Setenv("WHALE_WATCHER_TARGET_LIST", "cmd, fs")
+	actual := validator.ValidateRuleset(input, "", "", "")
+	if actual.CheckedCount != 2 {
+		t.Errorf("checkedcount mismatch: Expected %d Got %d", len(input.Rules), actual.CheckedCount)
+	}
+	if actual.ViolationCount != 0 {
+		t.Errorf("violation mismatch: Expected 0 Got %d", actual.ViolationCount)
+	}
+	if executionCount != 2 {
+		t.Errorf("Execution count mismatch: Expected 2 Got %d", executionCount)
 	}
 }

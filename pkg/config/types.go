@@ -59,6 +59,7 @@ type Config struct {
 	Github         GithubConfig         `yaml:"github" envPrefix:"GH_"`
 	Target         TargetConfig         `yaml:"target" envPrefix:"TARGET_"`
 	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
+	TargetList     string               `yaml:"target_list" envPrefix:"TARGET_LIST"`
 }
 
 func (c *Config) Validate() error {
