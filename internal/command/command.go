@@ -29,6 +29,7 @@ Valid commands:
 	- help -> its this one :)
 	- validate <ruleset> <dockerfile> <oci image tarball> -> validate the ruleset against the given container artifacts
 	- docs <ruleset> -> pretty pring a ruleset
+	- bci -> build base image cache
 	`
 
 func Run(args []string) {
