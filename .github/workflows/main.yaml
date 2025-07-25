@@ -1,0 +1,85 @@
+name: Build and Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (defaults to manual-YYYY-MM-DD)'
+        required: false
+        type: string
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Install deps
+        run: make dep-install
+      
+      - name: Build project
+        run: make all
+      
+      - name: Run tests
+        run: go test ./...
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./build/
+          retention-days: 1
+
+  create-manual-release:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./build/
+      
+      - name: Set release tag
+        id: set_tag
+        run: |
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=manual-$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Delete existing manual release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.set_tag.outputs.tag }}"
+          # Delete the release if it exists
+          gh release delete "$TAG" --yes || true
+          # Delete the tag if it exists
+          git push --delete origin "$TAG" || true
+        continue-on-error: true
+      
+      - name: Create manual release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.set_tag.outputs.tag }}"
+          
+          # Create the release with all files from build directory
+          gh release create "$TAG" \
+            --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
+            --notes "Manual build from commit ${{ github.sha }}" \
+            --prerelease \
+            ./build/*
