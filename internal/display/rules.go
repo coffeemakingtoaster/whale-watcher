@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"text/template"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 )
 
 //go:embed site.tmpl

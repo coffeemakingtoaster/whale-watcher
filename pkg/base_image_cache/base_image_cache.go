@@ -5,8 +5,8 @@ import (
 	"errors"
 	"path/filepath"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache/db"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 )
 
 type BaseImageCache struct {

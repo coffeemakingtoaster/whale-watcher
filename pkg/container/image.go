@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	baseimagecache "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/tarutils"
+	baseimagecache "github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/tarutils"
 )
 
 type ContainerImage struct {

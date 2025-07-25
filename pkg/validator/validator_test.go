@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
 )
 
 type MockRunner struct {

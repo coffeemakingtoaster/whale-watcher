@@ -11,7 +11,7 @@ import (
 
 	"github.com/armon/go-radix"
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/tarutils"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/tarutils"
 )
 
 // This fs loads the files on demand and does NOT cache the entire blob

@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/display"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/adapters"
-	baseimagecache "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/ingester"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
+	"github.com/coffeemakingtoaster/whale-watcher/internal/display"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
+	baseimagecache "github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache/ingester"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
 )
 
 type RunContext struct {

@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/fetcher"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache/db"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/fetcher"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 )
 
 func IngestImage(image string) error {

@@ -3,7 +3,7 @@ package environment_test
 import (
 	"testing"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/environment"
+	"github.com/coffeemakingtoaster/whale-watcher/internal/environment"
 )
 
 func TestUnsafeCheckTrue(t *testing.T) {

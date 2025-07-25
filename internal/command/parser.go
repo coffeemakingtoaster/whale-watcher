@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/fetcher"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/fetcher"
 )
 
 func getContext(args []string) (*RunContext, error) {

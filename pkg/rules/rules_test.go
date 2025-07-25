@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/rules"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 )
 
 var noAssertRuleset = `

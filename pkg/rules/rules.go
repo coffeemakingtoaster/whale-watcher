@@ -12,7 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/environment"
+	"github.com/coffeemakingtoaster/whale-watcher/internal/environment"
 )
 
 func LoadRuleset(location string) (RuleSet, error) {

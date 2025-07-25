@@ -6,7 +6,7 @@ import (
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
 )
 
 type FixUtils struct {

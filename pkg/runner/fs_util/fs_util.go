@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
 )
 
 type FsUtils struct {

@@ -3,7 +3,7 @@ package layerfs_test
 import (
 	"testing"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/layerfs"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/layerfs"
 )
 
 func TestPut(t *testing.T) {

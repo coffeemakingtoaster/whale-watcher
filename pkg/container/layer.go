@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/layerfs"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/container/tarutils"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/layerfs"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/tarutils"
 )
 
 type Layer struct {

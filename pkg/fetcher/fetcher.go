@@ -20,7 +20,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 )
 
 func FetchContainerFiles() (string, string, string) {

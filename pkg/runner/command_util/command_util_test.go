@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
-	commandutil "iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner/command_util"
+	commandutil "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/command_util"
 )
 
 var sampleDockerfile = []string{

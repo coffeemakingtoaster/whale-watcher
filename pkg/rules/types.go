@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 )
 
 var allowedCategories = []string{"negative", "positive"}

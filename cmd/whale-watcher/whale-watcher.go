@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/internal/command"
+	"github.com/coffeemakingtoaster/whale-watcher/internal/command"
 )
 
 func main() {

@@ -2,9 +2,9 @@ package adapters
 
 import (
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/adapters/github"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/validator"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters/github"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
 )
 
 type PullRequestAdapter interface {

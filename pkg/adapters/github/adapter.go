@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 )
 
 type GithubPullRequestAdapter struct {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/base_image_cache/db"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache/db"
 )
 
 func GetTestDb() *sql.DB {

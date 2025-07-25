@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"iteragit.iteratec.de/max.herkenhoff/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 )
 
 var yamlConfig = `

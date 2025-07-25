@@ -1,4 +1,4 @@
-module iteragit.iteratec.de/max.herkenhoff/whale-watcher
+module github.com/coffeemakingtoaster/whale-watcher
 
 go 1.24.3
 
