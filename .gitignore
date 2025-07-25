@@ -239,3 +239,4 @@ config.yaml
 .cache
 .termdbms
 *.db
+reauthor.sh
