@@ -1,5 +1,7 @@
 # Whale watcher
 
+> This is a work in progress system! This tool as of now has a lot of quirks and servers as an unfinished proof-of-concept.
+
 Your way to define and enforce docker policies :)
 
 ## Quick start
