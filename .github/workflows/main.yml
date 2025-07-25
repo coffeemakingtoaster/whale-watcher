@@ -25,7 +25,7 @@ jobs:
         run: make dep-install
       
       - name: Build project
-        run: make build
+        run: make all
       
       - name: Run tests
         run: go test ./...
