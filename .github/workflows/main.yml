@@ -57,7 +57,7 @@ jobs:
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
             echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
           else
-            echo "tag=manual-$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+            echo "tag=pre-release" >> $GITHUB_OUTPUT
           fi
       
       - name: Delete existing manual release
@@ -82,5 +82,4 @@ jobs:
             --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
             --notes "Manual build from commit ${{ github.sha }}" \
             --prerelease \
-            --latest \
             ./build/*
