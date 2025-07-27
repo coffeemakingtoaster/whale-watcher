@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/armon/go-radix"
-	"github.com/rs/zerolog/log"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/tarutils"
+	"github.com/rs/zerolog/log"
 )
 
 // This fs loads the files on demand and does NOT cache the entire blob
@@ -92,6 +92,7 @@ func (lfs *LayerFS) Open(name string) (fs.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	lfs.fileCache.Put(name, fileData)
 	return &LayerFSFile{data: fileData, name: name}, nil
 }
 
