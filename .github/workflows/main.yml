@@ -82,4 +82,5 @@ jobs:
             --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
             --notes "Manual build from commit ${{ github.sha }}" \
             --prerelease \
+            --latest \
             ./build/*
