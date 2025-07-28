@@ -60,6 +60,7 @@ func Run(args []string) int {
 	// Get ref to prevent directory cleanup
 	ref := runner.GetReferencingWorkingDirectoryInstance()
 	defer ref.Free()
+	// TODO: These paths are passed down way to far without any validation
 	violations := validator.ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFile, runContext.DockerTarballPath)
 	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {

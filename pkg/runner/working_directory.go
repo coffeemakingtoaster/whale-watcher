@@ -93,7 +93,7 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, docker
 
 func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
 	dest := filepath.Join(workingDirectory, newName)
-	log.Debug().Str("filepath", dest).Send()
+	log.Debug().Str("source", source).Str("dest", dest).Send()
 
 	// Note: this is not container friendly
 	return os.Link(source, dest)

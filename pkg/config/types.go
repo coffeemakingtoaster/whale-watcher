@@ -4,7 +4,7 @@ import "errors"
 
 type TargetConfig struct {
 	RepositoryURL  string `yaml:"repository" env:"REPOSITORY_URL"`
-	DockerfilePath string `yaml:"dockerfile" env:"DOCKERFILE_PATH"`
+	DockerfilePath string `yaml:"dockerfile" env:"DOCKERFILE"`
 	Image          string `yaml:"image" env:"IMAGE"`
 	Branch         string `yaml:"branch" env:"BRANCH"`
 	OciPath        string `yaml:"ocipath" env:"OCI_PATH"`
