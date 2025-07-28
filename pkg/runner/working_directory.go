@@ -92,14 +92,22 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, docker
 }
 
 func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
-	dest := filepath.Join(workingDirectory, newName)
-	log.Debug().Str("source", source).Str("dest", dest).Send()
+	destination := filepath.Join(workingDirectory, newName)
+	log.Debug().Str("source", source).Str("dest", destination).Send()
 
-	err := os.Link(source, dest)
+	err := os.Link(source, destination)
 	// Assume that linking failed due to cross device things
-	// soft linking should work
+	// copy should work
 	if err != nil {
-		return os.Symlink(source, dest)
+		data, err := os.ReadFile(source)
+		if err != nil {
+			return err
+		}
+		// Write data to dst
+		err = os.WriteFile(destination, data, 0755)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
