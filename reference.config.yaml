@@ -6,6 +6,7 @@ target:
   ocipath: # specify the location of the oci tar file. Not needed if image is pulled from registry
   dockerpath: # specify the location of the docker tar file. Not needed if image is pulled from registry
   branch: # specify branch that should be pulled for validation. Only needed if remote repo is used
+  unsafe: # specify whether the image parsing should be done unsafe (i.e. use http instead of https to communicate with registry)
 # Github integration
 github:
   pat: # personal access token of account used for creating pr and pushing changes

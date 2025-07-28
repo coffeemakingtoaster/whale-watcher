@@ -9,6 +9,7 @@ type TargetConfig struct {
 	Branch         string `yaml:"branch" env:"BRANCH"`
 	OciPath        string `yaml:"ocipath" env:"OCI_PATH"`
 	DockerPath     string `yaml:"dockerpath" env:"DOCKER_PATH"`
+	Insecure       bool   `yaml:"insecure" env:"INSECURE"`
 }
 
 func (tc *TargetConfig) Validate() error {

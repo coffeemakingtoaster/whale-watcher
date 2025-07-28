@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -20,7 +21,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 )
 
 func FetchContainerFiles() (string, string, string) {
@@ -44,7 +44,7 @@ func FetchContainerFiles() (string, string, string) {
 		ociPath = cfg.Target.OciPath
 		dockerPath = cfg.Target.DockerPath
 	} else {
-		ociPath, dockerPath, err = loadImageFromRegistry(cfg.Target.Image)
+		ociPath, dockerPath, err = loadImageFromRegistry(cfg.Target.Image, cfg.Target.Insecure)
 		if err != nil {
 			log.Warn().Err(err).Msg("Could not load image from repository")
 		}
@@ -53,7 +53,7 @@ func FetchContainerFiles() (string, string, string) {
 	return dockerfilePath, ociPath, dockerPath
 }
 
-func loadImageFromRegistry(image string) (string, string, error) {
+func loadImageFromRegistry(image string, insecure bool) (string, string, error) {
 	log.Info().Str("image", image).Msg("Downloading image from registry")
 	tmpDirPath, err := os.MkdirTemp("", "filecache")
 	if err != nil {
@@ -63,13 +63,13 @@ func loadImageFromRegistry(image string) (string, string, error) {
 	}
 
 	destination := filepath.Join(tmpDirPath, "image.tar")
-	err = LoadTarToPath(image, destination, "oci")
+	err = LoadTarToPath(image, destination, "oci", insecure)
 	if err != nil {
 		return "", "", err
 	}
 
 	destinationDocker := filepath.Join(tmpDirPath, "image_docker.tar")
-	err = LoadTarToPath(image, destinationDocker, "docker")
+	err = LoadTarToPath(image, destinationDocker, "docker", insecure)
 	if err != nil {
 		return "", "", err
 	}
@@ -78,13 +78,21 @@ func loadImageFromRegistry(image string) (string, string, error) {
 	return destination, destinationDocker, nil
 }
 
-func LoadTarToPath(image, destination, format string) error {
+func LoadTarToPath(image, destination, format string, insecure bool) error {
 	format = strings.ToLower(format)
 	if format != "oci" && format != "docker" {
 		return fmt.Errorf("unsupported format: %s (supported: 'oci', 'docker')", format)
 	}
 
-	ref, err := name.ParseReference(image)
+	var ref name.Reference
+	var err error
+
+	if !insecure {
+		ref, err = name.ParseReference(image)
+	} else {
+		log.Warn().Msg("Insecure was enabled in config, performing insecure image pull (http)")
+		ref, err = name.ParseReference(image, name.Insecure)
+	}
 	if err != nil {
 		return err
 	}

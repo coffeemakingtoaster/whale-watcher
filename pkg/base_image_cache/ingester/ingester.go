@@ -3,12 +3,12 @@ package ingester
 import (
 	"path/filepath"
 
-	"github.com/rs/zerolog/log"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache/db"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/fetcher"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/rs/zerolog/log"
 )
 
 func IngestImage(image string) error {
@@ -27,7 +27,7 @@ func IngestImage(image string) error {
 	pwd := runner.GetReferencingWorkingDirectoryInstance()
 	defer pwd.Free()
 	destination := pwd.GetAbsolutePath("image.tar")
-	err = fetcher.LoadTarToPath(image, destination, "oci")
+	err = fetcher.LoadTarToPath(image, destination, "oci", false)
 	if err != nil {
 		log.Error().Err(err).Msgf("Could not download image %s", image)
 		return err
