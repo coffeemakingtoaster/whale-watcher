@@ -3,8 +3,10 @@ package fetcher
 import (
 	"archive/tar"
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -86,22 +88,30 @@ func LoadTarToPath(image, destination, format string, insecure bool) error {
 
 	var ref name.Reference
 	var err error
+	var remoteOptions []remote.Option
 
 	if !insecure {
 		ref, err = name.ParseReference(image)
 	} else {
 		log.Warn().Msg("Insecure was enabled in config, performing insecure image pull (http)")
 		ref, err = name.ParseReference(image, name.Insecure)
+		if err == nil {
+			// Configure transport for insecure HTTP connections
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			remoteOptions = append(remoteOptions, remote.WithTransport(tr))
+		}
 	}
+
 	if err != nil {
 		return err
 	}
 
-	img, err := remote.Image(ref)
+	img, err := remote.Image(ref, remoteOptions...)
 	if err != nil {
 		return err
 	}
-
 	switch format {
 	case "docker":
 		log.Info().Str("image", image).Msg("Saving docker tarball")
