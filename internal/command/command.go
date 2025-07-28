@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"github.com/coffeemakingtoaster/whale-watcher/internal/display"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
 	baseimagecache "github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache"
@@ -13,6 +12,7 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
+	"github.com/rs/zerolog/log"
 )
 
 type RunContext struct {
@@ -32,21 +32,21 @@ Valid commands:
 	- bci -> build base image cache
 	`
 
-func Run(args []string) {
+func Run(args []string) int {
 	runContext, err := getContext(args)
 	if err != nil {
 		panic(err)
 	}
 	if runContext.Instruction == "help" {
 		fmt.Println(helpText)
-		return
+		return 0
 	}
 	if runContext.Instruction == "bic" {
 		cfg := config.GetConfig()
 		for _, img := range cfg.BaseImageCache.BaseImages {
 			ingester.IngestImage(img)
 		}
-		return
+		return 0
 	}
 	ruleSet, err := rules.LoadRuleset(runContext.RuleSetEntrypoint)
 	if err != nil {
@@ -55,7 +55,7 @@ func Run(args []string) {
 	log.Info().Msgf("Loaded %d rules!", len(ruleSet.Rules))
 	if runContext.Instruction == "docs" {
 		display.ServeRules(ruleSet)
-		return
+		return 0
 	}
 	// Get ref to prevent directory cleanup
 	ref := runner.GetReferencingWorkingDirectoryInstance()
@@ -78,7 +78,7 @@ func Run(args []string) {
 	loadedImage, err := container.ContainerImageFromOCITar(ref.GetAbsolutePath("./out.tar"))
 	if err != nil {
 		log.Warn().Err(err).Msg("Could not parse oci tar")
-		return
+		return 1
 	}
 	if loadedImage.GetBaseImage() != "" {
 		log.Info().Str("base image", loadedImage.GetBaseImage()).Msg("Already uses known base image")
@@ -86,7 +86,7 @@ func Run(args []string) {
 	closestBaseImage, err := baseImageCache.GetClosestDependencyImage(loadedImage.GetPackageList())
 	if err != nil || len(closestBaseImage) == 0 {
 		log.Warn().Err(err).Msg("Could not determine closest base image")
-		return
+		return 1
 	}
 	cfg := config.GetConfig()
 	if config.ShouldInteractWithVSC() && violations.ViolationCount > 0 {
@@ -94,7 +94,7 @@ func Run(args []string) {
 		adapter, err := adapters.GetAdapterForRepository(cfg.Target.RepositoryURL)
 		if err != nil {
 			log.Warn().Err(err).Msg("Could not set for adapter")
-			return
+			return 1
 		}
 		description := violations.BuildDescriptionMarkdown()
 		description += fmt.Sprintf("\n⚠️ Recommended Base Image: `%s` ⚠️\n", closestBaseImage)
@@ -105,4 +105,8 @@ func Run(args []string) {
 
 	}
 	log.Info().Str("base image", closestBaseImage).Msg("Found fitting base image!")
+	if violations.ViolationCount > 0 {
+		return 1
+	}
+	return 0
 }
