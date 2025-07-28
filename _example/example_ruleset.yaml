@@ -32,8 +32,7 @@ rules:
     id: apt_sources_empty
     target: fs
     fix_instruction: |
-      depth = command_util.get_ast_depth()
-      fix_util.add_run_instruction(depth - 1, "rm -rf /etc/apt/sources.list.d/*")
+      assert(fix_util.append_run_instruction_with_match("apt", "rm -rf /etc/apt/sources.list.d/*"))
       fix_util.finish()
     long_description: |
       ⚠️ This is AI-generated content.
@@ -48,7 +47,7 @@ rules:
     id: user_not_root
     target: os
     fix_instruction: |
-      fix_util.set_user("sample")
+      fix_util.create_user("sample")
       fix_util.finish()
     long_description: |
       ⚠️ This is AI-generated content.
