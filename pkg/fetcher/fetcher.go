@@ -16,6 +16,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/legacy/tarball"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -95,13 +96,14 @@ func LoadTarToPath(image, destination, format string, insecure bool) error {
 	} else {
 		log.Warn().Msg("Insecure was enabled in config, performing insecure image pull (http)")
 		ref, err = name.ParseReference(image, name.Insecure)
-		if err == nil {
-			// Configure transport for insecure HTTP connections
-			tr := &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-			remoteOptions = append(remoteOptions, remote.WithTransport(tr))
+		if err != nil {
+			return err
 		}
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		remoteOptions = append(remoteOptions, remote.WithTransport(tr))
+		remoteOptions = append(remoteOptions, remote.WithAuth(authn.Anonymous))
 	}
 
 	if err != nil {
