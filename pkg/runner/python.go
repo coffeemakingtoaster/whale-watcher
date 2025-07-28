@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/rs/zerolog/log"
@@ -53,6 +54,10 @@ func (r *PythonRunner) RunFix(command string) {
 	err := cmd.Run()
 	if err != nil {
 		log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
+		// signal aborted indicates an issue with the gopy build result, advancing is useless
+		if strings.Contains(err.Error(), "signal: aborted (core dumped)") {
+			panic(err)
+		}
 	}
 }
 
