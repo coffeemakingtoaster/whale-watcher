@@ -15,10 +15,10 @@ github.com/caarlos0/env/v11 v11.3.1 h1:cArPWC15hWmEt+gWk7YBi7lEXTXCvpaSdCiZE2X5m
 github.com/caarlos0/env/v11 v11.3.1/go.mod h1:qupehSf/Y0TUTsxKywqRt/vJjN5nz6vauiYEUUr8P4U=
 github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
 github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
-github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250721125410-f41021f191d5 h1:qKAuTRThq4RC8keAUn4SgLirkW7gcgO80n04BZudNbI=
-github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250721125410-f41021f191d5/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250727230339-c85ccb2363f0 h1:HGNA0VCwrmiDvOcJp/iIvy71y1daWRdA9izjcC5lYHg=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250727230339-c85ccb2363f0/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250728135034-84420851869f h1:l1XqC7ouHVhRWJG7NiBpjarasBaq0goCjVgdJgX4vBE=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250728135034-84420851869f/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
 github.com/containerd/stargz-snapshotter/estargz v0.16.3 h1:7evrXtoh1mSbGj/pfRccTampEyKpjpOnS3CyiV1Ebr8=
 github.com/containerd/stargz-snapshotter/estargz v0.16.3/go.mod h1:uyr4BfYfOj3G9WBVE8cOlQmXAbPN9VEQpBBeJIuOipU=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
@@ -47,8 +47,6 @@ github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399 h1:eMj
 github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399/go.mod h1:1OCfN199q1Jm3HZlxleg+Dw/mwps2Wbk9frAWm+4FII=
 github.com/go-git/go-git/v5 v5.16.2 h1:fT6ZIOjE5iEnkzKyxTHK1W4HGAsPhqEqiSAssSO77hM=
 github.com/go-git/go-git/v5 v5.16.2/go.mod h1:4Ge4alE/5gPs30F2H1esi2gPd69R0C39lolkucHBOp8=
-github.com/go-python/gopy v0.4.10 h1:Ec3x+NTSzLsw9f6FTdDLwQCQlmlNmJIu4J6nSnyugqE=
-github.com/go-python/gopy v0.4.10/go.mod h1:zMV/gSSYa9u/8Zp0WYR+L/z+kOIqIUtMg/a1/GRy5uw=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 h1:f+oWsMOmNPc8JmEHVZIycC7hBoQxHH9pNKQORJNozsQ=
 github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8/go.mod h1:wcDNUvekVysuuOpQKo3191zZyTpiI6se1N1ULghS0sw=
