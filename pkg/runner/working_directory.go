@@ -95,8 +95,13 @@ func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
 	dest := filepath.Join(workingDirectory, newName)
 	log.Debug().Str("source", source).Str("dest", dest).Send()
 
-	// Note: this is not container friendly
-	return os.Link(source, dest)
+	err := os.Link(source, dest)
+	// Assume that linking failed due to cross device things
+	// soft linking should work
+	if err != nil {
+		return os.Symlink(source, dest)
+	}
+	return nil
 }
 
 func newRunnerWorkingDirectory() (*RunnerWorkingDirectory, error) {

@@ -62,8 +62,8 @@ func loadImageFromRegistry(image string, insecure bool) (string, string, error) 
 		}
 	}
 
-	destination := filepath.Join(tmpDirPath, "image.tar")
-	err = LoadTarToPath(image, destination, "oci", insecure)
+	destinationOci := filepath.Join(tmpDirPath, "image.tar")
+	err = LoadTarToPath(image, destinationOci, "oci", insecure)
 	if err != nil {
 		return "", "", err
 	}
@@ -74,8 +74,8 @@ func loadImageFromRegistry(image string, insecure bool) (string, string, error) 
 		return "", "", err
 	}
 
-	log.Info().Str("image", image).Msg("Successful download")
-	return destination, destinationDocker, nil
+	log.Info().Str("image", image).Str("dockerTarPath", destinationDocker).Str("ociTarPath", destinationOci).Msg("Successful download")
+	return destinationOci, destinationDocker, nil
 }
 
 func LoadTarToPath(image, destination, format string, insecure bool) error {
