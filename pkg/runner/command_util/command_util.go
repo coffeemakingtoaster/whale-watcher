@@ -102,6 +102,45 @@ func (cu *CommandUtils) GetLastInstructionNodeInStageByCommand(command string, s
 	return result
 }
 
+func (cu *CommandUtils) UsesSubstringAnywhere(pattern string) bool {
+	curr := cu.astRoot
+	for curr != nil {
+		if strings.Contains(strings.Join(curr.Reconstruct(), "\n"), pattern) {
+			return true
+		}
+		curr = curr.Subsequent
+	}
+	return false
+}
+
+// This is very inefficient
+// To make this faster the parser should likely change
+// if only the maintainer would have the time
+// TODO: Add a fix counterpart to this
+func (cu *CommandUtils) CommandAlwaysHasParam(command, param string) bool {
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	for _, node := range nodes {
+		runNode, ok := node.(*ast.RunInstructionNode)
+		if !ok {
+			panic("Conversionerror")
+		}
+		for _, cmd := range runNode.Cmd {
+			parts := strings.Split(cmd, "&&")
+			for i := range parts {
+				c := strings.TrimSpace(parts[i])
+				if !strings.HasPrefix(c, fmt.Sprintf("%s ", command)) {
+					continue
+				}
+				if !strings.Contains(c, param) {
+					return false
+				}
+			}
+		}
+
+	}
+	return true
+}
+
 func (cu *CommandUtils) Name() string {
 	return "command_util"
 }

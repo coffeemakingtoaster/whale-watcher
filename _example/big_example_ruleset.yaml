@@ -1,0 +1,131 @@
+#  npmCacheCleanAfterInstall,
+#  npmCacheCleanUseForce,
+#  rmRecursiveAfterMktempD,
+#  pipUseNoCacheDir,
+#  configureShouldUseBuildFlag,
+#  gemUpdateSystemRmRootGem,
+#  sha256sumEchoOneSpaces,
+#  gemUpdateNoDocument,
+#  gpgVerifyAscRmAsc,
+#  yumInstallRmVarCacheYum,
+#  tarSomethingRmTheSomething,
+#  gpgUseBatchFlag,
+#  gpgUseHaPools,
+#  ruleAptGetInstallUseY,
+#  ruleAptGetUpdatePrecedesInstall,
+
+name: Big Ruleset used for trials
+rules:
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.uses_substring_anywhere("http://"))
+    description: Ensure that only https connections are used
+    id: use_https_over_http
+    target: command
+    long_description: |
+      Http connections are generally unsafe! Instead https should be used.
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.command_has_always_param("curl","-f"))
+    description: Ensure that curl always uses -f flag
+    id: curl_always_use_f
+    target: command
+    long_description: |
+      Curl should always use the -f flag
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.command_has_always_param("apt-get","-y"))
+    description: Ensure that apt has the -y flag
+    id: apt_get_always_agree
+    target: command
+    long_description: |
+      The -y flag is needed for non interactive environments.
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.command_has_always_param("apt-get","-y"))
+    description: Ensure that apt has the -y flag
+    id: apt_always_agree
+    target: command
+    long_description: |
+      The -y flag is needed for non interactive environments.
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.command_has_always_param("apt-get","--no-install-recommends"))
+    description: Ensure that apt always skips recommends
+    id: apt_get_skip_recommends
+    target: command
+    long_description: |
+      Don't install unwanted recommended packages
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.command_has_always_param("apt","--no-install-recommends"))
+    description: Ensure that apt always skips recommends
+    id: apt_get_skip_recommends
+    target: command
+    long_description: |
+      Don't install unwanted recommended packages
+
+  - scope: output
+    category: Negative
+    instruction: |
+      # maybe also add fs check?
+      assert(not command_util.command_has_always_param("apk add","--no-cache"))
+    description: Ensure that apk doesn't use cache
+    id: apk_no_cache
+    target: command
+    long_description: |
+      Apk cache just bloats the image
+
+  - scope: output
+    category: Negative
+    instruction: |
+      layer_count = fs_util.get_layer_count()
+      assert(fs_util.look_for_file("/etc/apt/sources.list.d/debian.sources") == -1)
+    description: Ensure apt sources are empty
+    id: apt_sources_empty
+    target: fs
+    fix_instruction: |
+      # try to append apt command run instruction to not introduce an additional layer
+      if not fix_util.append_run_instruction_with_match("apt", "rm -rf /etc/apt/sources.list.d/*"):
+        fix_util.add_run_instruction("rm -rf /etc/apt/sources.list.d/*")
+      fix_util.finish()
+    long_description: |
+      The apt sources are generally not needed in a production image and therefore only add bloat and attack vectors. Installing apt packages after container start violates the idea of an immutable container.
+
+  - scope: output
+    category: Negative
+    instruction: |
+      layer_count = fs_util.get_layer_count()
+      assert(fs_util.look_for_file("/usr/src") == -1)
+    description: Ensure the /usr/src is cleaned up
+    id: /usr/src empty
+    target: fs
+    fix_instruction: |
+      fix_util.add_run_instruction("rm -rf /usr/src/*")
+      fix_util.finish()
+    long_description: |
+      The /usr/src directory is generally used for source files. Containers should only contain finished builds, not actual source files for security and bloat reasons.
+   
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(os_util.exec_command("whoami") != "root")
+    description: Final user should not be root
+    id: user_not_root
+    target: os
+    fix_instruction: |
+      fix_util.create_user("nonroot")
+      fix_util.finish()
+    long_description: |
+      The root user is the most powerful user on a linux machine. Running a process adds additional risks in the case of said process being vulnerable. In most cases, starting the process as a 'weaker' user is sufficient.
