@@ -1,10 +1,12 @@
 package adapters
 
 import (
-	"github.com/rs/zerolog/log"
+	"errors"
+
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters/github"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
+	"github.com/rs/zerolog/log"
 )
 
 type PullRequestAdapter interface {
@@ -14,7 +16,21 @@ type PullRequestAdapter interface {
 }
 
 func GetAdapterForRepository(repository string) (PullRequestAdapter, error) {
-	return github.NewGithubPullRequestAdapter(repository)
+
+	cfg := config.GetConfig()
+	if cfg.Github.Validate() == nil {
+		if user, repo, err := ParseGitRepoURL("github.com", repository); err == nil {
+			return github.NewGithubPullRequestAdapter(user, repo)
+		}
+	}
+
+	if cfg.Gitea.Validate() == nil {
+		if user, repo, err := ParseGitRepoURL(cfg.Gitea.InstanceUrl, repository); err == nil {
+			return github.NewGithubPullRequestAdapter(user, repo)
+		}
+
+	}
+	return &github.GithubPullRequestAdapter{}, errors.New("No configured vsc matched")
 }
 
 func CreatePRForFixes(violations validator.Violations, updatedDockerfilePath string) error {

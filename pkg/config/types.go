@@ -44,6 +44,25 @@ func (gc *GithubConfig) Validate() error {
 	return nil
 }
 
+type GiteaConfig struct {
+	Username    string `yaml:"username" env:"USER_NAME"`
+	Password    string `yaml:"password" env:"PASSWORD"`
+	InstanceUrl string `yaml:"instance_url" env:"INSTANCE_URL"`
+}
+
+func (gc *GiteaConfig) Validate() error {
+	if gc.Password == "" {
+		return errors.New("PAT must be set!")
+	}
+	if gc.Username == "" {
+		return errors.New("Username must be set!")
+	}
+	if gc.InstanceUrl == "" {
+		return errors.New("Instanceurl must be set!")
+	}
+	return nil
+}
+
 type BaseImageCacheConfig struct {
 	BaseImages    []string `yaml:"base_images" env:"BASE_IMAGES"`
 	CacheLocation string   `yaml:"cache_location" env:"CACHE_LOCATION"`
@@ -58,6 +77,7 @@ func (bicg *BaseImageCacheConfig) Validate() error {
 
 type Config struct {
 	Github         GithubConfig         `yaml:"github" envPrefix:"GITHUB_"`
+	Gitea          GiteaConfig          `yaml:"gitea" envPrefix:"GITEA_"`
 	Target         TargetConfig         `yaml:"target" envPrefix:"TARGET_"`
 	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
 	TargetList     string               `yaml:"target_list" envPrefix:"TARGET_LIST"`

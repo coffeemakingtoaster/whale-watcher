@@ -2,12 +2,9 @@ package github
 
 import (
 	"errors"
-	"net/url"
-	"regexp"
-	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/rs/zerolog/log"
 )
 
 type GithubPullRequestAdapter struct {
@@ -44,11 +41,7 @@ func (ghpra *GithubPullRequestAdapter) UpdatePullRequest(title, content string) 
 	return err
 }
 
-func NewGithubPullRequestAdapter(repositoryURL string) (*GithubPullRequestAdapter, error) {
-	repoUser, repoId, err := parseGitHubRepo(repositoryURL)
-	if err != nil {
-		return nil, err
-	}
+func NewGithubPullRequestAdapter(repoUser, repoId string) (*GithubPullRequestAdapter, error) {
 	conf := config.GetConfig()
 
 	if len(conf.Github.PAT) == 0 || len(conf.Github.Username) == 0 {
@@ -61,30 +54,4 @@ func NewGithubPullRequestAdapter(repositoryURL string) (*GithubPullRequestAdapte
 		pat:              conf.Github.PAT,
 		whaleWatcherUser: conf.Github.Username,
 	}, nil
-}
-
-func parseGitHubRepo(repoURL string) (user, repo string, err error) {
-	repoURL = strings.TrimSuffix(repoURL, ".git")
-
-	if strings.HasPrefix(repoURL, "git@") {
-		re := regexp.MustCompile(`git@github\.com:([^/]+)/(.+)`)
-		matches := re.FindStringSubmatch(repoURL)
-		if len(matches) == 3 {
-			return matches[1], matches[2], nil
-		}
-		return "", "", errors.New("invalid SSH GitHub URL format")
-	}
-
-	parsedURL, err := url.Parse(repoURL)
-	if err != nil {
-		return "", "", err
-	}
-	if parsedURL.Host != "github.com" {
-		return "", "", errors.New("not a github.com URL")
-	}
-	parts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
-	if len(parts) != 2 {
-		return "", "", errors.New("invalid GitHub URL path")
-	}
-	return parts[0], parts[1], nil
 }

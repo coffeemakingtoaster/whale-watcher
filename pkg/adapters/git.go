@@ -2,12 +2,17 @@ package adapters
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"time"
 
+	localconfig "github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -16,7 +21,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/rs/zerolog/log"
-	localconfig "github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 )
 
 func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath string) (string, error) {
@@ -154,4 +158,30 @@ func getFileData(path string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return buf.Bytes(), nil
+}
+
+func ParseGitRepoURL(host string, repoURL string) (user, repo string, err error) {
+	repoURL = strings.TrimSuffix(repoURL, ".git")
+
+	if strings.HasPrefix(repoURL, "git@") {
+		re := regexp.MustCompile(regexp.QuoteMeta(host) + `:([^/]+)/(.+)`)
+		matches := re.FindStringSubmatch(repoURL)
+		if len(matches) == 3 {
+			return matches[1], matches[2], nil
+		}
+		return "", "", errors.New("invalid SSH GitHub URL format")
+	}
+
+	parsedURL, err := url.Parse(repoURL)
+	if err != nil {
+		return "", "", err
+	}
+	if parsedURL.Host != host {
+		return "", "", fmt.Errorf("not a %s URL", host)
+	}
+	parts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid %s URL path", host)
+	}
+	return parts[0], parts[1], nil
 }
