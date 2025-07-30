@@ -72,5 +72,5 @@ Requirements:
 
 ## Troubleshooting
 
-Building on modern MacOs  is broken due to LLVM versions not supporting old flags.
-This requires altering and rebuilding gopy... See patched repo [here](https://github.com/coffeemakingtoaster/gopy).
+~~Building on modern MacOs  is broken due to LLVM versions not supporting old flags.~~
+~~This requires altering and rebuilding gopy... See patched repo [here](https://github.com/coffeemakingtoaster/gopy).~~
