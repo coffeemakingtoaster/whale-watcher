@@ -3,6 +3,7 @@ package fixutil
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
@@ -105,6 +106,56 @@ func (cu *FixUtils) CreateUser(user string) {
 	}
 	cu.AddRunInstruction(fmt.Sprintf("groupadd -r %s && useradd --no-log-init -r -g %s %s", user, user, user))
 	cu.SetUser(user)
+}
+
+// This is very inefficient
+// To make this faster the parser should likely change
+// if only the maintainer would have the time
+// TODO: Add a fix counterpart to this
+func (fu *FixUtils) EnsureCommandAlwaysHasParam(command, param string) {
+	curr := fu.astRoot
+	for curr != nil {
+		for i := range curr.Instructions {
+			runNode, ok := curr.Instructions[i].(*ast.RunInstructionNode)
+			if !ok {
+				continue
+			}
+			fu.ensureCommandInNodeAlwaysHasParam(runNode, command, param)
+		}
+		curr = curr.Subsequent
+	}
+}
+
+func (fu *FixUtils) ensureCommandInNodeAlwaysHasParam(node *ast.RunInstructionNode, command, param string) {
+	pointer := 0
+	for pointer < len(node.Cmd) {
+		cmd := node.Cmd[pointer]
+		if cmd == command {
+			pointer++
+			cmdPointer := pointer
+			for pointer < len(node.Cmd) {
+				cmd := node.Cmd[pointer]
+				if strings.Contains(cmd, param) {
+					break
+				}
+				// is command block ended/Run instruction end without finding wanted param?
+				if cmd == "&&" {
+					node.Cmd = slices.Insert(node.Cmd, cmdPointer, param)
+					break
+				}
+				if pointer == len(node.Cmd)-1 {
+					node.Cmd = slices.Insert(node.Cmd, cmdPointer, param)
+					return
+				}
+				pointer++
+			}
+		}
+		pointer++
+	}
+}
+
+func (fu *FixUtils) GetReconstruct() []string {
+	return fu.astRoot.Reconstruct()
 }
 
 func (fu *FixUtils) Finish() {
