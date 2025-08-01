@@ -95,3 +95,42 @@ func TestGetLastInstructionNodeInStageByCommand(t *testing.T) {
 		t.Errorf("Instruction result mismatch: Expected Workdir instruction node Got %v (Searched for %s)", *valid, command)
 	}
 }
+
+func TestCommandAlwaysHasParamWithCommandNotPresent(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	if !cu.CommandAlwaysHasParam("invalid", "-v") {
+		t.Error("Command with param mismatch: Expected true but got false")
+	}
+}
+
+func TestCommandAlwaysHasParamWithCommandTrueSimple(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN curl -f hello")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if !cu.CommandAlwaysHasParam("curl", "-f") {
+		t.Error("Command with param mismatch: Expected true but got false")
+	}
+}
+
+func TestCommandAlwaysHasParamWithCommandTrueNested(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && curl -f -x hello && abc def")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if !cu.CommandAlwaysHasParam("curl", "-f") {
+		t.Error("Command with param mismatch: Expected true but got false")
+	}
+}
+
+func TestCommandAlwaysHasParamWithCommandFalseSimple(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN curl -x hello")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if cu.CommandAlwaysHasParam("curl", "-f") {
+		t.Error("Command with param mismatch: Expected false but got true")
+	}
+}
+
+func TestCommandAlwaysHasParamWithCommandFalseNested(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && curl -d -l hello && abc def")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if cu.CommandAlwaysHasParam("curl", "-f") {
+		t.Error("Command with param mismatch: Expected false but got true")
+	}
+}

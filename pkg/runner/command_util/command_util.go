@@ -122,21 +122,27 @@ func (cu *CommandUtils) CommandAlwaysHasParam(command, param string) bool {
 	for _, node := range nodes {
 		runNode, ok := node.(*ast.RunInstructionNode)
 		if !ok {
-			panic("Conversionerror")
+			panic("Conversion error")
 		}
-		for _, cmd := range runNode.Cmd {
-			parts := strings.Split(cmd, "&&")
-			for i := range parts {
-				c := strings.TrimSpace(parts[i])
-				if !strings.HasPrefix(c, fmt.Sprintf("%s ", command)) {
-					continue
-				}
-				if !strings.Contains(c, param) {
-					return false
+		pointer := 0
+		for pointer < len(runNode.Cmd) {
+			cmd := runNode.Cmd[pointer]
+			if cmd == command {
+				pointer++
+				for pointer < len(runNode.Cmd) {
+					cmd := runNode.Cmd[pointer]
+					if strings.Contains(cmd, param) {
+						break
+					}
+					// is command block ended/Run instruction end without finding wanted param?
+					if cmd == "&&" || pointer == len(runNode.Cmd)-1 {
+						return false
+					}
+					pointer++
 				}
 			}
+			pointer++
 		}
-
 	}
 	return true
 }
