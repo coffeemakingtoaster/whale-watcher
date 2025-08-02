@@ -21,7 +21,7 @@ jobs:
         run: curl -LO http://github.com/coffeemakingtoaster/whale-watcher/releases/download/pre-release/whale-watcher && chmod +x ./whale-watcher
 
       - name: Generate HTML
-        run: ./whale-watcher docs ./_example/big_example_ruleset.yaml
+        run: ./whale-watcher docs --export ./_example/big_example_ruleset.yaml
 
       - name: Upload HTML
         uses: actions/upload-pages-artifact@v3 
