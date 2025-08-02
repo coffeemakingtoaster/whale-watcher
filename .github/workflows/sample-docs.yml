@@ -23,11 +23,14 @@ jobs:
       - name: Generate HTML
         run: ./whale-watcher docs --export ./_example/big_example_ruleset.yaml
 
+      - name: Prep upload
+        run: mkdir -p _out && mv ./index.html _out
+
       - name: Upload HTML
         uses: actions/upload-pages-artifact@v3 
         id: deployment
         with:
-          path: ./index.html
+          path: _out
 
   deploy:
     environment:
