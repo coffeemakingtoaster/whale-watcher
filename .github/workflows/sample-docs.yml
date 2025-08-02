@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ./_example/big_example_ruleset.yaml
+      - ./.github/workflows/sample-docs.yml
 
 jobs:
   # This is faster than building
