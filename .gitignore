@@ -240,3 +240,4 @@ config.yaml
 .termdbms
 *.db
 reauthor.sh
+index.html

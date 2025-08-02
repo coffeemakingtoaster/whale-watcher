@@ -3,9 +3,10 @@ package command
 import (
 	"errors"
 	"fmt"
+	"strings"
 
-	"github.com/rs/zerolog"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/fetcher"
+	"github.com/rs/zerolog"
 )
 
 func getContext(args []string) (*RunContext, error) {
@@ -29,7 +30,7 @@ func getContext(args []string) (*RunContext, error) {
 		// Only show errors now, otherwise interference with documentation
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	default:
-		return nil, errors.New(fmt.Sprintf("Unknown command: %s. Use help for more detail!", runContext.Instruction))
+		return nil, fmt.Errorf("Unknown command: %s. Use help for more detail!", runContext.Instruction)
 	}
 	return &runContext, nil
 }
@@ -48,6 +49,12 @@ func (rc *RunContext) parseDocs(args []string) error {
 	if len(args) < 1 {
 		return errors.New("Not enough arguments for docs. Needs <ruleset location>.")
 	}
-	rc.RuleSetEntrypoint = args[0]
+	rc.ExportHTML = false
+	if len(args) == 1 {
+		rc.RuleSetEntrypoint = args[0]
+	} else {
+		rc.RuleSetEntrypoint = args[1]
+		rc.ExportHTML = strings.TrimSpace(args[0]) == "--export"
+	}
 	return nil
 }

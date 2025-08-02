@@ -21,6 +21,7 @@ type RunContext struct {
 	DockerFile        string
 	RuleSetEntrypoint string
 	Instruction       string
+	ExportHTML        bool
 }
 
 var helpText = `
@@ -28,7 +29,7 @@ Whale watcher!
 Valid commands:
 	- help -> its this one :)
 	- validate <ruleset> <dockerfile> <oci image tarball> -> validate the ruleset against the given container artifacts
-	- docs <ruleset> -> pretty pring a ruleset
+	- docs <ruleset> -> Serve the ruleset documentation as a website. Pass --export to output and index.html instead
 	- bci -> build base image cache
 	`
 
@@ -54,7 +55,7 @@ func Run(args []string) int {
 	}
 	log.Info().Msgf("Loaded %d rules!", len(ruleSet.Rules))
 	if runContext.Instruction == "docs" {
-		display.ServeRules(ruleSet)
+		display.ServeRules(ruleSet, runContext.ExportHTML)
 		return 0
 	}
 	// Get ref to prevent directory cleanup
