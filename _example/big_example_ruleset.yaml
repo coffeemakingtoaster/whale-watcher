@@ -9,9 +9,7 @@
 #  gpgVerifyAscRmAsc,
 #  yumInstallRmVarCacheYum,
 #  tarSomethingRmTheSomething,
-#  gpgUseBatchFlag,
 #  gpgUseHaPools,
-#  ruleAptGetInstallUseY,
 #  ruleAptGetUpdatePrecedesInstall,
 
 name: Big Ruleset used for trials
@@ -33,6 +31,9 @@ rules:
     description: Ensure that curl always uses -f flag
     id: curl_always_use_f
     target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("curl", "-f")
+      fix_util.finish()
     long_description: |
       Curl should always use the -f flag
 
@@ -43,6 +44,9 @@ rules:
     description: Ensure that apt has the -y flag
     id: apt_get_always_agree
     target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("apt-get", "-y")
+      fix_util.finish()
     long_description: |
       The -y flag is needed for non interactive environments.
 
@@ -52,6 +56,9 @@ rules:
       assert(not command_util.command_has_always_param("apt-get","-y"))
     description: Ensure that apt has the -y flag
     id: apt_always_agree
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("apt", "-y")
+      fix_util.finish()
     target: command
     long_description: |
       The -y flag is needed for non interactive environments.
@@ -63,6 +70,9 @@ rules:
     description: Ensure that apt always skips recommends
     id: apt_get_skip_recommends
     target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("apt-get", "--no-install-recommends")
+      fix_util.finish()
     long_description: |
       Don't install unwanted recommended packages
 
@@ -73,6 +83,9 @@ rules:
     description: Ensure that apt always skips recommends
     id: apt_get_skip_recommends
     target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("apt", "--no-install-recommends")
+      fix_util.finish()
     long_description: |
       Don't install unwanted recommended packages
 
@@ -80,10 +93,15 @@ rules:
     category: Negative
     instruction: |
       # maybe also add fs check?
-      assert(not command_util.command_has_always_param("apk add","--no-cache"))
+      # TODO: This does not have add...hmmm
+      assert(not command_util.command_has_always_param("apk","--no-cache"))
     description: Ensure that apk doesn't use cache
     id: apk_no_cache
     target: command
+    fix_instruction: |
+      # TODO: This does not have add...hmmm
+      fix_util.ensure_command_always_has_param("apk", "--no-cache")
+      fix_util.finish()
     long_description: |
       Apk cache just bloats the image
 
@@ -129,3 +147,14 @@ rules:
       fix_util.finish()
     long_description: |
       The root user is the most powerful user on a linux machine. Running a process adds additional risks in the case of said process being vulnerable. In most cases, starting the process as a 'weaker' user is sufficient.
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(not command_util.command_has_always_param("gpg","--batch"))
+    description: Ensure that gpg has the --batch flag
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("gpg", "--batch")
+      fix_util.finish()
+    id: gpg_always_batch
+    target: command
