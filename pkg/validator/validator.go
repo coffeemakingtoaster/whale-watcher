@@ -3,9 +3,9 @@ package validator
 import (
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	"github.com/rs/zerolog/log"
 )
 
 func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) Violations {
@@ -22,7 +22,8 @@ func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, d
 		}
 		violations.ViolationCount++
 		violation := Violation{
-			RuleId: rule.Id,
+			RuleId:      rule.Id,
+			Description: rule.Description,
 		}
 		if fix.Fix != "" || rule.FixInstruction != "" {
 			violations.FixableCount++

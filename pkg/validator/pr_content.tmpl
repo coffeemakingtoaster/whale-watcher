@@ -9,9 +9,9 @@
 
 # whale watcher autofix PR ({{ len .Fixed}} Fixed, {{ len .Detected }} Unfixed)
 
-{{ if .DocURL }}
+{{ if .DocUrl }}
 
-For further details on the used ruleset see the [docs]({{ .DocURL }})
+For further details on the used ruleset see the [docs]({{ .DocUrl }})
 
 {{ end }}
 
@@ -19,7 +19,7 @@ For further details on the used ruleset see the [docs]({{ .DocURL }})
 
 ## ✅ Automatically Fixed Issues
 
-{{ for .Fixed }}
+{{ range .Fixed }}
   {{ template "list-entry" . }}
 {{ end }}
 
@@ -29,7 +29,7 @@ For further details on the used ruleset see the [docs]({{ .DocURL }})
 
 ## ❌ Detected but Not Automatically Fixable
 
-{{ for .Detected }}
+{{ range .Detected }}
   {{ template "list-entry" . }}
 {{ end }}
 

@@ -172,6 +172,8 @@ func (fu *FixUtils) Finish() {
 
 	data := strings.Join(newContent, "\n")
 
+	log.Info().Str("data", data).Send()
+
 	dockerFile.Write([]byte(data))
 
 	dockerFile.Close()

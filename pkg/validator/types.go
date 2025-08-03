@@ -52,7 +52,7 @@ func (v *Violations) BuildDescriptionMarkdown() string {
 			detected = append(detected, violationToTemplate(violation, cfg.DocsURL))
 		}
 	}
-	tmpl, err := template.New("pr").Parse(prTemplate)
+	tmpl, err := template.New("site").Parse(prTemplate)
 	if err != nil {
 		panic(err)
 	}

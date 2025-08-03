@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -22,6 +23,12 @@ func LoadOrInitDB(dbPath string) (*sql.DB, error) {
 	if _, err := os.Open(dbPath); os.IsNotExist(err) {
 		log.Info().Msg("Cache did not exist, creating cache...")
 		needsInit = true
+		cachePath := filepath.Dir(dbPath)
+		log.Debug().Str("cachedir", cachePath).Msg("Creating directory")
+		err := os.MkdirAll(cachePath, 0755)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	db, err := sql.Open("sqlite3", dbPath)

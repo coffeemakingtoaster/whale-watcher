@@ -65,7 +65,7 @@ func Run(args []string) int {
 	violations := validator.ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFile, runContext.DockerTarballPath)
 	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
 	for _, violation := range violations.Violations {
-		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Str("fix", violation.Fix).Send()
+		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Send()
 	}
 	// should a pr be created?
 	if config.ShouldInteractWithVSC() {
