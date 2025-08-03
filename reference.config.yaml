@@ -23,3 +23,5 @@ base_image_cache:
 log_level: 
 # list of policy target that will be executed, if empty all policy targets will be ran
 target_list: 
+# Possible url to deployed docs. Is used in PRs to link to the detailed description
+docs_url:

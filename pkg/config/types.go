@@ -82,6 +82,7 @@ type Config struct {
 	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
 	TargetList     string               `yaml:"target_list" envPrefix:"TARGET_LIST"`
 	LogLevel       int                  `yaml:"log_level" envPrefix:"LOG_LEVEL"`
+	DocsURL        string               `yaml:"docs_url" envPrefix:"DOCS_URL"`
 }
 
 func (c *Config) Validate() error {

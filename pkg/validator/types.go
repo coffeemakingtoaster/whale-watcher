@@ -1,8 +1,13 @@
 package validator
 
 import (
-	"fmt"
-	"strings"
+	"bytes"
+	_ "embed"
+	"net/url"
+	"text/template"
+
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/rs/zerolog/log"
 )
 
 type Violations struct {
@@ -19,41 +24,66 @@ type Violation struct {
 	AutoFixed   bool
 }
 
+type templateViolation struct {
+	RuleId      string
+	Description string
+	URL         string
+}
+
+type templateContent struct {
+	Fixed    []templateViolation
+	Detected []templateViolation
+	DocUrl   string
+}
+
+//go:embed pr_content.tmpl
+var prTemplate string
+
 func (v *Violations) BuildDescriptionMarkdown() string {
-	var fixed []string
-	var detected []string
-	var sb strings.Builder
+	var fixed []templateViolation
+	var detected []templateViolation
+
+	cfg := config.GetConfig()
 
 	for _, violation := range v.Violations {
-		markdown := buildViolationMarkdown(violation)
 		if violation.AutoFixed {
-			fixed = append(fixed, markdown)
+			fixed = append(fixed, violationToTemplate(violation, cfg.DocsURL))
 		} else {
-			detected = append(detected, markdown)
+			detected = append(detected, violationToTemplate(violation, cfg.DocsURL))
 		}
 	}
-
-	if len(fixed) > 0 {
-		sb.WriteString("## ✅ Automatically Fixed Issues\n\n")
-		addList(&sb, fixed)
-		sb.WriteString("\n")
+	tmpl, err := template.New("pr").Parse(prTemplate)
+	if err != nil {
+		panic(err)
+	}
+	var writer bytes.Buffer
+	err = tmpl.ExecuteTemplate(&writer, "site", templateContent{
+		Fixed:    fixed,
+		Detected: detected,
+		DocUrl:   cfg.DocsURL,
+	})
+	if err != nil {
+		panic(err)
 	}
 
-	if len(detected) > 0 {
-		sb.WriteString("## ❌ Detected but Not Automatically Fixable\n\n")
-		addList(&sb, detected)
-		sb.WriteString("\n")
-	}
-
-	return sb.String()
+	return writer.String()
 }
 
-func buildViolationMarkdown(v Violation) string {
-	return fmt.Sprintf("`%s` - %s", v.RuleId, v.Description)
-}
-
-func addList(sb *strings.Builder, elements []string) {
-	for _, element := range elements {
-		sb.WriteString(fmt.Sprintf("- %s\n", element))
+func violationToTemplate(violation Violation, docBaseURL string) templateViolation {
+	res := templateViolation{
+		RuleId:      violation.RuleId,
+		Description: violation.Description,
 	}
+
+	if len(docBaseURL) > 0 {
+		u, err := url.Parse(docBaseURL)
+		if err != nil {
+			log.Warn().Err(err).Msg("Could not parse the docs url")
+			return res
+		}
+		u.Fragment = url.PathEscape(res.RuleId)
+		res.URL = u.String()
+	}
+
+	return res
 }
