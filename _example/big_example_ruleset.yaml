@@ -27,7 +27,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_always_has_param("curl","-f"))
+      assert(command_util.command_always_has_param("curl","-f"))
     description: Ensure that curl always uses -f flag
     id: curl_always_use_f
     target: command
@@ -40,7 +40,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_always_has_param("apt-get install","-y"))
+      assert(command_util.command_always_has_param("apt-get install","-y"))
     description: Ensure that apt has the -y flag
     id: apt_get_always_agree
     target: command
@@ -53,7 +53,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_always_has_param("apt install","-y"))
+      assert(command_util.command_always_has_param("apt install","-y"))
     description: Ensure that apt has the -y flag
     id: apt_always_agree
     fix_instruction: |
@@ -66,7 +66,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_always_has_param("apt-get install","--no-install-recommends"))
+      assert(command_util.command_always_has_param("apt-get install","--no-install-recommends"))
     description: Ensure that apt always skips recommends
     id: apt_get_skip_recommends
     target: command
@@ -79,7 +79,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_always_has_param("apt install","--no-install-recommends"))
+      assert(command_util.command_always_has_param("apt install","--no-install-recommends"))
     description: Ensure that apt always skips recommends
     id: apt_skip_recommends
     target: command
@@ -92,9 +92,8 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      # maybe also add fs check?
-      # TODO: This does not have add...hmmm
-      assert(not command_util.command_always_has_param("apk","--no-cache"))
+      # maybe add fs check?
+      assert(command_util.command_always_has_param("apk add","--no-cache"))
     description: Ensure that apk doesn't use cache
     id: apk_no_cache
     target: command
@@ -151,7 +150,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_always_has_param("gpg","--batch"))
+      assert(command_util.command_always_has_param("gpg","--batch"))
     description: Ensure that gpg has the --batch flag
     fix_instruction: |
       fix_util.ensure_command_always_has_param("gpg", "--batch")
