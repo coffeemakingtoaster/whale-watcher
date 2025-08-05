@@ -15,12 +15,12 @@ func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, d
 			log.Info().Str("id", rule.Id).Msg("Skipped because target is disallowed")
 			continue
 		}
-		log.Info().Str("id", rule.Id).Msg("Not skipped")
 		violations.CheckedCount++
 		success, fix := rule.Validate(ociTarPath, dockerFilePath, dockerTarPath)
 		if success {
 			continue
 		}
+		log.Info().Str("id", rule.Id).Msg("Violation detected")
 		violations.ViolationCount++
 		violation := Violation{
 			RuleId:      rule.Id,

@@ -88,7 +88,10 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
+		// If it is just an assertion error we dont need to throw it
+		if strings.Contains(err.Error(), "AssertionError") {
+			log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
+		}
 		return err
 	}
 
