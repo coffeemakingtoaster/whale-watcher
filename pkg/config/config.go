@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/rs/zerolog"
@@ -15,10 +14,6 @@ const envPrefix = "WHALE_WATCHER_"
 
 var configPath = "./config.yaml"
 
-var lock = &sync.Mutex{}
-
-var config *Config
-
 // TODO: Adding a function that buffers all logging events during config parsing and publishes them later (after logging level has been set)
 func init() {
 	// Disable logging at the start
@@ -27,8 +22,8 @@ func init() {
 	if len(configPathEnv) != 0 {
 		SetConfigPath(configPathEnv)
 	}
-	GetConfig()
-	zerolog.SetGlobalLevel(zerolog.Level(config.LogLevel))
+	cfg := GetConfig()
+	zerolog.SetGlobalLevel(zerolog.Level(cfg.LogLevel))
 }
 
 func SetConfigPath(path string) {
@@ -36,29 +31,29 @@ func SetConfigPath(path string) {
 }
 
 func LoadConfigFromData(data []byte) Config {
-	err := yaml.Unmarshal(data, &config)
+	var cfg Config
+	err := yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		log.Error().Err(err).Msg("Could not parse config, initialising empty and trusting env fallback")
 	}
-	return handleEnvOverrides()
+	return handleEnvOverrides(cfg)
 }
 
 func loadConfigFromFile(configPath string) Config {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not read config file %s", configPath)
-		config = &Config{}
-		return handleEnvOverrides()
+		return handleEnvOverrides(Config{})
 	}
 	return LoadConfigFromData(data)
 }
 
-func handleEnvOverrides() Config {
-	err := env.ParseWithOptions(config, env.Options{Prefix: envPrefix})
+func handleEnvOverrides(cfg Config) Config {
+	err := env.ParseWithOptions(&cfg, env.Options{Prefix: envPrefix})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to read env variables for config overrides")
 	}
-	return *config
+	return cfg
 }
 
 func ShouldInteractWithVSC() bool {
@@ -67,15 +62,10 @@ func ShouldInteractWithVSC() bool {
 }
 
 func GetConfig() Config {
-	if config == nil {
-		lock.Lock()
-		loadedConfig := loadConfigFromFile(configPath)
-		config = &loadedConfig
-		err := config.Validate()
-		if err != nil {
-			log.Error().Err(err).Msg("Invalid config!")
-		}
-		lock.Unlock()
+	cfg := loadConfigFromFile(configPath)
+	err := cfg.Validate()
+	if err != nil {
+		log.Error().Err(err).Msg("Invalid config!")
 	}
-	return *config
+	return cfg
 }

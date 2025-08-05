@@ -2,7 +2,6 @@ package validator_test
 
 import (
 	"errors"
-	"os"
 	"testing"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
@@ -174,6 +173,7 @@ func TestValidateFullFixableFailingRuleset(t *testing.T) {
 }
 
 func TestLimitTargetValidation(t *testing.T) {
+	t.Setenv("WHALE_WATCHER_TARGET_LIST", "cmd,fs")
 	executionCount := 0
 	validRunner := MockRunner{func(_ bool) error {
 		executionCount++
@@ -214,10 +214,9 @@ func TestLimitTargetValidation(t *testing.T) {
 			},
 		},
 	}
-	os.Setenv("WHALE_WATCHER_TARGET_LIST", "cmd, fs")
 	actual := validator.ValidateRuleset(input, "", "", "")
 	if actual.CheckedCount != 2 {
-		t.Errorf("checkedcount mismatch: Expected %d Got %d", len(input.Rules), actual.CheckedCount)
+		t.Errorf("checkedcount mismatch: Expected 2 Got %d", actual.CheckedCount)
 	}
 	if actual.ViolationCount != 0 {
 		t.Errorf("violation mismatch: Expected 0 Got %d", actual.ViolationCount)

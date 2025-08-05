@@ -1,6 +1,9 @@
 package config
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type TargetConfig struct {
 	RepositoryURL  string `yaml:"repository" env:"REPOSITORY_URL"`
@@ -13,18 +16,6 @@ type TargetConfig struct {
 }
 
 func (tc *TargetConfig) Validate() error {
-	if tc.RepositoryURL == "" && tc.DockerfilePath == "" {
-		return errors.New("RepositoryURL and Dockerfilepath must be set!")
-	}
-
-	if tc.Image == "" && (tc.OciPath == "" || tc.DockerPath == "") {
-		return errors.New("Either image identifier or tar paths must be set")
-	}
-
-	if tc.Image != "" && tc.OciPath != "" {
-		return errors.New("Only image identifier OR oci path can be set at a time")
-	}
-
 	return nil
 }
 
@@ -34,6 +25,9 @@ type GithubConfig struct {
 }
 
 func (gc *GithubConfig) Validate() error {
+	if len(gc.PAT)+len(gc.Username) == 0 {
+		return nil
+	}
 	if gc.PAT == "" {
 		return errors.New("PAT must be set!")
 	}
@@ -80,9 +74,9 @@ type Config struct {
 	Gitea          GiteaConfig          `yaml:"gitea" envPrefix:"GITEA_"`
 	Target         TargetConfig         `yaml:"target" envPrefix:"TARGET_"`
 	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
-	TargetList     string               `yaml:"target_list" envPrefix:"TARGET_LIST"`
-	LogLevel       int                  `yaml:"log_level" envPrefix:"LOG_LEVEL"`
-	DocsURL        string               `yaml:"docs_url" envPrefix:"DOCS_URL"`
+	TargetList     string               `yaml:"target_list" env:"TARGET_LIST"`
+	LogLevel       int                  `yaml:"log_level" env:"LOG_LEVEL"`
+	DocsURL        string               `yaml:"docs_url" env:"DOCS_URL"`
 }
 
 func (c *Config) Validate() error {
@@ -95,4 +89,11 @@ func (c *Config) Validate() error {
 		return err
 	}
 	return nil
+}
+
+func (c *Config) AllowsTarget(target string) bool {
+	if len(c.TargetList) == 0 {
+		return true
+	}
+	return strings.Contains(c.TargetList, target)
 }
