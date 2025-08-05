@@ -118,7 +118,8 @@ func (cu *CommandUtils) UsesSubstringAnywhere(pattern string) bool {
 // To make this faster the parser should likely change
 // if only the maintainer would have the time
 // This is unable to detect parameters weaved into command (apt-get -y install will not detect the -y)
-func (cu *CommandUtils) CommandAlwaysHasParam(command []string, param string) bool {
+func (cu *CommandUtils) CommandAlwaysHasParam(rawCommand string, param string) bool {
+	command := strings.Split(rawCommand, " ")
 	nodes := cu.GetEveryNodeOfInstruction("RUN")
 	for _, node := range nodes {
 		search := util.NewSliceSearch(command)

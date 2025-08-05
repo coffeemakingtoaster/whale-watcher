@@ -77,6 +77,8 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 	command = buffer.String() + "\n" + command
 	cmd := exec.Command(r.exec, "-c", command)
 	cmd.Dir = r.workingDirectory.tmpDirPath
+	// only log panic
+	cmd.Env = append(cmd.Env, "WHALE_WATCHER_LOG_LEVEL=5")
 
 	var errorOutput bytes.Buffer
 	var stdOutput bytes.Buffer

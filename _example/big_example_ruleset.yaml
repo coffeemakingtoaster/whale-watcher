@@ -27,12 +27,12 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_has_always_param(["curl"],"-f"))
+      assert(not command_util.command_always_has_param("curl","-f"))
     description: Ensure that curl always uses -f flag
     id: curl_always_use_f
     target: command
     fix_instruction: |
-      fix_util.ensure_command_always_has_param(["curl"], "-f")
+      fix_util.ensure_command_always_has_param("curl", "-f")
       fix_util.finish()
     long_description: |
       Curl should always use the -f flag
@@ -40,12 +40,12 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_has_always_param(["apt-get", "install"],"-y"))
+      assert(not command_util.command_always_has_param("apt-get install","-y"))
     description: Ensure that apt has the -y flag
     id: apt_get_always_agree
     target: command
     fix_instruction: |
-      fix_util.ensure_command_always_has_param(["apt-get","install"], "-y")
+      fix_util.ensure_command_always_has_param("apt-get install", "-y")
       fix_util.finish()
     long_description: |
       The -y flag is needed for non interactive environments.
@@ -53,11 +53,11 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_has_always_param(["apt","install"],"-y"))
+      assert(not command_util.command_always_has_param("apt install","-y"))
     description: Ensure that apt has the -y flag
     id: apt_always_agree
     fix_instruction: |
-      fix_util.ensure_command_always_has_param(["apt","install"], "-y")
+      fix_util.ensure_command_always_has_param("apt install", "-y")
       fix_util.finish()
     target: command
     long_description: |
@@ -66,12 +66,12 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_has_always_param(["apt-get","install"],"--no-install-recommends"))
+      assert(not command_util.command_always_has_param("apt-get install","--no-install-recommends"))
     description: Ensure that apt always skips recommends
     id: apt_get_skip_recommends
     target: command
     fix_instruction: |
-      fix_util.ensure_command_always_has_param(["apt-get","install"], "--no-install-recommends")
+      fix_util.ensure_command_always_has_param("apt-get install", "--no-install-recommends")
       fix_util.finish()
     long_description: |
       Don't install unwanted recommended packages
@@ -79,12 +79,12 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_has_always_param(["apt","install"],"--no-install-recommends"))
+      assert(not command_util.command_always_has_param("apt install","--no-install-recommends"))
     description: Ensure that apt always skips recommends
     id: apt_skip_recommends
     target: command
     fix_instruction: |
-      fix_util.ensure_command_always_has_param(["apt","install"], "--no-install-recommends")
+      fix_util.ensure_command_always_has_param("apt install", "--no-install-recommends")
       fix_util.finish()
     long_description: |
       Don't install unwanted recommended packages
@@ -94,13 +94,13 @@ rules:
     instruction: |
       # maybe also add fs check?
       # TODO: This does not have add...hmmm
-      assert(not command_util.command_has_always_param(["apk"],"--no-cache"))
+      assert(not command_util.command_always_has_param("apk","--no-cache"))
     description: Ensure that apk doesn't use cache
     id: apk_no_cache
     target: command
     fix_instruction: |
       # TODO: This does not have add...hmmm
-      fix_util.ensure_command_always_has_param(["apk"], "--no-cache")
+      fix_util.ensure_command_always_has_param("apk", "--no-cache")
       fix_util.finish()
     long_description: |
       Apk cache just bloats the image
@@ -151,10 +151,10 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.command_has_always_param(["gpg"],"--batch"))
+      assert(not command_util.command_always_has_param("gpg","--batch"))
     description: Ensure that gpg has the --batch flag
     fix_instruction: |
-      fix_util.ensure_command_always_has_param(["gpg"], "--batch")
+      fix_util.ensure_command_always_has_param("gpg", "--batch")
       fix_util.finish()
     id: gpg_always_batch
     target: command

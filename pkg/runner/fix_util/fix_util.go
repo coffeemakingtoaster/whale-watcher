@@ -109,7 +109,8 @@ func (cu *FixUtils) CreateUser(user string) {
 	cu.SetUser(user)
 }
 
-func (fu *FixUtils) EnsureCommandAlwaysHasParam(command []string, param string) {
+func (fu *FixUtils) EnsureCommandAlwaysHasParam(rawCommand, param string) {
+	command := strings.Split(rawCommand, " ")
 	curr := fu.astRoot
 	for curr != nil {
 		for i := range curr.Instructions {

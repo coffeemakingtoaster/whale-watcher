@@ -19,10 +19,12 @@ var lock = &sync.Mutex{}
 
 var config *Config
 
+// TODO: Adding a function that buffers all logging events during config parsing and publishes them later (after logging level has been set)
 func init() {
+	// Disable logging at the start
+	zerolog.SetGlobalLevel(zerolog.Level(5))
 	configPathEnv := os.Getenv(fmt.Sprintf("%sCONFIG_PATH", envPrefix))
 	if len(configPathEnv) != 0 {
-		log.Warn().Msgf("Config path specified in env! Updating to %s", configPathEnv)
 		SetConfigPath(configPathEnv)
 	}
 	GetConfig()
