@@ -6,6 +6,7 @@ import (
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 )
 
 type CommandUtils struct {
@@ -116,10 +117,11 @@ func (cu *CommandUtils) UsesSubstringAnywhere(pattern string) bool {
 // This is very inefficient
 // To make this faster the parser should likely change
 // if only the maintainer would have the time
-// TODO: Add a fix counterpart to this
-func (cu *CommandUtils) CommandAlwaysHasParam(command, param string) bool {
+// This is unable to detect parameters weaved into command (apt-get -y install will not detect the -y)
+func (cu *CommandUtils) CommandAlwaysHasParam(command []string, param string) bool {
 	nodes := cu.GetEveryNodeOfInstruction("RUN")
 	for _, node := range nodes {
+		search := runner.NewSliceSearch(command)
 		runNode, ok := node.(*ast.RunInstructionNode)
 		if !ok {
 			panic("Conversion error")
@@ -127,7 +129,7 @@ func (cu *CommandUtils) CommandAlwaysHasParam(command, param string) bool {
 		pointer := 0
 		for pointer < len(runNode.Cmd) {
 			cmd := runNode.Cmd[pointer]
-			if cmd == command {
+			if search.Match(cmd) {
 				pointer++
 				for pointer < len(runNode.Cmd) {
 					cmd := runNode.Cmd[pointer]
@@ -140,6 +142,7 @@ func (cu *CommandUtils) CommandAlwaysHasParam(command, param string) bool {
 					}
 					pointer++
 				}
+				search.Reset()
 			}
 			pointer++
 		}

@@ -46,7 +46,7 @@ func getDiff(expected, actual []string) (string, string) {
 func TestAddParamCommandNotPresent(t *testing.T) {
 	fu := fixutil.SetupFromContent(sampleDockerfile)
 	expected := fu.GetReconstruct()
-	fu.EnsureCommandAlwaysHasParam("curl", "-f")
+	fu.EnsureCommandAlwaysHasParam([]string{"curl"}, "-f")
 	actual := fu.GetReconstruct()
 
 	if !reflect.DeepEqual(expected, actual) {
@@ -56,10 +56,24 @@ func TestAddParamCommandNotPresent(t *testing.T) {
 }
 
 func TestAddParamCommandPresent(t *testing.T) {
-	alteredDockerfile := append(sampleDockerfile, "RUN curl google.com")
-	expected := "RUN [\"curl\",\"-f\",\"google.com\"]"
+	alteredDockerfile := append(sampleDockerfile, "RUN apt-get install vim-btw")
+	expected := "RUN [\"apt-get\",\"install\",\"-y\",\"vim-btw\"]"
 	fu := fixutil.SetupFromContent(alteredDockerfile)
-	fu.EnsureCommandAlwaysHasParam("curl", "-f")
+	fu.EnsureCommandAlwaysHasParam([]string{"apt-get", "install"}, "-y")
+
+	out := fu.GetReconstruct()
+	actual := out[len(out)-1]
+
+	if actual != expected {
+		t.Errorf("Run node mismatch: Expected %s Got: %s", expected, actual)
+	}
+}
+
+func TestAddParamCommandPresentMultiple(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN apt-get update && apt-get install vim-btw && apt-get install arch-btw")
+	expected := "RUN [\"apt-get\",\"update\",\"&&\",\"apt-get\",\"install\",\"-y\",\"vim-btw\",\"&&\",\"apt-get\",\"install\",\"-y\",\"arch-btw\"]"
+	fu := fixutil.SetupFromContent(alteredDockerfile)
+	fu.EnsureCommandAlwaysHasParam([]string{"apt-get", "install"}, "-y")
 
 	out := fu.GetReconstruct()
 	actual := out[len(out)-1]

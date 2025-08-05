@@ -98,7 +98,7 @@ func TestGetLastInstructionNodeInStageByCommand(t *testing.T) {
 
 func TestCommandAlwaysHasParamWithCommandNotPresent(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
-	if !cu.CommandAlwaysHasParam("invalid", "-v") {
+	if !cu.CommandAlwaysHasParam([]string{"invalid"}, "-v") {
 		t.Error("Command with param mismatch: Expected true but got false")
 	}
 }
@@ -106,7 +106,7 @@ func TestCommandAlwaysHasParamWithCommandNotPresent(t *testing.T) {
 func TestCommandAlwaysHasParamWithCommandTrueSimple(t *testing.T) {
 	alteredDockerfile := append(sampleDockerfile, "RUN curl -f hello")
 	cu := commandutil.SetupFromContent(alteredDockerfile)
-	if !cu.CommandAlwaysHasParam("curl", "-f") {
+	if !cu.CommandAlwaysHasParam([]string{"curl"}, "-f") {
 		t.Error("Command with param mismatch: Expected true but got false")
 	}
 }
@@ -114,7 +114,15 @@ func TestCommandAlwaysHasParamWithCommandTrueSimple(t *testing.T) {
 func TestCommandAlwaysHasParamWithCommandTrueNested(t *testing.T) {
 	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && curl -f -x hello && abc def")
 	cu := commandutil.SetupFromContent(alteredDockerfile)
-	if !cu.CommandAlwaysHasParam("curl", "-f") {
+	if !cu.CommandAlwaysHasParam([]string{"curl"}, "-f") {
+		t.Error("Command with param mismatch: Expected true but got false")
+	}
+}
+
+func TestCommandAlwaysHasParamWithLongCommandTrue(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && apt-get install -y vim-btw && abc def")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if !cu.CommandAlwaysHasParam([]string{"apt-get", "install"}, "-y") {
 		t.Error("Command with param mismatch: Expected true but got false")
 	}
 }
@@ -122,7 +130,7 @@ func TestCommandAlwaysHasParamWithCommandTrueNested(t *testing.T) {
 func TestCommandAlwaysHasParamWithCommandFalseSimple(t *testing.T) {
 	alteredDockerfile := append(sampleDockerfile, "RUN curl -x hello")
 	cu := commandutil.SetupFromContent(alteredDockerfile)
-	if cu.CommandAlwaysHasParam("curl", "-f") {
+	if cu.CommandAlwaysHasParam([]string{"curl"}, "-f") {
 		t.Error("Command with param mismatch: Expected false but got true")
 	}
 }
@@ -130,7 +138,15 @@ func TestCommandAlwaysHasParamWithCommandFalseSimple(t *testing.T) {
 func TestCommandAlwaysHasParamWithCommandFalseNested(t *testing.T) {
 	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && curl -d -l hello && abc def")
 	cu := commandutil.SetupFromContent(alteredDockerfile)
-	if cu.CommandAlwaysHasParam("curl", "-f") {
+	if cu.CommandAlwaysHasParam([]string{"curl"}, "-f") {
+		t.Error("Command with param mismatch: Expected false but got true")
+	}
+}
+
+func TestCommandAlwaysHasParamWithLongCommandFalse(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && apt-get install vim-btw && abc def")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if cu.CommandAlwaysHasParam([]string{"apt-get", "install"}, "-y") {
 		t.Error("Command with param mismatch: Expected false but got true")
 	}
 }

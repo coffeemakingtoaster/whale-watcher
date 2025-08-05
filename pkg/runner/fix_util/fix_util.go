@@ -8,6 +8,7 @@ import (
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 	"github.com/rs/zerolog/log"
 )
 
@@ -108,11 +109,7 @@ func (cu *FixUtils) CreateUser(user string) {
 	cu.SetUser(user)
 }
 
-// This is very inefficient
-// To make this faster the parser should likely change
-// if only the maintainer would have the time
-// TODO: Add a fix counterpart to this
-func (fu *FixUtils) EnsureCommandAlwaysHasParam(command, param string) {
+func (fu *FixUtils) EnsureCommandAlwaysHasParam(command []string, param string) {
 	curr := fu.astRoot
 	for curr != nil {
 		for i := range curr.Instructions {
@@ -126,11 +123,12 @@ func (fu *FixUtils) EnsureCommandAlwaysHasParam(command, param string) {
 	}
 }
 
-func (fu *FixUtils) ensureCommandInNodeAlwaysHasParam(node *ast.RunInstructionNode, command, param string) {
+func (fu *FixUtils) ensureCommandInNodeAlwaysHasParam(node *ast.RunInstructionNode, command []string, param string) {
+	search := runner.NewSliceSearch[string](command)
 	pointer := 0
 	for pointer < len(node.Cmd) {
 		cmd := node.Cmd[pointer]
-		if cmd == command {
+		if search.Match(cmd) {
 			pointer++
 			cmdPointer := pointer
 			for pointer < len(node.Cmd) {
@@ -149,6 +147,7 @@ func (fu *FixUtils) ensureCommandInNodeAlwaysHasParam(node *ast.RunInstructionNo
 				}
 				pointer++
 			}
+			search.Reset()
 		}
 		pointer++
 	}
