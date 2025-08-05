@@ -27,6 +27,8 @@ github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250803105312-3b40a2a1e
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250803105312-3b40a2a1e2e8/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250805100550-57497479b2f3 h1:kXLSU0QEy789Mak7nbapCO897i8TXUeYzfIL6q7nlZ4=
 github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250805100550-57497479b2f3/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250805110534-d94e0701a969 h1:nb5pt/8xH5gopXp+0eRqDKn/8UTbJr3Mg6f76YdjVJI=
+github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250805110534-d94e0701a969/go.mod h1:3kFCzPHMwofiYkL8l4Y9MkRJ+eP+jeExdC6qhNX6mI8=
 github.com/containerd/stargz-snapshotter/estargz v0.16.3 h1:7evrXtoh1mSbGj/pfRccTampEyKpjpOnS3CyiV1Ebr8=
 github.com/containerd/stargz-snapshotter/estargz v0.16.3/go.mod h1:uyr4BfYfOj3G9WBVE8cOlQmXAbPN9VEQpBBeJIuOipU=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
