@@ -6,7 +6,7 @@ import (
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/util"
 )
 
 type CommandUtils struct {
@@ -121,7 +121,7 @@ func (cu *CommandUtils) UsesSubstringAnywhere(pattern string) bool {
 func (cu *CommandUtils) CommandAlwaysHasParam(command []string, param string) bool {
 	nodes := cu.GetEveryNodeOfInstruction("RUN")
 	for _, node := range nodes {
-		search := runner.NewSliceSearch(command)
+		search := util.NewSliceSearch(command)
 		runNode, ok := node.(*ast.RunInstructionNode)
 		if !ok {
 			panic("Conversion error")

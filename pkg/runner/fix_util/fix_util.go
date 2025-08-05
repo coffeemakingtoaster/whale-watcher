@@ -8,7 +8,7 @@ import (
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/util"
 	"github.com/rs/zerolog/log"
 )
 
@@ -124,7 +124,7 @@ func (fu *FixUtils) EnsureCommandAlwaysHasParam(command []string, param string) 
 }
 
 func (fu *FixUtils) ensureCommandInNodeAlwaysHasParam(node *ast.RunInstructionNode, command []string, param string) {
-	search := runner.NewSliceSearch[string](command)
+	search := util.NewSliceSearch[string](command)
 	pointer := 0
 	for pointer < len(node.Cmd) {
 		cmd := node.Cmd[pointer]
