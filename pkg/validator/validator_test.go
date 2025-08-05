@@ -225,3 +225,60 @@ func TestLimitTargetValidation(t *testing.T) {
 		t.Errorf("Execution count mismatch: Expected 2 Got %d", executionCount)
 	}
 }
+
+func TestValidateNoFixExecution(t *testing.T) {
+	t.Setenv("WHALE_WATCHER_NO_FIX", "true")
+	runExecutionCount := 0
+	fixExecutionCount := 0
+	validRunner := MockRunner{func(is_test bool) error {
+		if !is_test {
+			runExecutionCount++
+		} else {
+			fixExecutionCount++
+		}
+		return errors.New("No")
+	},
+	}
+	input := rules.RuleSet{
+		Rules: []*rules.Rule{
+			&rules.Rule{
+				Scope:          "output",
+				Category:       "Negative",
+				Instruction:    "abc",
+				Description:    "def",
+				Id:             "invalid test 1",
+				Target:         "fs",
+				Runner:         validRunner,
+				FixInstruction: "xy",
+			},
+			&rules.Rule{
+				Scope:          "output",
+				Category:       "Negative",
+				Instruction:    "abc",
+				Description:    "def",
+				Id:             "invalid test 2",
+				Target:         "fs",
+				Runner:         validRunner,
+				FixInstruction: "xy",
+			},
+		},
+	}
+	actual := validator.ValidateRuleset(input, "", "", "")
+	if actual.CheckedCount != 2 {
+		t.Errorf("checkedcount mismatch: Expected %d Got %d", len(input.Rules), actual.CheckedCount)
+	}
+	if actual.ViolationCount != 2 {
+		t.Errorf("violation count mismatch: Expected 0 Got %d", actual.ViolationCount)
+	}
+	if actual.FixableCount != 0 {
+		t.Errorf("fixable mismatch: Expected 0 Got %d", actual.ViolationCount)
+	}
+
+	if runExecutionCount != 2 {
+		t.Errorf("Execution count mismatch: Expected 0 Got %d", runExecutionCount)
+	}
+
+	if fixExecutionCount != 0 {
+		t.Errorf("fix execution count mismatch: Expected 0 Got %d", fixExecutionCount)
+	}
+}

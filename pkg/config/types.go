@@ -77,6 +77,7 @@ type Config struct {
 	TargetList     string               `yaml:"target_list" env:"TARGET_LIST"`
 	LogLevel       int                  `yaml:"log_level" env:"LOG_LEVEL"`
 	DocsURL        string               `yaml:"docs_url" env:"DOCS_URL"`
+	NoFix          bool                 `yaml:"no_fix" env:"NO_FIX"`
 }
 
 func (c *Config) Validate() error {

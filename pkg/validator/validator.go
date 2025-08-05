@@ -26,7 +26,7 @@ func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, d
 			RuleId:      rule.Id,
 			Description: rule.Description,
 		}
-		if fix.Fix != "" || rule.FixInstruction != "" {
+		if (fix.Fix != "" || rule.FixInstruction != "") && !cfg.NoFix {
 			violations.FixableCount++
 			violation.Fix = fix.Fix
 			err := rule.PerformFix()
