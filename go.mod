@@ -5,7 +5,7 @@ go 1.24.3
 require (
 	github.com/armon/go-radix v1.0.0
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250805110534-d94e0701a969
+	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250805111611-10095ad6be88
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-python/gopy v0.4.10
