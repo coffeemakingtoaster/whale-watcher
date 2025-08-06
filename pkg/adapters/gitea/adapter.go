@@ -15,7 +15,7 @@ type GiteaPullRequestAdapter struct {
 
 func (gtpra *GiteaPullRequestAdapter) IsReady() bool {
 	existingPrId, err := checkForExistingPr(gtpra.repoUser, gtpra.repoId, gtpra.authUsername, gtpra.authPassword)
-	log.Debug().Err(err).Int("prid", int(existingPrId)).Send()
+	log.Debug().Err(err).Int("prid", int(existingPrId)).Msg("Result of checking for existing PRs")
 	// No existing PR and no error -> go ahead
 	return existingPrId == 0 && err == nil
 }
