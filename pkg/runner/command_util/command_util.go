@@ -114,6 +114,25 @@ func (cu *CommandUtils) UsesSubstringAnywhere(pattern string) bool {
 	return false
 }
 
+// Check if command is used in Dockerfile
+// TODO: Add way to check stage
+func (cu *CommandUtils) UsesCommand(command string) bool {
+	search := util.NewSliceSearch(strings.Split(command, " "))
+	runNodes := cu.GetEveryNodeOfInstruction("RUN")
+	for _, n := range runNodes {
+		node, ok := n.(*ast.RunInstructionNode)
+		if !ok {
+			continue
+		}
+		for i := range node.Cmd {
+			if search.Match(node.Cmd[i]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // This is very inefficient
 // To make this faster the parser should likely change
 // if only the maintainer would have the time

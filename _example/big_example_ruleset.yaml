@@ -1,4 +1,3 @@
-#  npmCacheCleanAfterInstall,
 #  npmCacheCleanUseForce,
 #  rmRecursiveAfterMktempD,
 #  pipUseNoCacheDir,
@@ -157,3 +156,28 @@ rules:
       fix_util.finish()
     id: gpg_always_batch
     target: command
+
+  - scope: output
+    category: Negative
+    instruction: |
+      if command_util.uses_command("npm install") || command_util.uses_command("npm ci"):
+        command_util.uses_command("npm cache clean") 
+    description: Use npm cache clean after an npm install
+    id: clean_npm_cache_after_npm_install
+    target: command
+    # TODO: Once the helper function returns a stage index this may be able to also have a fix instruction
+    long_description: |
+      Npm cache should always be cleaned. Keeping the npm cache just leads to image bloat
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(command_util.command_always_has_param("npm cache clean","--force"))
+    description: Ensure npm cachec clean always uses the --force flag
+    id: npm_cache_clean_always_use_force
+    target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("npm cache clean", "--force")
+      fix_util.finish()
+    long_description: |
+      Npm cache clean in a Dockerfile should always use --force

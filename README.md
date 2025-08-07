@@ -67,7 +67,7 @@ For instance the yaml field `github.pat` can be overwritten via `WHALE_WATCHER_G
 Requirements:
 
 - [gopy](https://github.com/go-python/gopy/tree/master)
-- [python4](https://www.python.org)
+- [python3](https://www.python.org)
 - [docker](https://docker.com)
 
 ## Troubleshooting

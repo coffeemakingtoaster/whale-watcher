@@ -150,3 +150,19 @@ func TestCommandAlwaysHasParamWithLongCommandFalse(t *testing.T) {
 		t.Error("Command with param mismatch: Expected false but got true")
 	}
 }
+
+func TestUsesCommandTrue(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	actual := cu.UsesCommand("python3 -m pip install")
+	if !actual {
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+	}
+}
+
+func TestUsesCommandFalse(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	actual := cu.UsesCommand("imaginary command")
+	if actual {
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+	}
+}
