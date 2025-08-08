@@ -1,15 +1,4 @@
-#  npmCacheCleanUseForce,
-#  rmRecursiveAfterMktempD,
-#  pipUseNoCacheDir,
-#  configureShouldUseBuildFlag,
-#  gemUpdateSystemRmRootGem,
-#  sha256sumEchoOneSpaces,
-#  gemUpdateNoDocument,
-#  gpgVerifyAscRmAsc,
-#  yumInstallRmVarCacheYum,
-#  tarSomethingRmTheSomething,
-#  gpgUseHaPools,
-#  ruleAptGetUpdatePrecedesInstall,
+# Inspired by https://github.com/jjhenkel/binnacle-icse2020/blob/master/datasets/6-gold-rules/gold-rules.ts
 
 name: Big Ruleset used for trials
 rules:
@@ -161,7 +150,7 @@ rules:
     category: Negative
     instruction: |
       if command_util.uses_command("npm install") || command_util.uses_command("npm ci"):
-        command_util.uses_command("npm cache clean") 
+        assert(command_util.uses_command("npm cache clean"))
     description: Use npm cache clean after an npm install
     id: clean_npm_cache_after_npm_install
     target: command
@@ -173,7 +162,7 @@ rules:
     category: Negative
     instruction: |
       assert(command_util.command_always_has_param("npm cache clean","--force"))
-    description: Ensure npm cachec clean always uses the --force flag
+    description: Ensure npm cache clean always uses the --force flag
     id: npm_cache_clean_always_use_force
     target: command
     fix_instruction: |
@@ -181,3 +170,60 @@ rules:
       fix_util.finish()
     long_description: |
       Npm cache clean in a Dockerfile should always use --force
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(command_util.command_always_has_param("pip","--no-cache-dir"))
+    description: Ensure pip doesnt cache downloads
+    id: pip_always_no_cache
+    target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("pip", "--no-cache-dir")
+      fix_util.finish()
+    long_description: |
+      A pip cache just bloats the docker container and does not provide any useful speedups
+
+  - scope: output
+    category: Negative
+    instruction: |
+      if command_util.uses_command("gem update --system"):
+        assert(fs_util.look_for_file("/root/.gem") == -1)
+    description: Clean gem cache after install
+    id: clean_gem_cache
+    target: command
+    fix_instruction: |
+      if not fix_util.append_run_instruction_with_match("gem", "rm -rf /root/.gem"):
+        fix_util.add_run_instruction("rm -rf rm -rf /root/.gem")
+      fix_util.finish()
+    long_description: |
+      Gem cache should always be cleaned. Keeping the npm cache just leads to image bloat
+
+  - scope: output
+    category: Negative
+    instruction: |
+      assert(command_util.command_always_has_param("yum","-y"))
+    description: Use yes flag for yum
+    id: yum_always_yes
+    target: command
+    fix_instruction: |
+      fix_util.ensure_command_always_has_param("yum", "-y")
+      fix_util.finish()
+    long_description: |
+      Interactive package manager prompts cannot be answered during a docker build process
+
+  - scope: output
+    category: Negative
+    instruction: |
+      if command_util.uses_command("yum install"):
+        assert(fs_util.look_for_file("/var/cache/yum") == -1)
+    description: Clear yum cache
+    id: yum_rm_rache
+    target: command
+    fix_instruction: |
+      if not fix_util.append_run_instruction_with_match("yum", "rm -rf /var/cache/yum"):
+        fix_util.add_run_instruction("rm -rf /var/cache/yum")
+      fix_util.finish()
+    long_description: |
+      The yum cache does not serve any purpose at container runtime
+
