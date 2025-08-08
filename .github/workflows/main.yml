@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag (defaults to manual-YYYY-MM-DD)'
+        description: 'Release tag (defaults to pre-release)'
         required: false
         type: string
 
@@ -41,12 +41,15 @@ jobs:
       
       - name: Run tests
         run: go test ./...
+
+      - name: tar build
+        run: tar -czvf ${{ matrix.name }}.tar.gz -C ./build .
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}-build-artifacts
-          path: ./build/
+          path: ./${{ matrix.name }}.tar.gz
           retention-days: 1
 
   create-manual-release:
@@ -55,23 +58,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Download build artifacts
+
+      - name: Download macos build artifacts
         uses: actions/download-artifact@v4
-        with:
-          name: linux-build-artifacts
-          path: ./linux-build/
-       
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-build-artifacts
-          path: ./macos-build/
+
+      - name: debug
+        run: ls .
 
       - name: Set release tag
         id: set_tag
         run: |
-          echo "tag=pre-release" >> $GITHUB_OUTPUT
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=pre-release" >> $GITHUB_OUTPUT
+          fi
       
       - name: Delete existing manual release
         env:
@@ -89,10 +90,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.set_tag.outputs.tag }}"
+          
           # Create the release with all files from build directory
           gh release create "$TAG" \
             --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
             --notes "Manual build from commit ${{ github.sha }}" \
             --prerelease \
-            ./macos-build/*
-            ./linux-build/*
+            ./linux.tar.gz \
+            ./macos.tar.gz
