@@ -10,10 +10,11 @@ on:
 
 jobs:
   build-and-test:
-    matrix:
-      os: [macos-latest, ubuntu-latest]
-      name: ["macos", "linux"]
-      exclude:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        name: ["macos", "linux"]
+        exclude:
         - os: macos-latest
           name: linux
         - os: ubuntu-latest
@@ -51,7 +52,6 @@ jobs:
   create-manual-release:
     needs: build-and-test
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
