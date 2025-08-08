@@ -96,5 +96,5 @@ jobs:
             --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
             --notes "Manual build from commit ${{ github.sha }}" \
             --prerelease \
-            ./linux.tar.gz \
-            ./macos.tar.gz
+            ./linux-build-artifacts/linux.tar.gz \
+            ./macos-build-artifacts/macos.tar.gz
