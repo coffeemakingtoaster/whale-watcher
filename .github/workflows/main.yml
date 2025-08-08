@@ -10,8 +10,15 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-    
+    matrix:
+      os: [macos-latest, ubuntu-latest]
+      name: ["macos", "linux"]
+      exclude:
+        - os: macos-latest
+          name: linux
+        - os: ubuntu-latest
+          name: macos
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,7 +44,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: ${{ matrix.name }}-build-artifacts
           path: ./build/
           retention-days: 1
 
@@ -52,9 +59,15 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
-          path: ./build/
-      
+          name: linux-build-artifacts
+          path: ./linux-build/
+       
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-build-artifacts
+          path: ./macos-build/
+
       - name: Set release tag
         id: set_tag
         run: |
@@ -86,4 +99,4 @@ jobs:
             --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
             --notes "Manual build from commit ${{ github.sha }}" \
             --prerelease \
-            ./build/*
+            ./*-build/*
