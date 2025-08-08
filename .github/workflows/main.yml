@@ -71,11 +71,7 @@ jobs:
       - name: Set release tag
         id: set_tag
         run: |
-          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
-            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=pre-release" >> $GITHUB_OUTPUT
-          fi
+          echo "tag=pre-release" >> $GITHUB_OUTPUT
       
       - name: Delete existing manual release
         env:
@@ -93,10 +89,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.set_tag.outputs.tag }}"
-          
           # Create the release with all files from build directory
           gh release create "$TAG" \
             --title "Pre Release - $(date +'%Y-%m-%d %H:%M:%S UTC')" \
             --notes "Manual build from commit ${{ github.sha }}" \
             --prerelease \
-            ./*-build/*
+            ./macos-build/*
+            ./linux-build/*
