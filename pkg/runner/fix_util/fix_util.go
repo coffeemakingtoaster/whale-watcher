@@ -37,7 +37,8 @@ func SetupFromContent(DockerfileContent []string) FixUtils {
 
 // Find the last place where a run instruction contains the search string and append the command
 // Mainly meant for adding cleanup commands
-func (cu *FixUtils) AppendRunInstructionWithMatch(search, command string) bool {
+func (cu *FixUtils) AppendRunInstructionWithMatch(target, command string) bool {
+	search := util.NewSliceSearch(strings.Split(target, " "))
 	layer_index := -1
 	instruction_index := -1
 	curr_index := 0
@@ -47,11 +48,12 @@ func (cu *FixUtils) AppendRunInstructionWithMatch(search, command string) bool {
 			switch run := instruction.(type) {
 			case *ast.RunInstructionNode:
 				for i := range run.Cmd {
-					if strings.Contains(run.Cmd[i], search) {
+					if search.Match(run.Cmd[i]) {
 						instruction_index = instruction_count
 						layer_index = curr_index
 					}
 				}
+				search.Reset()
 			}
 		}
 		curr_index++

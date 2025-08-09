@@ -29,7 +29,7 @@ rules:
     category: Negative
     instruction: |
       assert(command_util.command_always_has_param("apt-get install","-y"))
-    description: Ensure that apt has the -y flag
+    description: Ensure that apt get has the -y flag
     id: apt_get_always_agree
     target: command
     fix_instruction: |
@@ -55,7 +55,7 @@ rules:
     category: Negative
     instruction: |
       assert(command_util.command_always_has_param("apt-get install","--no-install-recommends"))
-    description: Ensure that apt always skips recommends
+    description: Ensure that apt get always skips recommends
     id: apt_get_skip_recommends
     target: command
     fix_instruction: |
@@ -154,7 +154,10 @@ rules:
     description: Use npm cache clean after an npm install
     id: clean_npm_cache_after_npm_install
     target: command
-    # TODO: Once the helper function returns a stage index this may be able to also have a fix instruction
+    fix_instruction: |
+      if not (fix_util.append_run_instruction_with_match("npm install", "npm cache clean") or fix_util.append_run_instruction_with_match("npm ci", "npm cache clean")):
+        fix_util.add_run_instruction("npm cache clean")
+      fix_util.finish()
     long_description: |
       Npm cache should always be cleaned. Keeping the npm cache just leads to image bloat
 

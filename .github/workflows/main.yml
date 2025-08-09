@@ -62,9 +62,6 @@ jobs:
       - name: Download macos build artifacts
         uses: actions/download-artifact@v4
 
-      - name: debug
-        run: ls .
-
       - name: Set release tag
         id: set_tag
         run: |

@@ -129,6 +129,7 @@ func (cu *CommandUtils) UsesCommand(command string) bool {
 				return true
 			}
 		}
+		search.Reset()
 	}
 	return false
 }
