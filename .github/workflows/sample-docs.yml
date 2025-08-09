@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download executable
-        run: curl -LO http://github.com/coffeemakingtoaster/whale-watcher/releases/download/pre-release/whale-watcher && chmod +x ./whale-watcher
+        run: curl -LO --silent https://github.com/coffeemakingtoaster/whale-watcher/releases/download/pre-release/linux.tar.gz && tar -xvzf linux.tar.gz -C . && chmod +x ./whale-watcher 
 
       - name: Generate HTML
         run: ./whale-watcher docs --export ./_example/big_example_ruleset.yaml
