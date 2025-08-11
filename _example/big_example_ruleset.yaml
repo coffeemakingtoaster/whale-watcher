@@ -5,7 +5,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      assert(not command_util.uses_substring_anywhere("http://"))
+      assert(command_util.uses_substring_anywhere("http://"))
     description: Ensure that only https connections are used
     id: use_https_over_http
     target: command
