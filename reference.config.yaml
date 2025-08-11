@@ -25,3 +25,5 @@ log_level:
 target_list: 
 # Possible url to deployed docs. Is used in PRs to link to the detailed description
 docs_url:
+# Disable autofixing (bool)
+no_fix:
