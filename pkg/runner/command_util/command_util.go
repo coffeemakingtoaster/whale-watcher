@@ -2,6 +2,7 @@ package commandutil
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
@@ -124,10 +125,11 @@ func (cu *CommandUtils) UsesCommand(command string) bool {
 		if !ok {
 			continue
 		}
-		for i := range node.Cmd {
-			if search.Match(node.Cmd[i]) {
-				return true
-			}
+		// calls are in order
+		if slices.ContainsFunc(node.Cmd, func(in string) bool {
+			return search.Match(in)
+		}) {
+			return true
 		}
 		search.Reset()
 	}

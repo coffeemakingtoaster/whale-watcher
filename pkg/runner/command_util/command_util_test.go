@@ -166,3 +166,15 @@ func TestUsesCommandFalse(t *testing.T) {
 		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
 	}
 }
+
+func TestUsesCommandTrueSubSequent(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	actual := cu.UsesCommand("python3 -m pip install")
+	if !actual {
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+	}
+	actual = cu.UsesCommand("make clean")
+	if !actual {
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+	}
+}

@@ -3,9 +3,7 @@ package runner
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -91,6 +89,8 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 		// If it is just an assertion error we dont need to throw it
 		if strings.Contains(err.Error(), "AssertionError") {
 			log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
+		} else {
+			log.Debug().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
 		}
 		return err
 	}
@@ -100,13 +100,4 @@ func (r *PythonRunner) Run(contextData TemplateData, command string) error {
 
 func (r PythonRunner) ToString() string {
 	return fmt.Sprintf("Exec: %s with preamble %s", r.exec, r.utilImport.Root.String())
-}
-
-func (r PythonRunner) addFileToTmp(srcFilePath, tmpDirPath string) error {
-	fileName := filepath.Base(srcFilePath)
-	dest := filepath.Join(tmpDirPath, fileName)
-	log.Debug().Str("filepath", dest).Send()
-
-	// Note: this is not container friendly
-	return os.Link(srcFilePath, dest)
 }
