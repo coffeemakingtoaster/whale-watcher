@@ -149,7 +149,7 @@ rules:
   - scope: output
     category: Negative
     instruction: |
-      if command_util.uses_command("npm install") || command_util.uses_command("npm ci"):
+      if command_util.uses_command("npm install") or command_util.uses_command("npm ci"):
         assert(command_util.uses_command("npm cache clean"))
     description: Use npm cache clean after an npm install
     id: clean_npm_cache_after_npm_install
