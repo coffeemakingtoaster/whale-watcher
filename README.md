@@ -1,8 +1,8 @@
 # Whale watcher
 
-> This is a work in progress system! This tool as of now has a lot of quirks and servers as an unfinished proof-of-concept.
+> This is a work in progress system! This tool as of now has a lot of quirks and servers as an unfinished proof-of-concept. Currently this is designed for macos and linux only. Windows support has never been tested.
 
-Your way to define and enforce docker policies :)
+Your way to define and enforce docker policies :) 
 
 ## Quick start
 
@@ -16,6 +16,8 @@ Build (this also builds dependencies that are needed even if the program is star
 
 ```sh
 make all
+# Optional
+sudo make install
 ```
 
 Use tool: 
@@ -25,6 +27,7 @@ Use tool:
 
 The Dockerfile can be utilized for testing and the `_examples` directory contains sample rulesets.
 To get an OCI tarball simply use `make oci-export`.
+There is a [dummy repository](https://github.com/coffeemakingtoaster/whale-watcher-dummy-target) that can be tested against using ` WHALE_WATCHER_CONFIG_PATH=./_example/dummy_repository.config.yaml whale-watcher validate ./_example/big_example_ruleset.yaml`.
 
 ## Usage
 

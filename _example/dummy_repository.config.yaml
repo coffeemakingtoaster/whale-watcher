@@ -1,0 +1,7 @@
+target:
+  repository: https://github.com/coffeemakingtoaster/whale-watcher-dummy-target.git
+  dockerfile: prod.Dockerfile
+  image: ghcr.io/coffeemakingtoaster/whale-watcher-dummy-target/dummy:latest
+  branch: main
+# Do not show debug or trace
+log_level: 1
