@@ -152,3 +152,7 @@ verify: local-verify remote-verify test
 .PHONY: docker-verify
 docker-verify: docker
 	docker run --rm -v $$(pwd)/testdata/verify_ruleset.yaml:/app/verify_ruleset.yaml -v $$(pwd)/Dockerfile:/app/Dockerfile -it whale-watcher:latest "/app/verify_ruleset.yaml" "/app/Dockerfile" "whale-watcher:latest"
+
+.PHONY: install
+install: all
+	cp ./build/whale-watcher /usr/local/bin/
