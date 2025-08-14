@@ -7,15 +7,35 @@ import (
 	"os"
 	"strings"
 
+	"github.com/coffeemakingtoaster/whale-watcher/internal/environment"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
-	"github.com/coffeemakingtoaster/whale-watcher/internal/environment"
 )
 
 func LoadRuleset(location string) (RuleSet, error) {
+	ruleset, err := loadRuleSet(location)
+	if err != nil {
+		return RuleSet{}, err
+	}
+	if len(ruleset.Include) == 0 {
+		return ruleset, nil
+	}
+	for i := range ruleset.Include {
+		source := ruleset.Include[len(ruleset.Include)-1-i]
+		weakSet, err := loadRuleSet(source)
+		if err != nil {
+			log.Error().Err(err).Str("source", source).Str("nestingset", ruleset.Name).Msg("Could not load included ruleset from source due to an erro")
+			continue
+		}
+		ruleset.Swallow(weakSet)
+	}
+	return ruleset, nil
+}
+
+func loadRuleSet(location string) (RuleSet, error) {
 	if strings.HasPrefix(location, "http://") {
 		log.Debug().Msg("Provided ruleset location is a (unsafe) git repository!")
 		if !environment.IsUnsafeMode() {
@@ -27,8 +47,13 @@ func LoadRuleset(location string) (RuleSet, error) {
 		log.Debug().Msg("Provided ruleset location is a git repository!")
 		return loadRuleSetFromRepository(location)
 	}
+	if strings.HasPrefix(location, "git@") {
+		log.Debug().Msg("Provided ruleset location is a ssh git repository!")
+		return loadRuleSetFromRepository(location)
+	}
 	log.Debug().Msg("Provided ruleset location is a filepath!")
 	return loadRuleSetFromFile(location)
+
 }
 
 func loadRuleSetFromRepository(repositoryURL string) (RuleSet, error) {
