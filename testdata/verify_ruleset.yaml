@@ -7,19 +7,27 @@ name: Verification ruleset
 rules:
   - scope: output
     category: Negative
-    instruction: assert(os_util.name() == "os_util")
-    description: Ensure the os util import works properly
-    id: validate os lib
-    target: os
+    instruction: |
+      assert(command_util.name() == "command_util")
+    description: Ensure the command util import works properly
+    id: validate command lib
+    target: command
+
   - scope: output
     category: Negative
-    instruction: assert(fs_util.name() == "fs_util")
+    instruction: |
+      assert(command_util.name() == "command_util")
+      assert(fs_util.name() == "fs_util")
     description: Ensure the fs util import works properly
     id: validate fs lib
     target: fs
+
   - scope: output
     category: Negative
-    instruction: assert(command_util.name() == "command_util")
-    description: Ensure the cmd util import works properly
-    id: validate command lib
-    target: command
+    instruction: |
+      assert(os_util.name() == "os_util")
+      assert(fs_util.name() == "fs_util")
+      assert(command_util.name() == "command_util")
+    description: Ensure the os util import works properly
+    id: validate os lib
+    target: os
