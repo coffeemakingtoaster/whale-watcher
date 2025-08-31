@@ -12,6 +12,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	COMMAND_UTIL_LEVEL = iota
+	FS_UTIL_LEVEL
+	OS_UTIL_LEVEL
+)
+
 //go:embed _fs_util_build/*
 var fsutil embed.FS
 
@@ -27,9 +33,10 @@ var fixutil embed.FS
 var lock = &sync.Mutex{}
 
 type RunnerWorkingDirectory struct {
-	tmpDirPath  string
-	refCount    int
-	isPopulated bool
+	tmpDirPath         string
+	refCount           int
+	isPopulated        bool
+	current_util_level int
 }
 
 var instance *RunnerWorkingDirectory
@@ -69,11 +76,15 @@ func (rwd *RunnerWorkingDirectory) Free() {
 	instance = nil
 }
 
-func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, dockerImagePath string) {
+func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, dockerImagePath string, util_level int) {
+	var err error
+	err = rwd.extractUtils(util_level)
+	if err != nil {
+		log.Warn().Err(err).Msg("Error preparing utils")
+	}
 	if rwd.isPopulated {
 		return
 	}
-	var err error
 	err = addFileToWorkingDirectory(dockerFilePath, rwd.tmpDirPath, "Dockerfile")
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", dockerFilePath, rwd.tmpDirPath)
@@ -82,7 +93,6 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, docker
 	cfg := config.GetConfig()
 	if !cfg.AllowsTarget("fs") && !cfg.AllowsTarget("os") {
 		log.Info().Msg("Not adding container artifacts to working directory as they are not needed for allowed targets")
-
 	} else {
 		err = addFileToWorkingDirectory(ociImagePath, rwd.tmpDirPath, "out.tar")
 		if err != nil {
@@ -119,23 +129,56 @@ func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
 	return nil
 }
 
+func (rwd *RunnerWorkingDirectory) extractUtils(utilLevel int) error {
+	// These writes here could fail when using this concurrently
+	if utilLevel <= rwd.current_util_level {
+		return nil
+	}
+	var err error
+	if utilLevel >= COMMAND_UTIL_LEVEL {
+		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
+		if err != nil {
+			return err
+		}
+		rwd.current_util_level = COMMAND_UTIL_LEVEL
+	}
+
+	if utilLevel >= FS_UTIL_LEVEL {
+		err = unpackFsToDir(fsutil, rwd.tmpDirPath)
+		if err != nil {
+			return err
+		}
+		rwd.current_util_level = FS_UTIL_LEVEL
+	}
+
+	if utilLevel >= OS_UTIL_LEVEL {
+		err = unpackFsToDir(osutil, rwd.tmpDirPath)
+		if err != nil {
+			return err
+		}
+		rwd.current_util_level = OS_UTIL_LEVEL
+	}
+
+	cfg := config.GetConfig()
+
+	// no fix utils needed if we are running again or in nofix
+	if cfg.NoFix || rwd.isPopulated {
+		return nil
+	}
+
+	return unpackFsToDir(fixutil, rwd.tmpDirPath)
+}
+
 func newRunnerWorkingDirectory() (*RunnerWorkingDirectory, error) {
 	dirPath, err := getTmpDir()
 	if err != nil {
 		return nil, err
 	}
-	err = unpackFsToDir(osutil, dirPath)
-	err = unpackFsToDir(fsutil, dirPath)
-	err = unpackFsToDir(cmdutil, dirPath)
-	err = unpackFsToDir(fixutil, dirPath)
-
-	if err != nil {
-		return nil, err
-	}
 
 	return &RunnerWorkingDirectory{
-		tmpDirPath: dirPath,
-		refCount:   0,
+		tmpDirPath:         dirPath,
+		refCount:           0,
+		current_util_level: -1,
 	}, nil
 }
 

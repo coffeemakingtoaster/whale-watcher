@@ -13,9 +13,9 @@ type MockRunner struct {
 	callback func(bool) error
 }
 
-func (mr MockRunner) Run(runner.TemplateData, string) error { return mr.callback(false) }
-func (mr MockRunner) RunFix(command string)                 { mr.callback(true) }
-func (mr MockRunner) ToString() string                      { return "" }
+func (mr MockRunner) Run(runner.TemplateData, string, int) error { return mr.callback(false) }
+func (mr MockRunner) RunFix(command string)                      { mr.callback(true) }
+func (mr MockRunner) ToString() string                           { return "" }
 
 func TestValidateFullValidRuleset(t *testing.T) {
 	executionCount := 0

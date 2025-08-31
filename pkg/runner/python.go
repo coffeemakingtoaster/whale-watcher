@@ -59,11 +59,11 @@ func (r *PythonRunner) RunFix(command string) {
 	}
 }
 
-func (r *PythonRunner) Run(contextData TemplateData, command string) error {
+func (r *PythonRunner) Run(contextData TemplateData, command string, util_level int) error {
 
 	defer r.workingDirectory.Free()
 
-	r.workingDirectory.Populate(contextData.DockerfilePath, contextData.OciImage, contextData.DockerImage)
+	r.workingDirectory.Populate(contextData.DockerfilePath, contextData.OciImage, contextData.DockerImage, util_level)
 
 	contextData.DockerfilePath = "./Dockerfile"
 	contextData.OciImage = "./out.tar"

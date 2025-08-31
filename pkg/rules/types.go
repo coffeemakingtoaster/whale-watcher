@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/rs/zerolog/log"
 )
 
 var allowedCategories = []string{"negative", "positive"}
@@ -43,8 +44,22 @@ func (r *Rule) AddRunner() error {
 	return err
 }
 
+func (r *Rule) GetUtilLevel() int {
+	switch r.Target {
+	case "command":
+		return runner.COMMAND_UTIL_LEVEL
+	case "fs":
+		return runner.FS_UTIL_LEVEL
+	case "os":
+		return runner.OS_UTIL_LEVEL
+	default:
+		log.Warn().Str("target", r.Target).Msgf("Unknown target, falling back to os")
+		return runner.OS_UTIL_LEVEL
+	}
+}
+
 func (r *Rule) Validate(ociTarPath, dockerFilepath, dockerTarPath string) (bool, ViolationInfo) {
-	err := r.Runner.Run(runner.TemplateData{DockerfilePath: dockerFilepath, OciImage: ociTarPath, DockerImage: dockerTarPath}, r.Instruction)
+	err := r.Runner.Run(runner.TemplateData{DockerfilePath: dockerFilepath, OciImage: ociTarPath, DockerImage: dockerTarPath}, r.Instruction, r.GetUtilLevel())
 	if err != nil {
 		return false, ViolationInfo{Details: err.Error()}
 	}

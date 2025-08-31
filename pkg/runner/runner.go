@@ -6,7 +6,7 @@ import (
 )
 
 type Runner interface {
-	Run(TemplateData, string) error
+	Run(TemplateData, string, int) error
 	RunFix(command string)
 	ToString() string
 }
