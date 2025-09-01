@@ -178,3 +178,33 @@ func TestUsesCommandTrueSubSequent(t *testing.T) {
 		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
 	}
 }
+
+func TestGetInstructionNodePropertyStringPropertyExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
+	actual := cu.GetNodePropertyString(nodes[0], "Path")
+	expected := "/build"
+	if actual != expected {
+		t.Errorf("Property mismatch: Expected %s Got %s", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringPropertyNotExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
+	actual := cu.GetNodePropertyString(nodes[0], "Paths")
+	expected := ""
+	if actual != expected {
+		t.Errorf("Property mismatch: Expected %s Got %s", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringPropertyIsNotString(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	actual := cu.GetNodePropertyString(nodes[0], "IsHeredoc")
+	expected := ""
+	if actual != expected {
+		t.Errorf("Property mismatch: Expected %s Got %s", expected, actual)
+	}
+}

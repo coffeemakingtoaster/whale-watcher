@@ -2,6 +2,7 @@ package commandutil
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -175,6 +176,16 @@ func (cu *CommandUtils) CommandAlwaysHasParam(rawCommand string, param string) b
 
 func (cu *CommandUtils) Name() string {
 	return "command_util"
+}
+
+// TODO: This is not ideal, in the long term a more elegant solution is needed
+func (cu *CommandUtils) GetNodePropertyString(node ast.Node, property string) string {
+	r := reflect.ValueOf(node)
+	f := reflect.Indirect(r).FieldByName(property)
+	if !f.IsValid() || f.Type().Name() != "string" {
+		return ""
+	}
+	return f.String()
 }
 
 func main() {}
