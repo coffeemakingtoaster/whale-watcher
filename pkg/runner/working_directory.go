@@ -236,3 +236,13 @@ func unpackFsToDir(toUnpack embed.FS, dirPath string) error {
 	log.Debug().Str("tmpDir", dirPath).Msg("Fs mounted to temporary directory")
 	return nil
 }
+
+func (rwd *RunnerWorkingDirectory) ForceFree() {
+	log.Warn().Int("Dangling references", rwd.refCount).Msg("Forced working directory cleanup! This likely indicated that something went (very) wrong.")
+	err := os.RemoveAll(rwd.tmpDirPath)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.tmpDirPath)
+		return
+	}
+	instance = nil
+}
