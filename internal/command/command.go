@@ -64,7 +64,12 @@ func Run(args []string) int {
 	}
 	// Get ref to prevent directory cleanup
 	ref := runner.GetReferencingWorkingDirectoryInstance()
-	defer ref.ForceFree()
+	// Attempt clean exit, force exit if needed
+	defer func() {
+		if !ref.Free() {
+			ref.ForceFree()
+		}
+	}()
 
 	violations := getViolations(runContext, ruleSet)
 

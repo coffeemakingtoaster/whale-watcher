@@ -61,19 +61,20 @@ func (rwd *RunnerWorkingDirectory) GetAbsolutePath(path string) string {
 	return filepath.Join(rwd.tmpDirPath, path)
 }
 
-func (rwd *RunnerWorkingDirectory) Free() {
+func (rwd *RunnerWorkingDirectory) Free() bool {
 	rwd.refCount--
 	if rwd.refCount > 0 {
 		log.Debug().Msgf("Free was called for working directory but ref count has not hit 0")
-		return
+		return false
 	}
 	err := os.RemoveAll(rwd.tmpDirPath)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.tmpDirPath)
-		return
+		return false
 	}
 	log.Debug().Msgf("Working directory cleaned up (ref count was 0)")
 	instance = nil
+	return true
 }
 
 func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, dockerImagePath string, util_level int) {
