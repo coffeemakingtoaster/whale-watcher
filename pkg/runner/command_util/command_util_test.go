@@ -29,7 +29,7 @@ var sampleDockerfile = []string{
 	"WORKDIR /app",
 	"",
 	"COPY --from=build /build/build/whale-watcher ./whale-watcher",
-	"",
+	"EXPOSE 3000",
 	"ENTRYPOINT [\"/app/whale-watcher\"]",
 }
 

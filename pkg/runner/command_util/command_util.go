@@ -180,12 +180,40 @@ func (cu *CommandUtils) Name() string {
 
 // TODO: This is not ideal, in the long term a more elegant solution is needed
 func (cu *CommandUtils) GetNodePropertyString(node ast.Node, property string) string {
-	r := reflect.ValueOf(node)
-	f := reflect.Indirect(r).FieldByName(property)
-	if !f.IsValid() || f.Type().Name() != "string" {
+	if node == nil {
+		return ""
+	}
+	v := reflect.ValueOf(node)
+
+	// Unwrap interface and pointers until we reach the concrete value
+	for v.Kind() == reflect.Interface || v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return ""
+		}
+		v = v.Elem()
+	}
+
+	// We need a struct to look up a field by name
+	if v.Kind() != reflect.Struct {
+		return ""
+	}
+
+	f := v.FieldByName(property)
+	if !f.IsValid() || f.Kind() != reflect.String {
 		return ""
 	}
 	return f.String()
 }
+
+/*
+func (cu *CommandUtils) GetNodePropertyInt(node ast.Node, property string) int {
+	r := reflect.ValueOf(&node)
+	f := reflect.Indirect(r).FieldByName(property)
+	if !f.IsValid() || f.Type().Name() != "int" {
+		return -1
+	}
+	return int(f.Int())
+}
+*/
 
 func main() {}
