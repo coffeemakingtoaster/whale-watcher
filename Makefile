@@ -44,7 +44,7 @@ dep-install:
 	@echo "$(RED)Pip install uses break system packages...this should not be problem. If it is, don't blame me :)$(RESET)"
 	python3 -m pip install pybindgen --break-system-packages
 	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/go-python/gopy@latest
+	go install github.com/go-python/gopy@04cb87bab1e03ba3d50e827654e6e07c94ed7606
 
 # Ensure the build directory exists
 $(BUILD_DIR):
