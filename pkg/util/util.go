@@ -1,6 +1,8 @@
 package util
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type SliceSearch[T any] struct {
 	slice []T

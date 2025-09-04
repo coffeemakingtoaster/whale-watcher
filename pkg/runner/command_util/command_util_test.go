@@ -1,6 +1,7 @@
 package commandutil_test
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -15,8 +16,8 @@ var sampleDockerfile = []string{
 	"WORKDIR /build",
 	"# Install deps",
 	"RUN apt update && apt install -y python3-pip && \\",
-	"python3 -m pip install pybindgen --break-system-packages && \\",
-	"go install golang.org/x/tools/cmd/goimports@latest && \\",
+	"(python3 -m pip install pybindgen --break-system-packages && \\",
+	"go install golang.org/x/tools/cmd/goimports@latest) && \\",
 	"go install github.com/go-python/gopy@latest",
 	"",
 	"COPY . .",
@@ -28,6 +29,9 @@ var sampleDockerfile = []string{
 	"",
 	"WORKDIR /app",
 	"",
+	"ENV A=foo B=bar",
+	"",
+	"ONBUILD RUN echo hello world",
 	"COPY --from=build /build/build/whale-watcher ./whale-watcher",
 	"EXPOSE 3000",
 	"ENTRYPOINT [\"/app/whale-watcher\"]",
@@ -154,8 +158,9 @@ func TestCommandAlwaysHasParamWithLongCommandFalse(t *testing.T) {
 func TestUsesCommandTrue(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	actual := cu.UsesCommand("python3 -m pip install")
+
 	if !actual {
-		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", !actual, actual)
 	}
 }
 
@@ -163,7 +168,7 @@ func TestUsesCommandFalse(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	actual := cu.UsesCommand("imaginary command")
 	if actual {
-		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", !actual, actual)
 	}
 }
 
@@ -171,18 +176,18 @@ func TestUsesCommandTrueSubSequent(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	actual := cu.UsesCommand("python3 -m pip install")
 	if !actual {
-		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", !actual, actual)
 	}
 	actual = cu.UsesCommand("make clean")
 	if !actual {
-		t.Errorf("Uses command return mismatch: Exptected %v Got %v", actual, !actual)
+		t.Errorf("Uses command return mismatch: Exptected %v Got %v", !actual, actual)
 	}
 }
 
 func TestGetInstructionNodePropertyStringPropertyExists(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
-	actual := cu.GetNodePropertyString(nodes[0], "Path")
+	actual := cu.GetNodePropertyString(&nodes[0], "Path")
 	expected := "/build"
 	if actual != expected {
 		t.Errorf("Property mismatch: Expected %s Got %s", expected, actual)
@@ -192,7 +197,7 @@ func TestGetInstructionNodePropertyStringPropertyExists(t *testing.T) {
 func TestGetInstructionNodePropertyStringPropertyNotExists(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
-	actual := cu.GetNodePropertyString(nodes[0], "Paths")
+	actual := cu.GetNodePropertyString(&nodes[0], "Paths")
 	expected := ""
 	if actual != expected {
 		t.Errorf("Property mismatch: Expected %s Got %s", expected, actual)
@@ -202,9 +207,118 @@ func TestGetInstructionNodePropertyStringPropertyNotExists(t *testing.T) {
 func TestGetInstructionNodePropertyStringPropertyIsNotString(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	nodes := cu.GetEveryNodeOfInstruction("RUN")
-	actual := cu.GetNodePropertyString(nodes[0], "IsHeredoc")
+	actual := cu.GetNodePropertyString(&nodes[0], "IsHeredoc")
 	expected := ""
 	if actual != expected {
 		t.Errorf("Property mismatch: Expected %s Got %s", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringListPropertyExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	actual := cu.GetNodePropertyStringList(&nodes[0], "Cmd")
+	expected := []string{"apt", "update", "&&", "apt", "install", "-y", "python3-pip", "&&", "(python3", "-m", "pip", "install", "pybindgen", "--break-system-packages", "&&", "go", "install", "golang.org/x/tools/cmd/goimports@latest)", "&&", "go", "install", "github.com/go-python/gopy@latest"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringPropertyListNotExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
+	actual := cu.GetNodePropertyStringList(&nodes[0], "Paths")
+	expected := []string{}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringPropertyListIsNotStringList(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	actual := cu.GetNodePropertyStringList(&nodes[0], "IsHeredoc")
+	expected := []string{}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringMapPropertyExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("ENV")
+	actual := cu.GetNodePropertyStringMap(&nodes[0], "Pairs")
+	expected := map[string]string{"A": "foo", "B": "bar"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringMapPropertyNotExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
+	actual := cu.GetNodePropertyStringMap(&nodes[0], "Paths")
+	expected := map[string]string{}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyStringMapPropertyIsNotMap(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	actual := cu.GetNodePropertyStringMap(&nodes[0], "IsHeredoc")
+	expected := map[string]string{}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetExposeNodePortNumbers(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("EXPOSE")
+	actual := cu.GetExposeNodePortNumbers(&nodes[0])
+	expected := []int{3000}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Port slice mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetEveryNodeOfInstructionAtLevel(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	expected := []string{"/build", "/app"}
+	for i := range 2 {
+		nodes := cu.GetEveryNodeOfInstructionAtLevel(i, "WORKDIR")
+		for _, node := range nodes {
+			workdirNode := node.(*ast.WorkdirInstructionNode)
+			if workdirNode.Path != expected[i] {
+				t.Errorf("Path mismatch at level %d: Expected %s Got %s", i, expected[i], workdirNode.Path)
+			}
+		}
+	}
+}
+
+func TestGetInstructionFromOnbuild(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("ONBUILD")
+
+	if len(nodes) != 1 {
+		t.Errorf("length mismatch: Expected %d Got %d", 1, len(nodes))
+	}
+
+	instruction := cu.GetInstructionFromOnbuild(&nodes[0])
+	run := instruction.(*ast.RunInstructionNode)
+	if !reflect.DeepEqual(run.Cmd, []string{"echo", "hello", "world"}) {
+		t.Errorf("Node content mismatch: Expected [echo, hello, world] Got %v", run.Cmd)
+	}
+}
+
+func TestGetNodeInstructionString(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	for _, node := range nodes {
+		if node.Instruction() != cu.GetNodeInstructionString(node) {
+			t.Errorf("Instruction string mismatch: Expected %s Got %s", node.Instruction(), cu.GetNodeInstructionString(node))
+		}
 	}
 }

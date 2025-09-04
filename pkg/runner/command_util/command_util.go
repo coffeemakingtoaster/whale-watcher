@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
@@ -68,6 +69,18 @@ func (cu *CommandUtils) GetEveryNodeOfInstruction(wantedInstruction string) []as
 	return res
 }
 
+func (cu *CommandUtils) GetEveryNodeOfInstructionAtLevel(level int, wantedInstruction string) []ast.Node {
+	wantedInstruction = strings.ToUpper(wantedInstruction)
+	stage := cu.GetStageNodeAt(level)
+	res := make([]ast.Node, 0)
+	for _, node := range stage.Instructions {
+		if node.Instruction() == wantedInstruction {
+			res = append(res, node)
+		}
+	}
+	return res
+}
+
 func (cu *CommandUtils) GetAstDepth() int {
 	depth := 0
 	curr := cu.astRoot
@@ -128,6 +141,9 @@ func (cu *CommandUtils) UsesCommand(command string) bool {
 		}
 		// calls are in order
 		if slices.ContainsFunc(node.Cmd, func(in string) bool {
+			// Remove subshell characters that were causing issues
+			in = strings.TrimPrefix(in, "(")
+			in = strings.TrimSuffix(in, ")")
 			return search.Match(in)
 		}) {
 			return true
@@ -178,31 +194,117 @@ func (cu *CommandUtils) Name() string {
 	return "command_util"
 }
 
-// TODO: This is not ideal, in the long term a more elegant solution is needed
-func (cu *CommandUtils) GetNodePropertyString(node ast.Node, property string) string {
+func (cu *CommandUtils) getNodeProperty(node *ast.Node, property string) any {
 	if node == nil {
-		return ""
+		return nil
 	}
 	v := reflect.ValueOf(node)
 
 	// Unwrap interface and pointers until we reach the concrete value
 	for v.Kind() == reflect.Interface || v.Kind() == reflect.Ptr {
 		if v.IsNil() {
-			return ""
+			return nil
 		}
 		v = v.Elem()
 	}
 
 	// We need a struct to look up a field by name
 	if v.Kind() != reflect.Struct {
-		return ""
+		return nil
 	}
 
 	f := v.FieldByName(property)
-	if !f.IsValid() || f.Kind() != reflect.String {
+	if !f.IsValid() {
+		return nil
+	}
+
+	switch f.Kind() {
+	case reflect.String:
+		return f.String()
+
+	case reflect.Slice:
+		if f.Type().Elem().Kind() == reflect.String {
+			result := make([]string, f.Len())
+			for i := 0; i < f.Len(); i++ {
+				result[i] = f.Index(i).String()
+			}
+			return result
+		}
+
+	case reflect.Map:
+		if f.Type().Key().Kind() == reflect.String && f.Type().Elem().Kind() == reflect.String {
+			result := make(map[string]string, f.Len())
+			for _, key := range f.MapKeys() {
+				result[key.String()] = f.MapIndex(key).String()
+			}
+			return result
+		}
+	}
+
+	return nil
+}
+
+// TODO: This is not ideal, in the long term a more elegant solution is needed
+func (cu *CommandUtils) GetNodePropertyString(node *ast.Node, property string) string {
+	val := cu.getNodeProperty(node, property)
+	if val == nil {
 		return ""
 	}
-	return f.String()
+	strVal, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return strVal
+}
+
+// List in the name is not accurate for go but is accurate for Python
+func (cu *CommandUtils) GetNodePropertyStringList(node *ast.Node, property string) []string {
+	val := cu.getNodeProperty(node, property)
+	if val == nil {
+		return []string{}
+	}
+	strSliceVal, ok := val.([]string)
+	if !ok {
+		return []string{}
+	}
+	return strSliceVal
+}
+
+func (cu *CommandUtils) GetNodePropertyStringMap(node *ast.Node, property string) map[string]string {
+	val := cu.getNodeProperty(node, property)
+	if val == nil {
+		return map[string]string{}
+	}
+	strMapVal, ok := val.(map[string]string)
+	if !ok {
+		return map[string]string{}
+	}
+	return strMapVal
+}
+
+func (cu *CommandUtils) GetExposeNodePortNumbers(node *ast.Node) []int {
+	exposeNode, ok := (*node).(*ast.ExposeInstructionNode)
+	if !ok {
+		panic("Wrong type of node passed to GetExposeNodePortNumbers")
+	}
+	ports := make([]int, len(exposeNode.Ports))
+	for i := range exposeNode.Ports {
+		portNumber, _ := strconv.Atoi(exposeNode.Ports[i].Port)
+		ports[i] = portNumber
+	}
+	return ports
+}
+
+func (cu *CommandUtils) GetInstructionFromOnbuild(node *ast.Node) ast.InstructionNode {
+	onBuildNode, ok := (*node).(*ast.OnbuildInstructionNode)
+	if !ok {
+		panic("Wrong type of node passed to GetInstructionFromOnbuild")
+	}
+	return onBuildNode.Trigger
+}
+
+func (cu *CommandUtils) GetNodeInstructionString(node ast.Node) string {
+	return node.Instruction()
 }
 
 /*
