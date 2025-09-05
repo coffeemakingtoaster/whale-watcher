@@ -132,11 +132,8 @@ func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
 
 func (rwd *RunnerWorkingDirectory) extractUtils(utilLevel int) error {
 	// These writes here could fail when using this concurrently
-	if utilLevel <= rwd.current_util_level {
-		return nil
-	}
 	var err error
-	if utilLevel >= COMMAND_UTIL_LEVEL {
+	if utilLevel >= COMMAND_UTIL_LEVEL && rwd.current_util_level < COMMAND_UTIL_LEVEL {
 		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
@@ -144,7 +141,7 @@ func (rwd *RunnerWorkingDirectory) extractUtils(utilLevel int) error {
 		rwd.current_util_level = COMMAND_UTIL_LEVEL
 	}
 
-	if utilLevel >= FS_UTIL_LEVEL {
+	if utilLevel >= FS_UTIL_LEVEL && rwd.current_util_level < FS_UTIL_LEVEL {
 		err = unpackFsToDir(fsutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
@@ -152,7 +149,7 @@ func (rwd *RunnerWorkingDirectory) extractUtils(utilLevel int) error {
 		rwd.current_util_level = FS_UTIL_LEVEL
 	}
 
-	if utilLevel >= OS_UTIL_LEVEL {
+	if utilLevel >= OS_UTIL_LEVEL && rwd.current_util_level < OS_UTIL_LEVEL {
 		err = unpackFsToDir(osutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
