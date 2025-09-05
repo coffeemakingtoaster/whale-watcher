@@ -8,34 +8,48 @@ import (
 )
 
 type FsUtils struct {
-	OCI *container.ContainerImage
+	OCI      *container.ContainerImage
+	tarPath  string
+	isLoaded bool
 }
 
 // Setup function used for instantiating util struct
 func Setup(ociTarpath string) FsUtils {
-	image, err := container.ContainerImageFromOCITar(ociTarpath)
-	if err != nil {
-		panic(err)
-	}
 	return FsUtils{
-		OCI: image,
+		tarPath: ociTarpath,
 	}
 }
 
+func (fu *FsUtils) load() {
+	if fu.isLoaded {
+		return
+	}
+	image, err := container.ContainerImageFromOCITar(fu.tarPath)
+	if err != nil {
+		panic(err)
+	}
+	fu.OCI = image
+	fu.isLoaded = true
+}
+
 func (fu *FsUtils) GetLayerCount() int {
+	fu.load()
 	return len(fu.OCI.Layers)
 }
 
 func (fu *FsUtils) DirContentCount(dirPath string) int {
+	fu.load()
 	files := fu.OCI.Layers[len(fu.OCI.Layers)-1].FileSystem.Ls(dirPath)
 	return len(files)
 }
 
 func (fu *FsUtils) LsLayer(dirPath string, layerIndex int) []string {
+	fu.load()
 	return fu.OCI.Layers[layerIndex].FileSystem.Ls(dirPath)
 }
 
 func (fu *FsUtils) OpenFileAtLayer(filePath string, layerIndex int) []string {
+	fu.load()
 	f, err := fu.OCI.Layers[layerIndex].FileSystem.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -48,6 +62,7 @@ func (fu *FsUtils) OpenFileAtLayer(filePath string, layerIndex int) []string {
 }
 
 func (fu *FsUtils) LookForFile(path string) int {
+	fu.load()
 	index := fu.GetLayerCount() - 1
 	for index >= 0 {
 		ok, deletion := fu.OCI.Layers[index].FileSystem.HasFile(path)
@@ -68,6 +83,7 @@ func (ou FsUtils) Name() string {
 
 // THIS IS JANKY!
 func (fu *FsUtils) GetInstalledPackages() []string {
+	fu.load()
 	return fu.OCI.GetPackageList()
 }
 
