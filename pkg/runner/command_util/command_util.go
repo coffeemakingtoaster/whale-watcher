@@ -239,6 +239,8 @@ func (cu *CommandUtils) getNodeProperty(node *ast.Node, property string) any {
 			}
 			return result
 		}
+	case reflect.Bool:
+		return f.Bool()
 	}
 
 	return nil
@@ -280,6 +282,18 @@ func (cu *CommandUtils) GetNodePropertyStringMap(node *ast.Node, property string
 		return map[string]string{}
 	}
 	return strMapVal
+}
+
+func (cu *CommandUtils) GetNodePropertyBool(node *ast.Node, property string) bool {
+	val := cu.getNodeProperty(node, property)
+	if val == nil {
+		return false
+	}
+	boolVal, ok := val.(bool)
+	if !ok {
+		return false
+	}
+	return boolVal
 }
 
 func (cu *CommandUtils) GetExposeNodePortNumbers(node *ast.Node) []int {

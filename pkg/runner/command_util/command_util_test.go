@@ -1,6 +1,7 @@
 package commandutil_test
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -20,7 +21,7 @@ var sampleDockerfile = []string{
 	"go install golang.org/x/tools/cmd/goimports@latest) && \\",
 	"go install github.com/go-python/gopy@latest",
 	"",
-	"COPY . .",
+	"COPY --link . .",
 	"",
 	"# Clean is not necessary here...but better safe than sorry",
 	"RUN make clean all verify",
@@ -270,6 +271,37 @@ func TestGetInstructionNodePropertyStringMapPropertyIsNotMap(t *testing.T) {
 	actual := cu.GetNodePropertyStringMap(&nodes[0], "IsHeredoc")
 	expected := map[string]string{}
 	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyBoolPropertyExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("COPY")
+	actual := cu.GetNodePropertyBool(&nodes[0], "Link")
+	fmt.Printf("%v %s", nodes[0], nodes[0].Reconstruct())
+	expected := true
+	if actual != expected {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyBoolPropertyNotExists(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
+	actual := cu.GetNodePropertyBool(&nodes[0], "Paths")
+	expected := false
+	if actual != expected {
+		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
+	}
+}
+
+func TestGetInstructionNodePropertyBoolPropertyIsNotMap(t *testing.T) {
+	cu := commandutil.SetupFromContent(sampleDockerfile)
+	nodes := cu.GetEveryNodeOfInstruction("RUN")
+	actual := cu.GetNodePropertyBool(&nodes[0], "Cmd")
+	expected := false
+	if actual != expected {
 		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
 	}
 }
