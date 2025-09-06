@@ -2,16 +2,14 @@ package container
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
-	"os"
 	"slices"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	baseimagecache "github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/tarutils"
+	"github.com/rs/zerolog/log"
 )
 
 type ContainerImage struct {
@@ -94,23 +92,6 @@ func (ci *ContainerImage) GetBaseImage() string {
 		}
 	}
 	return ""
-}
-
-// TODO: This is kinda slow as we have "overdraw" that is fixable
-func (ci *ContainerImage) ExtractToDir(basePath string) error {
-	if err := os.Mkdir(basePath, 0755); os.IsExist(err) {
-		return errors.New("Directory already exists")
-	}
-	for i := range ci.Layers {
-		log.Debug().Int("current", i).Int("total", len(ci.Layers)).Msgf("Extracting layer")
-		err := ci.Layers[i].extractToDir(basePath)
-		if err != nil {
-			// cleanup
-			os.RemoveAll(basePath)
-			return err
-		}
-	}
-	return nil
 }
 
 func (ci *ContainerImage) buildLayers(loadedTar *tarutils.LoadedTar, commands []string) error {

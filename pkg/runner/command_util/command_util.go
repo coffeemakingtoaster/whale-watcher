@@ -48,6 +48,10 @@ func (cu *CommandUtils) GetStageName(sn ast.StageNode) string {
 	return sn.Name
 }
 
+func (cu *CommandUtils) GetStageImage(sn ast.StageNode) string {
+	return sn.Image
+}
+
 func (cu *CommandUtils) GetEveryNodeOfInstruction(wantedInstruction string) []ast.Node {
 	wantedInstruction = strings.ToUpper(wantedInstruction)
 	res := []ast.Node{}
