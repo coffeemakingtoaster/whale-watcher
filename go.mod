@@ -6,7 +6,7 @@ require (
 	code.gitea.io/sdk/gitea v0.21.0
 	github.com/armon/go-radix v1.0.0
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250905090433-328fb5f25b56
+	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250909103256-f3fd3fd97124
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/google/go-containerregistry v0.20.6
