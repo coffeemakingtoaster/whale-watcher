@@ -245,11 +245,11 @@ func TestGetInstructionNodePropertyStringPropertyListIsNotStringList(t *testing.
 	}
 }
 
-func TestGetInstructionNodePropertyStringMapPropertyExists(t *testing.T) {
+func TestGetInstructionNodePropertyStringMapKeysPropertyExists(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	nodes := cu.GetEveryNodeOfInstruction("ENV")
-	actual := cu.GetNodePropertyStringMap(&nodes[0], "Pairs")
-	expected := map[string]string{"A": "foo", "B": "bar"}
+	actual := cu.GetNodePropertyStringMapKeys(&nodes[0], "Pairs")
+	expected := []string{"A", "B"}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
 	}
@@ -258,8 +258,8 @@ func TestGetInstructionNodePropertyStringMapPropertyExists(t *testing.T) {
 func TestGetInstructionNodePropertyStringMapPropertyNotExists(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	nodes := cu.GetEveryNodeOfInstruction("WORKDIR")
-	actual := cu.GetNodePropertyStringMap(&nodes[0], "Paths")
-	expected := map[string]string{}
+	actual := cu.GetNodePropertyStringMapKeys(&nodes[0], "Paths")
+	expected := []string{}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
 	}
@@ -268,8 +268,8 @@ func TestGetInstructionNodePropertyStringMapPropertyNotExists(t *testing.T) {
 func TestGetInstructionNodePropertyStringMapPropertyIsNotMap(t *testing.T) {
 	cu := commandutil.SetupFromContent(sampleDockerfile)
 	nodes := cu.GetEveryNodeOfInstruction("RUN")
-	actual := cu.GetNodePropertyStringMap(&nodes[0], "IsHeredoc")
-	expected := map[string]string{}
+	actual := cu.GetNodePropertyStringMapKeys(&nodes[0], "IsHeredoc")
+	expected := []string{}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
 	}

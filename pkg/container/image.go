@@ -22,7 +22,9 @@ type ContainerImage struct {
 
 func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 	loadedTar := tarutils.LoadTar(ociPath)
+
 	defer loadedTar.Unload()
+
 	raw, err := loadedTar.GetBlobFromFileByName("index.json")
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get image index")

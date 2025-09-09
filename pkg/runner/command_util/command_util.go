@@ -276,16 +276,36 @@ func (cu *CommandUtils) GetNodePropertyStringList(node *ast.Node, property strin
 	return strSliceVal
 }
 
-func (cu *CommandUtils) GetNodePropertyStringMap(node *ast.Node, property string) map[string]string {
+func (cu *CommandUtils) GetNodePropertyStringMapKeys(node *ast.Node, property string) []string {
 	val := cu.getNodeProperty(node, property)
 	if val == nil {
-		return map[string]string{}
+		return []string{}
 	}
 	strMapVal, ok := val.(map[string]string)
 	if !ok {
-		return map[string]string{}
+		return []string{}
 	}
-	return strMapVal
+	keys := make([]string, 0, len(strMapVal))
+	for k := range strMapVal {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (cu *CommandUtils) GetNodePropertyStringMapValue(node *ast.Node, property string, key string) string {
+	val := cu.getNodeProperty(node, property)
+	if val == nil {
+		return ""
+	}
+	strMapVal, ok := val.(map[string]string)
+	if !ok {
+		return ""
+	}
+	if val, ok := strMapVal[key]; ok {
+		return val
+	}
+
+	return ""
 }
 
 func (cu *CommandUtils) GetNodePropertyBool(node *ast.Node, property string) bool {
