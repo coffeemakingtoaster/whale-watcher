@@ -3,6 +3,7 @@ package commandutil_test
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -140,6 +141,14 @@ func TestCommandAlwaysHasParamWithCommandFalseSimple(t *testing.T) {
 	}
 }
 
+func TestCommandAlwaysHasParamTrueButMixed(t *testing.T) {
+	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && apt-get -y install vim-btw && abc def")
+	cu := commandutil.SetupFromContent(alteredDockerfile)
+	if !cu.CommandAlwaysHasParam("apt-get install", "-y") {
+		t.Error("Command with param mismatch: Expected true but got false")
+	}
+}
+
 func TestCommandAlwaysHasParamWithCommandFalseNested(t *testing.T) {
 	alteredDockerfile := append(sampleDockerfile, "RUN echo hello && curl -d -l hello && abc def")
 	cu := commandutil.SetupFromContent(alteredDockerfile)
@@ -250,6 +259,8 @@ func TestGetInstructionNodePropertyStringMapKeysPropertyExists(t *testing.T) {
 	nodes := cu.GetEveryNodeOfInstruction("ENV")
 	actual := cu.GetNodePropertyStringMapKeys(&nodes[0], "Pairs")
 	expected := []string{"A", "B"}
+	slices.Sort(expected)
+	slices.Sort(actual)
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Property mismatch: Expected %v Got %v", expected, actual)
 	}

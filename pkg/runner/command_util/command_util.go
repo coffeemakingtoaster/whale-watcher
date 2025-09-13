@@ -165,7 +165,8 @@ func (cu *CommandUtils) CommandAlwaysHasParam(rawCommand string, param string) b
 	command := strings.Split(rawCommand, " ")
 	nodes := cu.GetEveryNodeOfInstruction("RUN")
 	for _, node := range nodes {
-		search := util.NewSliceSearch(command)
+		commandSearch := util.NewSliceSearch(command)
+		param_found := false
 		runNode, ok := node.(*ast.RunInstructionNode)
 		if !ok {
 			panic("Conversion error")
@@ -173,8 +174,19 @@ func (cu *CommandUtils) CommandAlwaysHasParam(rawCommand string, param string) b
 		pointer := 0
 		for pointer < len(runNode.Cmd) {
 			cmd := runNode.Cmd[pointer]
-			if search.Match(cmd) {
+			// found param mid command -> dont match and skip
+			// relevant for cases like apt-get -y install
+			if cmd == param {
+				param_found = true
 				pointer++
+				continue
+			}
+			if commandSearch.Match(cmd) {
+				pointer++
+				// param found -> no need to scan
+				if param_found {
+					pointer = len(runNode.Cmd)
+				}
 				for pointer < len(runNode.Cmd) {
 					cmd := runNode.Cmd[pointer]
 					if strings.Contains(cmd, param) {
@@ -186,7 +198,8 @@ func (cu *CommandUtils) CommandAlwaysHasParam(rawCommand string, param string) b
 					}
 					pointer++
 				}
-				search.Reset()
+				param_found = false
+				commandSearch.Reset()
 			}
 			pointer++
 		}
