@@ -12,7 +12,6 @@ import (
 )
 
 var allowedCategories = []string{"negative", "positive"}
-var allowedScopes = []string{"output", "buildtime"}
 var allowedTargets = []string{"command", "os", "fs"}
 
 type ViolationInfo struct {
@@ -27,7 +26,6 @@ type RuleSet struct {
 }
 
 type Rule struct {
-	Scope           string `yaml:"scope"`
 	Category        string `yaml:"category"`
 	Instruction     string `yaml:"instruction"`
 	Description     string `yaml:"description"`
@@ -81,10 +79,6 @@ func (r *Rule) Verify() error {
 	r.Category = strings.ToLower(r.Category)
 	if err := isInAllowed(r.Category, allowedCategories); err != nil {
 		return fmt.Errorf("Category: %s", err.Error())
-	}
-	r.Scope = strings.ToLower(r.Scope)
-	if err := isInAllowed(r.Scope, allowedScopes); err != nil {
-		return fmt.Errorf("Scope: %s", err.Error())
 	}
 	r.Target = strings.ToLower(r.Target)
 	if err := isInAllowed(r.Target, allowedTargets); err != nil {

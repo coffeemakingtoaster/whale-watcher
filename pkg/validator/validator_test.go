@@ -27,7 +27,6 @@ func TestValidateFullValidRuleset(t *testing.T) {
 	input := rules.RuleSet{
 		Rules: []*rules.Rule{
 			{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -37,7 +36,6 @@ func TestValidateFullValidRuleset(t *testing.T) {
 				FixInstruction: "",
 			},
 			{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -75,7 +73,6 @@ func TestValidateFullUnfixableFailingRuleset(t *testing.T) {
 	input := rules.RuleSet{
 		Rules: []*rules.Rule{
 			&rules.Rule{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -85,7 +82,6 @@ func TestValidateFullUnfixableFailingRuleset(t *testing.T) {
 				FixInstruction: "",
 			},
 			&rules.Rule{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -131,7 +127,6 @@ func TestValidateFullFixableFailingRuleset(t *testing.T) {
 	input := rules.RuleSet{
 		Rules: []*rules.Rule{
 			&rules.Rule{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -141,7 +136,6 @@ func TestValidateFullFixableFailingRuleset(t *testing.T) {
 				FixInstruction: "xy",
 			},
 			&rules.Rule{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -183,7 +177,6 @@ func TestLimitTargetValidation(t *testing.T) {
 	input := rules.RuleSet{
 		Rules: []*rules.Rule{
 			{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -193,7 +186,6 @@ func TestLimitTargetValidation(t *testing.T) {
 				FixInstruction: "",
 			},
 			{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -203,7 +195,6 @@ func TestLimitTargetValidation(t *testing.T) {
 				FixInstruction: "",
 			},
 			{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -242,7 +233,6 @@ func TestValidateNoFixExecution(t *testing.T) {
 	input := rules.RuleSet{
 		Rules: []*rules.Rule{
 			&rules.Rule{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",
@@ -252,7 +242,6 @@ func TestValidateNoFixExecution(t *testing.T) {
 				FixInstruction: "xy",
 			},
 			&rules.Rule{
-				Scope:          "output",
 				Category:       "Negative",
 				Instruction:    "abc",
 				Description:    "def",

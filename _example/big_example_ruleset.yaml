@@ -2,8 +2,7 @@
 
 name: Big Ruleset used for trials
 rules:
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(not command_util.uses_substring_anywhere("http://"))
     description: Ensure that only https connections are used
@@ -12,8 +11,7 @@ rules:
     long_description: |
       Http connections are generally unsafe! Instead https should be used.
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("curl","-f"))
     description: Ensure that curl always uses -f flag
@@ -25,8 +23,7 @@ rules:
     long_description: |
       Curl should always use the -f flag
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("apt-get install","-y"))
     description: Ensure that apt get has the -y flag
@@ -38,8 +35,7 @@ rules:
     long_description: |
       The -y flag is needed for non interactive environments.
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("apt install","-y"))
     description: Ensure that apt has the -y flag
@@ -51,8 +47,7 @@ rules:
     long_description: |
       The -y flag is needed for non interactive environments.
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("apt-get install","--no-install-recommends"))
     description: Ensure that apt get always skips recommends
@@ -64,8 +59,7 @@ rules:
     long_description: |
       Don't install unwanted recommended packages
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("apt install","--no-install-recommends"))
     description: Ensure that apt always skips recommends
@@ -77,8 +71,7 @@ rules:
     long_description: |
       Don't install unwanted recommended packages
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       # maybe add fs check?
       assert(command_util.command_always_has_param("apk add","--no-cache"))
@@ -92,8 +85,7 @@ rules:
     long_description: |
       Apk cache just bloats the image
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       layer_count = fs_util.get_layer_count()
       assert(fs_util.look_for_file("/etc/apt/sources.list.d/debian.sources") == -1)
@@ -108,8 +100,7 @@ rules:
     long_description: |
       The apt sources are generally not needed in a production image and therefore only add bloat and attack vectors. Installing apt packages after container start violates the idea of an immutable container.
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       layer_count = fs_util.get_layer_count()
       assert(fs_util.look_for_file("/usr/src") == -1)
@@ -122,8 +113,7 @@ rules:
     long_description: |
       The /usr/src directory is generally used for source files. Containers should only contain finished builds, not actual source files for security and bloat reasons.
    
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(os_util.exec_command("whoami") != "root")
     description: Final user should not be root
@@ -135,8 +125,7 @@ rules:
     long_description: |
       The root user is the most powerful user on a linux machine. Running a process adds additional risks in the case of said process being vulnerable. In most cases, starting the process as a 'weaker' user is sufficient.
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("gpg","--batch"))
     description: Ensure that gpg has the --batch flag
@@ -146,8 +135,7 @@ rules:
     id: gpg_always_batch
     target: command
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       if command_util.uses_command("npm install") or command_util.uses_command("npm ci"):
         assert(command_util.uses_command("npm cache clean"))
@@ -161,8 +149,7 @@ rules:
     long_description: |
       Npm cache should always be cleaned. Keeping the npm cache just leads to image bloat
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("npm cache clean","--force"))
     description: Ensure npm cache clean always uses the --force flag
@@ -174,8 +161,7 @@ rules:
     long_description: |
       Npm cache clean in a Dockerfile should always use --force
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("pip","--no-cache-dir"))
     description: Ensure pip doesnt cache downloads
@@ -187,8 +173,7 @@ rules:
     long_description: |
       A pip cache just bloats the docker container and does not provide any useful speedups
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       if command_util.uses_command("gem update --system"):
         assert(fs_util.look_for_file("/root/.gem") == -1)
@@ -202,8 +187,7 @@ rules:
     long_description: |
       Gem cache should always be cleaned. Keeping the npm cache just leads to image bloat
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       assert(command_util.command_always_has_param("yum","-y"))
     description: Use yes flag for yum
@@ -215,8 +199,7 @@ rules:
     long_description: |
       Interactive package manager prompts cannot be answered during a docker build process
 
-  - scope: output
-    category: Negative
+  - category: Negative
     instruction: |
       if command_util.uses_command("yum install"):
         assert(fs_util.look_for_file("/var/cache/yum") == -1)

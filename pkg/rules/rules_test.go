@@ -43,7 +43,6 @@ func TestLoadRulesetFromContent(t *testing.T) {
 		Name: "test ruleset",
 		Rules: []*rules.Rule{
 			{
-				Scope:       "output",
 				Category:    "negative",
 				Instruction: "assert(True == True)\n",
 				Description: "Perform a check",
@@ -51,7 +50,6 @@ func TestLoadRulesetFromContent(t *testing.T) {
 				Target:      "command",
 			},
 			{
-				Scope:       "buildtime",
 				Category:    "positive",
 				Instruction: "assert(True == False)\n",
 				Description: "Perform a check",
@@ -78,14 +76,12 @@ func TestLoadRulesetFromContent(t *testing.T) {
 func TestVerifyInvalidRuleset(t *testing.T) {
 	expected := map[string]rules.Rule{
 		"No id set for rule": {
-			Scope:       "buildtime",
 			Category:    "positive",
 			Instruction: "assert(True == False)",
 			Description: "Perform a check",
 			Target:      "fs",
 		},
 		"Target: Invalid value invalid (Allowed: [\"command\" \"os\" \"fs\"])": {
-			Scope:       "buildtime",
 			Category:    "positive",
 			Instruction: "assert(True == False)",
 			Description: "Perform a check",
@@ -93,16 +89,7 @@ func TestVerifyInvalidRuleset(t *testing.T) {
 			Target:      "invalid",
 		},
 		"Category: Invalid value maybe (Allowed: [\"negative\" \"positive\"])": {
-			Scope:       "buildtime",
 			Category:    "maybe",
-			Instruction: "assert(True == False)",
-			Description: "Perform a check",
-			Id:          "test id2",
-			Target:      "fs",
-		},
-		"Scope: Invalid value never (Allowed: [\"output\" \"buildtime\"])": {
-			Scope:       "never",
-			Category:    "negative",
 			Instruction: "assert(True == False)",
 			Description: "Perform a check",
 			Id:          "test id2",
