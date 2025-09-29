@@ -51,6 +51,13 @@ func (ou *OsUtils) load() {
 	}
 }
 
+// this returns a json string, parsing json must be done in the ruleset as of now
+// TODO: I need to solve struct/map -> dict conversion somehow
+func (ou *OsUtils) GetImageMetadata() string {
+	ou.load()
+	return ou.runCommand([]string{"docker", "image", "inspect", "--format=json", ou.image})
+}
+
 func (ou *OsUtils) ExecCommand(command string) string {
 	ou.load()
 	return ou.runCommand([]string{"docker", "run", "--entrypoint", "/bin/sh", "--rm", ou.image, "-c", command})
