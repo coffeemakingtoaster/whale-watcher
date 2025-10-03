@@ -37,8 +37,6 @@ help:
 	@echo "  exec          - Build the whale-watcher executable."
 	@echo "  test          - Run tests."
 	@echo "  oci-export    - Export OCI image."
-	@echo "  verify-local  - Verify ruleset with local ruleset"
-	@echo "  verify-remote  - Verify ruleset loaded from git"
 	@echo "\t--- not supported yet ---"
 	@echo "  docker        - Build the Docker image."
 	@echo "  docker-verify - Verify ruleset using Docker."
@@ -136,28 +134,16 @@ docker-export: ./out/out_docker.tar
 builder_clean:
 	docker buildx prune -a -f
 
-.PHONY: remote-verify
+.PHONY: verify
 
-remote-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
+verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
 
-remote-verify: all oci-export docker-export builder_clean
-	# Verify util signature, not actually perform rule validation
-	# Use remote ruleset
-	@echo "\n$(BLUE)$(DELIM) Verifying remote ruleset $(DELIM)$(RESET)"
-	 ./build/whale-watcher validate https://github.com/coffeemakingtoaster/whale-watcher-target.git!example_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
-
-.PHONY: local-verify
-
-local-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
-
-local-verify: all oci-export docker-export
+verify: all oci-export docker-export
  	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying local ruleset $(DELIM)$(RESET)"
 	./build/whale-watcher validate $$(pwd)/testdata/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
 
-.PHONY: verify
-verify: local-verify remote-verify test
 
 .PHONY: docker-verify
 docker-verify: docker
