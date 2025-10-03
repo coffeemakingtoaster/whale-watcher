@@ -5,10 +5,7 @@ import (
 
 	"github.com/coffeemakingtoaster/whale-watcher/internal/display"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
-	baseimagecache "github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache/ingester"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/container"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
@@ -30,7 +27,6 @@ Valid commands:
 	- help -> its this one :)
 	- validate <ruleset> <dockerfile> <oci image tarball> -> validate the ruleset against the given container artifacts
 	- docs <ruleset> -> Serve the ruleset documentation as a website. Pass --export to output and index.html instead
-	- bic -> build base image cache
 	`
 
 func Run(args []string) int {
@@ -40,17 +36,6 @@ func Run(args []string) int {
 	}
 	if runContext.Instruction == "help" {
 		fmt.Println(helpText)
-		return 0
-	}
-	if runContext.Instruction == "bic" {
-		cfg := config.GetConfig()
-		if len(cfg.BaseImageCache.BaseImages) == 0 {
-			log.Warn().Msg("No base images listed. Nothing to do...")
-			return 1
-		}
-		for _, img := range cfg.BaseImageCache.BaseImages {
-			ingester.IngestImage(img)
-		}
 		return 0
 	}
 	ruleSet, err := rules.LoadRuleset(runContext.RuleSetEntrypoint)
@@ -82,7 +67,6 @@ func Run(args []string) int {
 	} else {
 		log.Info().Msg("No git context, no interaction with VSC platform needed")
 	}
-	err = recommendBaseImage(ref, violations)
 
 	if err != nil {
 		return 1
@@ -102,44 +86,4 @@ func getViolations(runContext *RunContext, ruleSet rules.RuleSet) validator.Viol
 		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Send()
 	}
 	return violations
-}
-
-func recommendBaseImage(ref *runner.RunnerWorkingDirectory, violations validator.Violations) error {
-	cfg := config.GetConfig()
-	// This is fine in of itself -> not configured
-	if len(cfg.BaseImageCache.BaseImages)+len(cfg.BaseImageCache.CacheLocation) == 0 {
-		return nil
-	}
-	baseImageCache := baseimagecache.NewBaseImageCache()
-	loadedImage, err := container.ContainerImageFromOCITar(ref.GetAbsolutePath("./out.tar"))
-	if err != nil {
-		log.Warn().Err(err).Msg("Could not parse oci tar")
-		return err
-	}
-	if loadedImage.GetBaseImage() != "" {
-		log.Info().Str("base image", loadedImage.GetBaseImage()).Msg("Already uses known base image")
-		return nil
-	}
-	closestBaseImage, err := baseImageCache.GetClosestDependencyImage(loadedImage.GetPackageList())
-	if err != nil || len(closestBaseImage) == 0 {
-		log.Warn().Err(err).Msg("Could not determine closest base image")
-		return err
-	}
-	if config.ShouldInteractWithVSC() && violations.ViolationCount > 0 {
-		log.Debug().Msg("Trying to update PR with base image hint")
-		adapter, err := adapters.GetAdapterForRepository(cfg.Target.RepositoryURL)
-		if err != nil {
-			log.Warn().Err(err).Msg("Could not set for adapter")
-			return err
-		}
-		description := violations.BuildDescriptionMarkdown()
-		description += fmt.Sprintf("\n⚠️ Recommended Base Image: `%s` ⚠️\n", closestBaseImage)
-		err = adapter.UpdatePullRequest("", description)
-		if err != nil {
-			log.Warn().Err(err).Msg("Could not update PR")
-			return err
-		}
-	}
-	log.Info().Str("base image", closestBaseImage).Msg("Found fitting base image!")
-	return nil
 }

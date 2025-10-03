@@ -6,8 +6,6 @@ import (
 	"slices"
 	"strings"
 
-	baseimagecache "github.com/coffeemakingtoaster/whale-watcher/pkg/base_image_cache"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/container/tarutils"
 	"github.com/rs/zerolog/log"
 )
@@ -79,21 +77,6 @@ func ContainerImageFromOCITar(ociPath string) (*ContainerImage, error) {
 	}
 
 	return &containerImage, nil
-}
-
-func (ci *ContainerImage) GetBaseImage() string {
-	cfg := config.GetConfig()
-	if len(cfg.BaseImageCache.CacheLocation) > 0 {
-		baseImageCache := baseimagecache.NewBaseImageCache()
-		baseImage, err := baseImageCache.GetImageByDigest(ci.Layers[0].Digest)
-		if err != nil {
-			log.Warn().Err(err).Msg("Error finding known base image")
-		} else {
-			log.Debug().Msgf("Detected used base image %s", baseImage)
-			return baseImage
-		}
-	}
-	return ""
 }
 
 func (ci *ContainerImage) buildLayers(loadedTar *tarutils.LoadedTar, commands []string) error {
