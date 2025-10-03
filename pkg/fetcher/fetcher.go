@@ -235,7 +235,7 @@ func saveAsOCITarball(img v1.Image, destination string) error {
 }
 
 func loadDockerfileFromRepository(repositoryURL, branch, dockerfilePath string) (string, error) {
-	data, err := getFileFromRepository(repositoryURL, branch, dockerfilePath)
+	data, err := GetFileFromRepository(repositoryURL, branch, dockerfilePath)
 	if err != nil {
 		log.Error().Msg("Could not retrieve filedata from repository")
 		return "", err
@@ -254,9 +254,11 @@ func loadDockerfileFromRepository(repositoryURL, branch, dockerfilePath string) 
 	return loadedPath, nil
 }
 
-func getFileFromRepository(repositoryURL, branch, path string) ([]byte, error) {
+func GetFileFromRepository(repositoryURL, branch, path string) ([]byte, error) {
 	fs := memfs.New()
 	storer := memory.NewStorage()
+
+	log.Debug().Str("url", repositoryURL).Msg("Cloning Repository")
 
 	repository, err := git.Clone(
 		storer,
@@ -275,11 +277,15 @@ func getFileFromRepository(repositoryURL, branch, path string) ([]byte, error) {
 
 	branchReference := plumbing.NewBranchReferenceName(branch)
 
+	log.Debug().Str("path", path).Msg("Getting file")
+
 	err = w.Checkout(&git.CheckoutOptions{SparseCheckoutDirectories: []string{dockerfileDirectory}, Branch: plumbing.ReferenceName(branchReference)})
 	if err != nil {
 		log.Error().Msg("Could not checkout")
 		return []byte{}, err
 	}
+
+	log.Debug().Str("path", path).Msg("Reading file")
 
 	fileHandle, err := w.Filesystem.Open(path)
 	if err != nil {

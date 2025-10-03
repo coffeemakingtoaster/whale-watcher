@@ -16,6 +16,8 @@ DELIM = ************
 # Get the version from the latest git tag or default to "alpha"
 VERSION = $(shell git describe --tags --abbrev=0 2>/dev/null || echo "alpha")
 
+MOBY_BUILDKIT_VERSION_TAG=v0.25.0
+
 # Phony targets declaration
 .PHONY: help
 help:
@@ -26,6 +28,8 @@ help:
 	@echo "  all           - Build all targets."
 	@echo "  verify        - Verify ruleset."
 	@echo "\t--- internal ---"
+	@echo "  full_clean    - Remove oci images, this is almost never needed"
+	@echo "  builder_clean - Run prune for builders after building"
 	@echo "  cmd_lib       - Build the command_util library."
 	@echo "  fs_lib        - Build the fs_util library."
 	@echo "  os_lib        - Build the os_util library."
@@ -92,13 +96,17 @@ $(BUILD_DIR)/whale-watcher: $(CMD_DIR)/whale-watcher.go | $(BUILD_DIR)
 all: cmd_lib fs_lib os_lib exec
 	@echo "\n$(GREEN)$(DELIM) All targets built successfully! $(DELIM)$(RESET)"
 
+.PHONY: full-clean
+
+full-clean: clean
+	rm -rf ./out/
+
 .PHONY: clean
 # Clean target to remove the build directory
 clean:
 	@echo "\n$(RED)$(DELIM) Cleaning build directory $(DELIM)$(RESET)"
 	rm -rf $(BUILD_DIR)
 	rm -rf $(PKG_DIR)/*_build
-	rm -rf ./out
 
 .PHONY: docker
 docker:
@@ -110,31 +118,33 @@ test:
 
 ./out/out.tar:
 	mkdir -p out
-	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
+	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:$(MOBY_BUILDKIT_VERSION_TAG),network=host --use
 	docker buildx build -o type=oci,dest=./out/out.tar,compression=gzip -f ./_example/example.Dockerfile ./_example/
-	docker buildx prune -a -f
 
 .PHONY: oci-export
 oci-export: ./out/out.tar
 
 ./out/out_docker.tar:
 	mkdir -p out
-	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:master,network=host --use
+	docker buildx create --driver docker-container --driver-opt image=moby/buildkit:$(MOBY_BUILDKIT_VERSION_TAG),network=host --use
 	docker buildx build -o type=tar,dest=./out/out_docker.tar,compression=gzip -f ./_example/example.Dockerfile ./_example/
-	docker buildx prune -a -f
 
 .PHONY: docker-export
 docker-export: ./out/out_docker.tar
+
+.PHONY: builder_clean
+builder_clean:
+	docker buildx prune -a -f
 
 .PHONY: remote-verify
 
 remote-verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
 
-remote-verify: all oci-export docker-export
+remote-verify: all oci-export docker-export builder_clean
 	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying remote ruleset $(DELIM)$(RESET)"
-	 ./build/whale-watcher validate https://github.com/coffeemakingtoaster/whale-watcher-target.git $$(pwd)/Dockerfile "./out/out.tar"
+	 ./build/whale-watcher validate https://github.com/coffeemakingtoaster/whale-watcher-target.git!example_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
 
 .PHONY: local-verify
 

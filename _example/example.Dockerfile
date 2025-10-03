@@ -1,5 +1,5 @@
 # This file is bogus and meant to violate policies
-FROM debian:latest AS runtime
+FROM debian:trixie AS runtime
 
 WORKDIR /app
 

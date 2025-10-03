@@ -1,16 +1,14 @@
 package rules
 
 import (
-	"bytes"
 	"errors"
-	"io"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/internal/environment"
-	"github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/fetcher"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/util"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
@@ -53,56 +51,27 @@ func loadRuleSet(location string) (RuleSet, error) {
 	}
 	log.Debug().Msg("Provided ruleset location is a filepath!")
 	return loadRuleSetFromFile(location)
-
 }
 
 func loadRuleSetFromRepository(repositoryURL string) (RuleSet, error) {
-	fs := memfs.New()
-	storer := memory.NewStorage()
-
-	repository, err := git.Clone(storer, fs, &git.CloneOptions{URL: repositoryURL})
+	var ruleSet RuleSet
+	url, internalPath, err := separateWWRepositoryUrlIntoGitURlAndInternalPath(repositoryURL)
 
 	if err != nil {
-		return RuleSet{}, err
+		return ruleSet, err
 	}
 
-	head, _ := repository.Head()
-	log.Info().Str("Hash", head.Hash().String()).Msgf("Using remote state for repository '%s'", repositoryURL)
-
-	var ruleSet RuleSet
-
-	files, err := fs.ReadDir(".")
-
-	for _, entry := range files {
-		if !strings.HasSuffix(entry.Name(), ".yaml") {
-			log.Debug().Str("filename", entry.Name()).Msg("Skipped remote file")
-			continue
-		}
-
-		log.Debug().Str("filename", entry.Name()).Msg("Parsing remote file")
-		fileHandle, err := fs.Open(entry.Name())
-		if err != nil {
-			return RuleSet{}, err
-		}
-
-		var data bytes.Buffer
-
-		_, err = io.Copy(&data, fileHandle)
-
-		if err != nil {
-			return RuleSet{}, err
-		}
-
-		log.Debug().Str("filename", entry.Name()).Int("filesize", data.Len()).Msg("Parsed file of size")
-
-		ruleSet, err = LoadRuleSetFromContent(data.Bytes())
-		if err != nil {
-			return RuleSet{}, err
-		}
-		return ruleSet, nil
+	if !strings.HasSuffix(url, ".git") {
+		return ruleSet, fmt.Errorf("url (%s) has to end in .git", url)
 	}
 
-	return ruleSet, nil
+	data, err := fetcher.GetFileFromRepository(url, "main", internalPath)
+
+	if err != nil {
+		return ruleSet, err
+	}
+
+	return LoadRuleSetFromContent(data)
 }
 
 func loadRuleSetFromFile(path string) (RuleSet, error) {
@@ -134,4 +103,14 @@ func LoadRuleSetFromContent(data []byte) (RuleSet, error) {
 		}
 	}
 	return ruleSet, nil
+}
+
+func separateWWRepositoryUrlIntoGitURlAndInternalPath(repositoryURl string) (string, string, error) {
+	matcher := util.NewSliceSearch[rune]([]rune(".git!"))
+	for i, c := range []rune(repositoryURl) {
+		if matcher.Match(c) {
+			return repositoryURl[:i], repositoryURl[i+1:], nil
+		}
+	}
+	return "", "", errors.New(fmt.Sprintf(".git!<path> not contained in url %s", repositoryURl))
 }
