@@ -57,27 +57,14 @@ func (gc *GiteaConfig) Validate() error {
 	return nil
 }
 
-type BaseImageCacheConfig struct {
-	BaseImages    []string `yaml:"base_images" env:"BASE_IMAGES"`
-	CacheLocation string   `yaml:"cache_location" env:"CACHE_LOCATION"`
-}
-
-func (bicg *BaseImageCacheConfig) Validate() error {
-	if len(bicg.BaseImages) > 0 && len(bicg.CacheLocation) == 0 {
-		return errors.New("Cache location must be provided")
-	}
-	return nil
-}
-
 type Config struct {
-	Github         GithubConfig         `yaml:"github" envPrefix:"GITHUB_"`
-	Gitea          GiteaConfig          `yaml:"gitea" envPrefix:"GITEA_"`
-	Target         TargetConfig         `yaml:"target" envPrefix:"TARGET_"`
-	BaseImageCache BaseImageCacheConfig `yaml:"base_image_cache" envPrefix:"BASE_IMAGE_CACHE"`
-	TargetList     string               `yaml:"target_list" env:"TARGET_LIST"`
-	LogLevel       int                  `yaml:"log_level" env:"LOG_LEVEL"`
-	DocsURL        string               `yaml:"docs_url" env:"DOCS_URL"`
-	NoFix          bool                 `yaml:"no_fix" env:"NO_FIX"`
+	Github     GithubConfig `yaml:"github" envPrefix:"GITHUB_"`
+	Gitea      GiteaConfig  `yaml:"gitea" envPrefix:"GITEA_"`
+	Target     TargetConfig `yaml:"target" envPrefix:"TARGET_"`
+	TargetList string       `yaml:"target_list" env:"TARGET_LIST"`
+	LogLevel   int          `yaml:"log_level" env:"LOG_LEVEL"`
+	DocsURL    string       `yaml:"docs_url" env:"DOCS_URL"`
+	NoFix      bool         `yaml:"no_fix" env:"NO_FIX"`
 }
 
 func (c *Config) Validate() error {

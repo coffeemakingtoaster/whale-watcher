@@ -11,13 +11,6 @@ target:
 github:
   pat: # personal access token of account used for creating pr and pushing changes
   username: # username of account used for creating pr and pushing changes
-# base image cache builder
-base_image_cache:
-  # list of all base images that will be indexed
-  base_images: 
-    - sample1
-  # save location for index (as sqlite db)
-  cache_location: 
 # log level used
 # follows log levels specified by zerolog
 log_level: 

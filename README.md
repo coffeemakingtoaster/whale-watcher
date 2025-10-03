@@ -31,12 +31,7 @@ There is a [dummy repository](https://github.com/coffeemakingtoaster/whale-watch
 
 ## Usage
 
-Using whale watcher is rather straightforward. There are 3 possible modes of operation: `bic`, `validate`, `docs`.
-
-### Bic
-
-Bic is short for base image cache which is used for building an index of the available base images.
-Running `whale-watcher bci` will use all base images specified in the config and create a database of these base images and their components.
+Using whale watcher is rather straightforward. There are 2 possible modes of operation: `validate`, `docs`.
 
 ### Validate
 
