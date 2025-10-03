@@ -104,3 +104,18 @@ func TestVerifyInvalidRuleset(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadRulesetFromInvalidGitRepositoryUrl(t *testing.T) {
+	_, err := rules.LoadRuleset("git@github.com:coffeemakingtoaster/whale-watcher.g!abc.yaml")
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+}
+
+func TestLoadRulesetFromGitRepositoryUrlWithoutPath(t *testing.T) {
+	_, err := rules.LoadRuleset("git@github.com:coffeemakingtoaster/whale-watcher.git")
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+}

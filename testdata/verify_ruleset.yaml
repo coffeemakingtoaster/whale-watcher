@@ -4,6 +4,8 @@
 # Allowed categories: negative, positived
 # Allowed target: command, os, fs
 name: Verification ruleset
+include:
+  - https://github.com/coffeemakingtoaster/whale-watcher-target.git!example_ruleset.yaml # include remote...that also includes an include
 rules:
   - category: Negative
     instruction: |

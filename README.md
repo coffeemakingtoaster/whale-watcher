@@ -45,7 +45,7 @@ Validate runs the validation of a given image based on a specified ruleset. The 
 whale-watcher validate <ruleset location>
 ```
 
-This ruleset location may also be a git repository.
+This ruleset location may also be a git repository and a filepath within the repositor, specified in the format `<repo url ssh or http ending in .git>!<path>`
 
 ### Docs
 

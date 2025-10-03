@@ -9,6 +9,7 @@ require (
 	github.com/coffeemakingtoaster/dockerfile-parser v0.0.0-20250909103256-f3fd3fd97124
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
+	github.com/go-python/gopy v0.4.10
 	github.com/google/go-containerregistry v0.20.6
 	github.com/google/go-github/v60 v60.0.0
 	github.com/mattn/go-sqlite3 v1.14.28

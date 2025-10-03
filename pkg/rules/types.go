@@ -20,9 +20,11 @@ type ViolationInfo struct {
 }
 
 type RuleSet struct {
-	Name       string  `yaml:"name"`
-	Rules      []*Rule `yaml:"rules"`
+	Name       string   `yaml:"name"`
+	Include    []string `yaml:"include"`
+	Rules      []*Rule  `yaml:"rules"`
 	tmpDirPath string
+	ids        map[string]int
 }
 
 type Rule struct {
@@ -68,6 +70,26 @@ func (r *Rule) Validate(ociTarPath, dockerFilepath, dockerTarPath string) (bool,
 func (rs *RuleSet) Close() {
 	if len(rs.tmpDirPath) > 0 {
 		os.RemoveAll(rs.tmpDirPath)
+	}
+}
+
+func (rs *RuleSet) updateIdList() {
+	rs.ids = make(map[string]int)
+	for i, rule := range rs.Rules {
+		rs.ids[rule.Id] = i
+	}
+}
+
+// Take all rules fromt he weaker set where the current set does not have a rule yet
+// identified via ID
+func (rs *RuleSet) Swallow(weakerSet RuleSet) {
+	if len(rs.Rules) != len(rs.ids) {
+		rs.updateIdList()
+	}
+	for _, rule := range weakerSet.Rules {
+		if _, ok := rs.ids[rule.Id]; !ok {
+			rs.Rules = append(rs.Rules, rule)
+		}
 	}
 }
 
