@@ -6,6 +6,7 @@ import (
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func NewCommand() *cobra.Command {
@@ -14,7 +15,7 @@ func NewCommand() *cobra.Command {
 	var exportPath *string
 
 	var cmd = &cobra.Command{
-		Use:   "docs",
+		Use:   "docs [flags] <policyset>",
 		Short: "Render the documentation form of a given policy set",
 		Long: `Render the provided policy set as html. By default this starts a webserver, serving the HTML documentation.
 
@@ -35,9 +36,16 @@ Expected arguments:  <policy set location>
 		},
 	}
 
-	cmd.Flags().BoolVarP(&export, "export", "x", false, "Export the index.html instead of serving server")
-	exportPath = cmd.Flags().StringP("file", "f", "./index.html", "Set the file to export the html representation of the ruleset to")
-	cmd.Flags().Int64VarP(&servePort, "port", "p", 3000, "Set the port for the webserver")
+	docFlags := pflag.NewFlagSet("Docs Options", pflag.ExitOnError)
+
+	docFlags.BoolVarP(&export, "export", "x", false, "Export the index.html instead of serving server")
+	docFlags.SetAnnotation("export", "group", []string{docFlags.Name()})
+	exportPath = docFlags.StringP("file", "f", "./index.html", "Set the file to export the html representation of the ruleset to")
+	docFlags.SetAnnotation("file", "group", []string{docFlags.Name()})
+	docFlags.Int64VarP(&servePort, "port", "p", 3000, "Set the port for the webserver")
+	docFlags.SetAnnotation("port", "group", []string{docFlags.Name()})
+
+	cmd.Flags().AddFlagSet(docFlags)
 
 	return cmd
 }

@@ -142,8 +142,7 @@ verify: all oci-export docker-export
  	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying local ruleset $(DELIM)$(RESET)"
-	./build/whale-watcher validate $$(pwd)/testdata/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar"
-
+	./build/whale-watcher validate $$(pwd)/testdata/verify_ruleset.yaml $$(pwd)/Dockerfile "./out/out.tar" "./out/out_docker.tar"
 
 .PHONY: docker-verify
 docker-verify: docker

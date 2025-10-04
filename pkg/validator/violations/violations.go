@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"text/template"
 
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 type Violations struct {
@@ -43,13 +43,11 @@ func (v *Violations) BuildDescriptionMarkdown() string {
 	var fixed []templateViolation
 	var detected []templateViolation
 
-	cfg := config.GetConfig()
-
 	for _, violation := range v.Violations {
 		if violation.AutoFixed {
-			fixed = append(fixed, violationToTemplate(violation, cfg.DocsURL))
+			fixed = append(fixed, violationToTemplate(violation, viper.GetString("docsurl")))
 		} else {
-			detected = append(detected, violationToTemplate(violation, cfg.DocsURL))
+			detected = append(detected, violationToTemplate(violation, viper.GetString("docsurl")))
 		}
 	}
 	tmpl, err := template.New("site").Parse(prTemplate)
@@ -60,7 +58,7 @@ func (v *Violations) BuildDescriptionMarkdown() string {
 	err = tmpl.ExecuteTemplate(&writer, "site", templateContent{
 		Fixed:    fixed,
 		Detected: detected,
-		DocUrl:   cfg.DocsURL,
+		DocUrl:   viper.GetString("docsurl"),
 	})
 	if err != nil {
 		panic(err)

@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 	"github.com/rs/zerolog/log"
 )
@@ -25,6 +26,7 @@ type RuleSet struct {
 	Rules      []*Rule  `yaml:"rules"`
 	tmpDirPath string
 	ids        map[string]int
+	targetList map[string]bool
 }
 
 type Rule struct {
@@ -80,15 +82,29 @@ func (rs *RuleSet) updateIdList() {
 	}
 }
 
+// Considers currently target allowlist in config
+func (rs *RuleSet) GetHighestTarget() string {
+	for _, target := range []string{"os", "fs"} {
+		if val, ok := rs.targetList[target]; ok && val && config.AllowsTarget(target) {
+			return target
+		}
+	}
+	return "command"
+}
+
 // Take all rules fromt he weaker set where the current set does not have a rule yet
 // identified via ID
 func (rs *RuleSet) Swallow(weakerSet RuleSet) {
 	if len(rs.Rules) != len(rs.ids) {
 		rs.updateIdList()
 	}
+	if rs.targetList == nil {
+		rs.targetList = make(map[string]bool)
+	}
 	for _, rule := range weakerSet.Rules {
 		if _, ok := rs.ids[rule.Id]; !ok {
 			rs.Rules = append(rs.Rules, rule)
+			rs.targetList[rule.Target] = true
 		}
 	}
 }

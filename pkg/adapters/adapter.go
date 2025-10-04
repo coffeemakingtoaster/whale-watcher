@@ -7,6 +7,7 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 type PullRequestAdapter interface {
@@ -17,15 +18,14 @@ type PullRequestAdapter interface {
 
 func GetAdapterForRepository(repository string) (PullRequestAdapter, error) {
 
-	cfg := config.GetConfig()
-	if cfg.Github.Validate() == nil {
+	if config.ValidateGithub() == nil {
 		if user, repo, err := ParseGitRepoURL("github.com", repository); err == nil {
 			return github.NewGithubPullRequestAdapter(user, repo)
 		}
 	}
 
-	if cfg.Gitea.Validate() == nil {
-		if user, repo, err := ParseGitRepoURL(cfg.Gitea.InstanceUrl, repository); err == nil {
+	if config.ValidateGitea() == nil {
+		if user, repo, err := ParseGitRepoURL(viper.GetString("gitea.instanceurl"), repository); err == nil {
 			return github.NewGithubPullRequestAdapter(user, repo)
 		}
 
@@ -39,9 +39,8 @@ func CreatePRForFixes(violations violationTypes.Violations, updatedDockerfilePat
 		log.Debug().Msg("No violations in current run, skipping PR creation")
 		return nil
 	}
-	cfg := config.GetConfig()
 
-	adapter, err := GetAdapterForRepository(cfg.Target.RepositoryURL)
+	adapter, err := GetAdapterForRepository(viper.GetString("target.repository"))
 	if err != nil {
 		return err
 	}
@@ -54,7 +53,7 @@ func CreatePRForFixes(violations violationTypes.Violations, updatedDockerfilePat
 
 	log.Debug().Msg("adapter is ready -> running git integration")
 
-	newBranch, err := SyncFileToRepoIfDifferent(cfg.Target.RepositoryURL, cfg.Target.Branch, cfg.Target.DockerfilePath, updatedDockerfilePath)
+	newBranch, err := SyncFileToRepoIfDifferent(viper.GetString("target.repository"), viper.GetString("target.branch"), viper.GetString("target.dockerfilepath"), updatedDockerfilePath)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create new branch on remote for fixes PR")
 		return err
@@ -64,6 +63,6 @@ func CreatePRForFixes(violations violationTypes.Violations, updatedDockerfilePat
 		return nil
 	}
 
-	err = adapter.CreatePullRequest(newBranch, cfg.Target.Branch, "Autofixes", violations.BuildDescriptionMarkdown())
+	err = adapter.CreatePullRequest(newBranch, viper.GetString("target.branch"), "Autofixes", violations.BuildDescriptionMarkdown())
 	return err
 }

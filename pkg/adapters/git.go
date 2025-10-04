@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	localconfig "github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -21,6 +20,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath string) (string, error) {
@@ -28,11 +28,9 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 	fs := memfs.New()
 	storer := memory.NewStorage()
 
-	cfg := localconfig.GetConfig()
-
 	auth := http.BasicAuth{
-		Username: cfg.Github.Username,
-		Password: cfg.Github.PAT,
+		Username: viper.GetString("github.username"),
+		Password: viper.GetString("github.password"),
 	}
 
 	repository, err := git.Clone(
@@ -118,7 +116,7 @@ func SyncFileToRepoIfDifferent(repoURL, branch, repoFilePath, hostFilePath strin
 
 	_, err = w.Commit("Update file from host system", &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  cfg.Github.Username,
+			Name:  viper.GetString("github.username"),
 			Email: "bot@example.com",
 			When:  time.Now(),
 		},

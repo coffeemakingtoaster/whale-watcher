@@ -2,70 +2,160 @@ package config
 
 import (
 	"fmt"
-	"os"
+	"reflect"
+	"strings"
 
-	"github.com/caarlos0/env/v11"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
-const envPrefix = "WHALE_WATCHER_"
-
-var configPath = "./config.yaml"
-
-// TODO: Adding a function that buffers all logging events during config parsing and publishes them later (after logging level has been set)
-func init() {
-	// Disable logging at the start
-	zerolog.SetGlobalLevel(zerolog.Level(5))
-	configPathEnv := os.Getenv(fmt.Sprintf("%sCONFIG_PATH", envPrefix))
-	if len(configPathEnv) != 0 {
-		SetConfigPath(configPathEnv)
+// AddConfigFlagsWithGroups registers flags for each nested struct
+// as a separate flag group, and binds both Viper + environment variables.
+func AddConfigFlagsWithGroups(cmd *cobra.Command, prefix string, val any, envPrefix string) error {
+	v := reflect.ValueOf(val)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
 	}
-	cfg := GetConfig()
-	zerolog.SetGlobalLevel(zerolog.Level(cfg.LogLevel))
+	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fieldVal := v.Field(i)
+
+		if !fieldVal.CanInterface() {
+			continue
+		}
+
+		mapKey := field.Tag.Get("mapstructure")
+		if mapKey == "" {
+			mapKey = strings.ToLower(field.Name)
+		}
+		structEnvPrefix := field.Tag.Get("envPrefix")
+		fullEnvPrefix := envPrefix
+		if structEnvPrefix != "" {
+			fullEnvPrefix = envPrefix + structEnvPrefix
+		}
+
+		switch fieldVal.Kind() {
+		case reflect.Struct:
+			groupName := field.Tag.Get("group")
+
+			var err error
+
+			if len(groupName) == 0 {
+				err = AddConfigFlagsWithGroups(cmd, mapKey, fieldVal.Addr().Interface(), fullEnvPrefix)
+			} else {
+				groupFlags := pflag.NewFlagSet(groupName, pflag.ContinueOnError)
+				err = addStructFlags(groupFlags, mapKey, fieldVal.Addr().Interface(), fullEnvPrefix)
+				cmd.PersistentFlags().AddFlagSet(groupFlags)
+			}
+			if err != nil {
+				return err
+			}
+
+		default:
+			// top-level (non-struct) fields
+			if err := addFieldFlag(cmd.PersistentFlags(), prefix, &field, &fieldVal, envPrefix); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
-func SetConfigPath(path string) {
-	configPath = path
+func addStructFlags(flagSet *pflag.FlagSet, prefix string, val any, envPrefix string) error {
+	v := reflect.ValueOf(val)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fieldVal := v.Field(i)
+
+		if !fieldVal.CanInterface() {
+			continue
+		}
+
+		mapKey := field.Tag.Get("mapstructure")
+		if mapKey == "" {
+			mapKey = strings.ToLower(field.Name)
+		}
+
+		fullKey := prefix + "." + mapKey
+		envKey := field.Tag.Get("env")
+		if envKey == "" {
+			envKey = strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
+		}
+		envVar := envPrefix + envKey
+		desc := field.Tag.Get("desc")
+
+		// Register flag
+		switch fieldVal.Kind() {
+		case reflect.String:
+			flagSet.String(fullKey, "", fmt.Sprintf("%s - (string) Env: %s", desc, envVar))
+		case reflect.Bool:
+			flagSet.Bool(fullKey, false, fmt.Sprintf("%s - (bool) Env: %s", desc, envVar))
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			flagSet.Int(fullKey, 0, fmt.Sprintf("%s - (int) Env: %s", desc, envVar))
+		}
+
+		flagSet.SetAnnotation(fullKey, "group", []string{flagSet.Name()})
+
+		// Bind to Viper and environment
+		_ = viper.BindPFlag(fullKey, flagSet.Lookup(fullKey))
+		_ = viper.BindEnv(fullKey, envVar)
+	}
+
+	return nil
 }
 
-func LoadConfigFromData(data []byte) Config {
-	var cfg Config
-	err := yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		log.Error().Err(err).Msg("Could not parse config, initialising empty and trusting env fallback")
+func addFieldFlag(flagSet *pflag.FlagSet, prefix string, field *reflect.StructField, value *reflect.Value, envPrefix string) error {
+	mapKey := field.Tag.Get("mapstructure")
+	if mapKey == "" {
+		mapKey = strings.ToLower(field.Name)
 	}
-	return handleEnvOverrides(cfg)
+	fullKey := mapKey
+	if prefix != "" {
+		fullKey = prefix + "." + mapKey
+	}
+
+	envKey := field.Tag.Get("env")
+	if envKey == "" {
+		envKey = strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
+	}
+	envVar := envPrefix + envKey
+
+	desc := field.Tag.Get("desc")
+
+	switch value.Kind() {
+	case reflect.String:
+		flagSet.String(fullKey, "", fmt.Sprintf("%s - (string) Env: %s", desc, envVar))
+	case reflect.Bool:
+		flagSet.Bool(fullKey, false, fmt.Sprintf("%s - (bool) Env: %s", desc, envVar))
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		flagSet.Int(fullKey, 0, fmt.Sprintf("%s - (int) Env: %s", desc, envVar))
+	}
+
+	_ = viper.BindPFlag(fullKey, flagSet.Lookup(fullKey))
+	_ = viper.BindEnv(fullKey, envVar)
+
+	return nil
 }
 
-func loadConfigFromFile(configPath string) Config {
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		log.Warn().Err(err).Msgf("Could not read config file %s", configPath)
-		return handleEnvOverrides(Config{})
+func AllowsTarget(target string) bool {
+	allowList := viper.GetString("target_list")
+	if len(allowList) == 0 {
+		return true
 	}
-	return LoadConfigFromData(data)
-}
+	return strings.Contains(allowList, target)
 
-func handleEnvOverrides(cfg Config) Config {
-	err := env.ParseWithOptions(&cfg, env.Options{Prefix: envPrefix})
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to read env variables for config overrides")
-	}
-	return cfg
 }
 
 func ShouldInteractWithVSC() bool {
-	cfg := GetConfig()
-	return len(cfg.Github.PAT) > 0 && len(cfg.Github.Username) > 0
-}
-
-func GetConfig() Config {
-	cfg := loadConfigFromFile(configPath)
-	err := cfg.Validate()
-	if err != nil {
-		log.Error().Err(err).Msg("Invalid config!")
-	}
-	return cfg
+	return ValidateGitea() == nil || ValidateGithub() == nil
 }

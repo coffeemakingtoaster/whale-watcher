@@ -2,36 +2,33 @@ package config
 
 import (
 	"errors"
-	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type TargetConfig struct {
-	RepositoryURL  string `yaml:"repository" env:"REPOSITORY_URL"`
-	DockerfilePath string `yaml:"dockerfile" env:"DOCKERFILE"`
-	Image          string `yaml:"image" env:"IMAGE"`
-	Branch         string `yaml:"branch" env:"BRANCH"`
-	OciPath        string `yaml:"ocipath" env:"OCI_PATH"`
-	DockerPath     string `yaml:"dockerpath" env:"DOCKER_PATH"`
-	Insecure       bool   `yaml:"insecure" env:"INSECURE"`
-}
-
-func (tc *TargetConfig) Validate() error {
-	return nil
+	RepositoryURL  string `mapstructure:"repository" env:"REPOSITORY_URL" desc:"Specify a remote repository. This can be empty for local."`
+	DockerfilePath string `mapstructure:"dockerfile" env:"DOCKERFILE" desc:"Specify the dockerfile path. This is either a local path or the location of the Dockerfile in the specified repository"`
+	Image          string `mapstructure:"image" env:"IMAGE" desc:"Image speficier to pull the image from a remote registry. This can be empty for local"`
+	Branch         string `mapstructure:"branch" env:"BRANCH" desc:"Specify branch that should be pulled for validation. Only needed if remote repo is used"`
+	OciPath        string `mapstructure:"ocipath" env:"OCI_PATH" desc:"Specify the location of the oci tar file. Not needed if image is pulled from registry"`
+	DockerPath     string `mapstructure:"dockerpath" env:"DOCKER_PATH" desc:"Specify the location of the docker tar file. Not needed if image is pulled from registry"`
+	Insecure       bool   `mapstructure:"insecure" env:"INSECURE" desc:"Specify whether the image parsing should be done unsafe (i.e. use http instead of https to communicate with registry)"`
 }
 
 type GithubConfig struct {
-	PAT      string `yaml:"pat" env:"PAT"`
-	Username string `yaml:"username" env:"USER_NAME"`
+	PAT      string `mapstructure:"pat" env:"PAT" desc:"Personal access token of account used for creating pr and pushing changes"`
+	Username string `mapstructure:"username" env:"USER_NAME" desc:"Username of account used for creating pr and pushing changes"`
 }
 
-func (gc *GithubConfig) Validate() error {
-	if len(gc.PAT)+len(gc.Username) == 0 {
+func ValidateGithub() error {
+	if len(viper.GetString("github.pat"))+len(viper.GetString("github.username")) == 0 {
 		return nil
 	}
-	if gc.PAT == "" {
+	if viper.GetString("github.pat") == "" {
 		return errors.New("PAT must be set!")
 	}
-	if gc.Username == "" {
+	if viper.GetString("github.username") == "" {
 		return errors.New("Username must be set!")
 	}
 
@@ -39,49 +36,30 @@ func (gc *GithubConfig) Validate() error {
 }
 
 type GiteaConfig struct {
-	Username    string `yaml:"username" env:"USER_NAME"`
-	Password    string `yaml:"password" env:"PASSWORD"`
-	InstanceUrl string `yaml:"instance_url" env:"INSTANCE_URL"`
+	Username    string `mapstructure:"username" env:"USER_NAME" desc:"Username of account used for creating pr and pushing changes"`
+	Password    string `mapstructure:"password" env:"PASSWORD" desc:"Password of account used for creating pr and pushing changes"`
+	InstanceUrl string `mapstructure:"instance_url" env:"INSTANCE_URL" desc:"URL of the gitea instance"`
 }
 
-func (gc *GiteaConfig) Validate() error {
-	if gc.Password == "" {
-		return errors.New("PAT must be set!")
+func ValidateGitea() error {
+	if viper.GetString("gitea.password") == "" {
+		return errors.New("Password must be set!")
 	}
-	if gc.Username == "" {
+	if viper.GetString("gitea.username") == "" {
 		return errors.New("Username must be set!")
 	}
-	if gc.InstanceUrl == "" {
+	if viper.GetString("gitea.instanceurl") == "" {
 		return errors.New("Instanceurl must be set!")
 	}
 	return nil
 }
 
 type Config struct {
-	Github     GithubConfig `yaml:"github" envPrefix:"GITHUB_"`
-	Gitea      GiteaConfig  `yaml:"gitea" envPrefix:"GITEA_"`
-	Target     TargetConfig `yaml:"target" envPrefix:"TARGET_"`
-	TargetList string       `yaml:"target_list" env:"TARGET_LIST"`
-	LogLevel   int          `yaml:"log_level" env:"LOG_LEVEL"`
-	DocsURL    string       `yaml:"docs_url" env:"DOCS_URL"`
-	NoFix      bool         `yaml:"no_fix" env:"NO_FIX"`
-}
-
-func (c *Config) Validate() error {
-	err := c.Github.Validate()
-	if err != nil {
-		return err
-	}
-	err = c.Target.Validate()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Config) AllowsTarget(target string) bool {
-	if len(c.TargetList) == 0 {
-		return true
-	}
-	return strings.Contains(c.TargetList, target)
+	Github     GithubConfig `mapstructure:"github" envPrefix:"GITHUB_" group:"Github Config"`
+	Gitea      GiteaConfig  `mapstructure:"gitea" envPrefix:"GITEA_" group:"Gitea Config"`
+	Target     TargetConfig `mapstructure:"target" envPrefix:"TARGET_" group:"Target Config"`
+	TargetList string       `mapstructure:"target_list" env:"TARGET_LIST" desc:"List all allowed targets"`
+	LogLevel   int          `mapstructure:"log_level" env:"LOG_LEVEL" desc:"Set log level (1-5)"`
+	DocsURL    string       `mapstructure:"docs_url" env:"DOCS_URL" desc:"Url pointing to active deployment of policy set documentation"`
+	NoFix      bool         `mapstructure:"no_fix" env:"NO_FIX" desc:"Disable the fixing functionality for detected violations"`
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -91,8 +92,7 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, docker
 		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", dockerFilePath, rwd.tmpDirPath)
 		return
 	}
-	cfg := config.GetConfig()
-	if !cfg.AllowsTarget("fs") && !cfg.AllowsTarget("os") {
+	if !config.AllowsTarget("fs") && !config.AllowsTarget("os") {
 		log.Info().Msg("Not adding container artifacts to working directory as they are not needed for allowed targets")
 	} else {
 		err = addFileToWorkingDirectory(ociImagePath, rwd.tmpDirPath, "out.tar")
@@ -157,10 +157,8 @@ func (rwd *RunnerWorkingDirectory) extractUtils(utilLevel int) error {
 		rwd.current_util_level = OS_UTIL_LEVEL
 	}
 
-	cfg := config.GetConfig()
-
 	// no fix utils needed if we are running again or in nofix
-	if cfg.NoFix || rwd.isPopulated {
+	if viper.GetBool("nofix") || rwd.isPopulated {
 		return nil
 	}
 

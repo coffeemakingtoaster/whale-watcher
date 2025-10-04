@@ -13,7 +13,7 @@ import (
 )
 
 func LoadRuleset(location string) (RuleSet, error) {
-	ruleset, err := loadRuleSet(location)
+	ruleset, err := shallowLoadRuleSet(location)
 	if err != nil {
 		return RuleSet{}, err
 	}
@@ -22,7 +22,7 @@ func LoadRuleset(location string) (RuleSet, error) {
 	}
 	for i := range ruleset.Include {
 		source := ruleset.Include[len(ruleset.Include)-1-i]
-		weakSet, err := loadRuleSet(source)
+		weakSet, err := shallowLoadRuleSet(source)
 		if err != nil {
 			log.Error().Err(err).Str("source", source).Str("nestingset", ruleset.Name).Msg("Could not load included ruleset from source due to an erro")
 			continue
@@ -32,7 +32,7 @@ func LoadRuleset(location string) (RuleSet, error) {
 	return ruleset, nil
 }
 
-func loadRuleSet(location string) (RuleSet, error) {
+func shallowLoadRuleSet(location string) (RuleSet, error) {
 	if strings.HasPrefix(location, "http://") {
 		log.Debug().Msg("Provided ruleset location is a (unsafe) git repository!")
 		if !util.IsUnsafeMode() {
@@ -83,6 +83,7 @@ func loadRuleSetFromFile(path string) (RuleSet, error) {
 
 func LoadRuleSetFromContent(data []byte) (RuleSet, error) {
 	var ruleSet RuleSet
+	ruleSet.targetList = make(map[string]bool)
 
 	err := yaml.Unmarshal(data, &ruleSet)
 	if err != nil {
@@ -100,6 +101,7 @@ func LoadRuleSetFromContent(data []byte) (RuleSet, error) {
 		if !strings.Contains(v.Instruction, "assert") {
 			log.Warn().Str("Instruction", v.Instruction).Msg("Instruction does not contain an assert. This rule therefore will never be checked properly")
 		}
+		ruleSet.targetList[v.Target] = true
 	}
 	return ruleSet, nil
 }
