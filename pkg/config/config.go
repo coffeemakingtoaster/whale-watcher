@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -91,15 +92,16 @@ func addStructFlags(flagSet *pflag.FlagSet, prefix string, val any, envPrefix st
 			envKey = strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
 		}
 		envVar := envPrefix + envKey
+		desc := field.Tag.Get("desc")
 
 		// Register flag
 		switch fieldVal.Kind() {
 		case reflect.String:
-			flagSet.String(fullKey, "", fmt.Sprintf("%s (string)", fullKey))
+			flagSet.String(fullKey, "", fmt.Sprintf("%s - (string) Env: %s", desc, envVar))
 		case reflect.Bool:
-			flagSet.Bool(fullKey, false, fmt.Sprintf("%s (bool)", fullKey))
+			flagSet.Bool(fullKey, false, fmt.Sprintf("%s - (bool) Env: %s", desc, envVar))
 		case reflect.Int, reflect.Int32, reflect.Int64:
-			flagSet.Int(fullKey, 0, fmt.Sprintf("%s (int)", fullKey))
+			flagSet.Int(fullKey, 0, fmt.Sprintf("%s - (int) Env: %s", desc, envVar))
 		}
 
 		flagSet.SetAnnotation(fullKey, "group", []string{flagSet.Name()})
@@ -146,11 +148,12 @@ func addFieldFlag(flagSet *pflag.FlagSet, prefix string, field *reflect.StructFi
 }
 
 func AllowsTarget(target string) bool {
-	val := viper.GetString("targetlist")
-	if len(val) == 0 {
+	allowList := viper.GetString("target_list")
+	log.Info().Str("allow", allowList).Send()
+	if len(allowList) == 0 {
 		return true
 	}
-	return strings.Contains(val, target)
+	return strings.Contains(allowList, target)
 
 }
 

@@ -40,7 +40,7 @@ func CreatePRForFixes(violations violationTypes.Violations, updatedDockerfilePat
 		return nil
 	}
 
-	adapter, err := GetAdapterForRepository(viper.GetString("target.repositoryurl"))
+	adapter, err := GetAdapterForRepository(viper.GetString("target.repository"))
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func CreatePRForFixes(violations violationTypes.Violations, updatedDockerfilePat
 
 	log.Debug().Msg("adapter is ready -> running git integration")
 
-	newBranch, err := SyncFileToRepoIfDifferent(viper.GetString("target.repositoryurl"), viper.GetString("target.branch"), viper.GetString("target.dockerfilepath"), updatedDockerfilePath)
+	newBranch, err := SyncFileToRepoIfDifferent(viper.GetString("target.repository"), viper.GetString("target.branch"), viper.GetString("target.dockerfilepath"), updatedDockerfilePath)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create new branch on remote for fixes PR")
 		return err

@@ -22,7 +22,6 @@ var envPrefix = "WHALE_WATCHER_"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "whale-watcher",
 	Short: "Your way to watch your containers",
 	Long:  `Enforce best practices across your application and check Dockerfiles and container for compliance`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -70,36 +69,33 @@ func setHelpFuncRecursive(cmd *cobra.Command, helpFunc func(*cobra.Command, []st
 
 func helpFunctionOverride(cmd *cobra.Command, args []string) {
 	fmt.Println(cmd.Short)
-	fmt.Println("\nUsage:")
-	fmt.Printf("  %s [flags]\n\n", cmd.Use)
+	if len(cmd.Use) > 0 {
+		fmt.Println("\nUsage:")
+		fmt.Printf("  %s [flags]\n", cmd.Use)
+	}
 
-	// print grouped flags
 	grouped := map[string][]*pflag.Flag{}
 
-	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
-		group := f.Annotations["group"]
-		groupName := "Global Options"
-		if len(group) > 0 {
-			groupName = group[0]
+	printGroup := func(group map[string][]*pflag.Flag) {
+		for groupName, flags := range group {
+			fmt.Printf("\n%s:\n", groupName)
+			for _, f := range flags {
+				fmt.Printf("  --%-20s %s\n", f.Name, f.Usage)
+			}
 		}
-		grouped[groupName] = append(grouped[groupName], f)
-	})
+
+	}
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		group := f.Annotations["group"]
-		groupName := "Global Options"
+		groupName := "General Options"
 		if len(group) > 0 {
 			groupName = group[0]
 		}
 		grouped[groupName] = append(grouped[groupName], f)
 	})
 
-	for groupName, flags := range grouped {
-		fmt.Printf("\n%s:\n", groupName)
-		for _, f := range flags {
-			fmt.Printf("  --%-20s %s\n", f.Name, f.Usage)
-		}
-	}
+	printGroup(grouped)
 }
 
 func main() {

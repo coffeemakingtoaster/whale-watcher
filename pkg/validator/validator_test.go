@@ -7,6 +7,7 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
+	"github.com/spf13/viper"
 )
 
 type MockRunner struct {
@@ -167,7 +168,9 @@ func TestValidateFullFixableFailingRuleset(t *testing.T) {
 }
 
 func TestLimitTargetValidation(t *testing.T) {
-	t.Setenv("WHALE_WATCHER_TARGET_LIST", "cmd,fs")
+	viper.Set("target_list", "cmd,fs")
+	defer viper.Reset()
+
 	executionCount := 0
 	validRunner := MockRunner{func(_ bool) error {
 		executionCount++
@@ -218,7 +221,9 @@ func TestLimitTargetValidation(t *testing.T) {
 }
 
 func TestValidateNoFixExecution(t *testing.T) {
-	t.Setenv("WHALE_WATCHER_NO_FIX", "true")
+	viper.Set("WHALE_WATCHER_NO_FIX", "true")
+	defer viper.Reset()
+
 	runExecutionCount := 0
 	fixExecutionCount := 0
 	validRunner := MockRunner{func(is_test bool) error {

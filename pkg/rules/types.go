@@ -98,6 +98,9 @@ func (rs *RuleSet) Swallow(weakerSet RuleSet) {
 	if len(rs.Rules) != len(rs.ids) {
 		rs.updateIdList()
 	}
+	if rs.targetList == nil {
+		rs.targetList = make(map[string]bool)
+	}
 	for _, rule := range weakerSet.Rules {
 		if _, ok := rs.ids[rule.Id]; !ok {
 			rs.Rules = append(rs.Rules, rule)

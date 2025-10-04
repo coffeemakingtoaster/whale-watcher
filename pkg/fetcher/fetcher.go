@@ -30,10 +30,10 @@ func FetchContainerFiles() (string, string, string) {
 	var dockerPath string
 	var err error
 
-	if viper.GetString("target.repositoryurl") == "" {
-		dockerfilePath = viper.GetString("target.dockerfilepath")
+	if viper.GetString("target.repository") == "" {
+		dockerfilePath = viper.GetString("target.dockerfile")
 	} else {
-		dockerfilePath, err = loadDockerfileFromRepository(viper.GetString("target.repositoryurl"), viper.GetString("target.branch"), viper.GetString("target.dockerfilepath"))
+		dockerfilePath, err = loadDockerfileFromRepository(viper.GetString("target.repository"), viper.GetString("target.branch"), viper.GetString("target.dockerfile"))
 
 		if err != nil {
 			log.Warn().Err(err).Msg("Could not load dockerfile from repository")

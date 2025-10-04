@@ -1,8 +1,8 @@
 package gitea
 
 import (
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 type GiteaPullRequestAdapter struct {
@@ -41,13 +41,12 @@ func (gtpra *GiteaPullRequestAdapter) UpdatePullRequest(title, content string) e
 }
 
 func NewGiteaPullRequestAdapter(repoUser, repoId string) (*GiteaPullRequestAdapter, error) {
-	conf := config.GetConfig()
 
 	return &GiteaPullRequestAdapter{
 		repoUser:         repoUser,
 		repoId:           repoId,
-		whaleWatcherUser: conf.Github.Username,
-		authUsername:     conf.Gitea.Username,
-		authPassword:     conf.Gitea.Password,
+		whaleWatcherUser: viper.GetString("gitea.username"),
+		authUsername:     viper.GetString("gitea.username"),
+		authPassword:     viper.GetString("gitea.password"),
 	}, nil
 }
