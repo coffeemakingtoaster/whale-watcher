@@ -1,5 +1,7 @@
 # Whale watcher
 
+![](./assets/logo.png)
+
 > This is a work in progress system! This tool as of now has a lot of quirks and servers as an unfinished proof-of-concept. Currently this is designed for macos and linux only. Windows support has never been tested.
 
 Your way to define and enforce docker policies :) 
