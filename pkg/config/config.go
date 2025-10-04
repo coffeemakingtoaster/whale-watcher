@@ -56,7 +56,7 @@ func AddConfigFlagsWithGroups(cmd *cobra.Command, prefix string, val any, envPre
 
 		default:
 			// top-level (non-struct) fields
-			if err := addFieldFlag(cmd.Flags(), prefix, &field, &fieldVal, envPrefix); err != nil {
+			if err := addFieldFlag(cmd.PersistentFlags(), prefix, &field, &fieldVal, envPrefix); err != nil {
 				return err
 			}
 		}

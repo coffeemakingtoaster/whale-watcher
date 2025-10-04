@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/docs"
@@ -24,14 +25,41 @@ var rootCmd = &cobra.Command{
 	Use:   "whale-watcher",
 	Short: "Your way to watch your containers",
 	Long:  `Enforce best practices across your application and check Dockerfiles and container for compliance`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := viper.Unmarshal(&cfg); err != nil {
-			return err
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// 1️⃣ Determine config file path
+		cfgFile := viper.GetString("config")
+		if cfgFile == "" {
+			cfgFile = "./config.yaml"
 		}
-		fmt.Printf("Loaded config:\n%+v\n", cfg)
+
+		viper.SetConfigFile(cfgFile)
+		viper.SetConfigType("yaml")
+
+		// 2️⃣ Try to read the config file
+		if err := viper.ReadInConfig(); err != nil {
+			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+				fmt.Println("No config file found, using defaults/env/flags")
+			} else {
+				return fmt.Errorf("failed to read config file: %w", err)
+			}
+		} else {
+			fmt.Println("Using config file:", viper.ConfigFileUsed())
+		}
+
+		// 3️⃣ Environment variable setup
+		viper.AutomaticEnv()
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+		// 4️⃣ Bind all command flags (so flags override config/env)
+		if err := viper.BindPFlags(cmd.Flags()); err != nil {
+			return fmt.Errorf("failed to bind flags: %w", err)
+		}
+		if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+			return fmt.Errorf("failed to bind persistent flags: %w", err)
+		}
+
 		return nil
-	},
-}
+	}}
 
 func setHelpFuncRecursive(cmd *cobra.Command, helpFunc func(*cobra.Command, []string)) {
 	cmd.SetHelpFunc(helpFunc)
@@ -75,9 +103,6 @@ func helpFunctionOverride(cmd *cobra.Command, args []string) {
 }
 
 func main() {
-	rootCmd.AddCommand(docs.NewCommand())
-	rootCmd.AddCommand(validator.NewCommand())
-
 	// Add flag/env for config file itself
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Path to config file (default: ./config.yaml)")
 	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
@@ -88,21 +113,13 @@ func main() {
 		panic(fmt.Sprintf("failed to add config flags: %v", err))
 	}
 
-	// Config file loading
-	cobra.OnInitialize(func() {
-		file := viper.GetString("config")
-		if file == "" {
-			file = "./config.yaml"
-		}
-		viper.SetConfigFile(file)
-		viper.SetConfigType("yaml")
-
-		viper.ReadInConfig()
-	})
-
 	setHelpFuncRecursive(rootCmd, helpFunctionOverride)
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Logger()
+
+	rootCmd.AddCommand(docs.NewCommand())
+	rootCmd.AddCommand(validator.NewCommand())
+	rootCmd.AddCommand(config.NewCommand())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
