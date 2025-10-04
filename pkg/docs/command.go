@@ -13,11 +13,13 @@ func NewCommand() *cobra.Command {
 	var servePort int64
 	var exportPath *string
 
-	// docsCmd represents the docs command
 	var cmd = &cobra.Command{
 		Use:   "docs",
-		Short: "Render the documentation form of a given ruleset",
-		Long:  `Ruleset yaml to html :)`,
+		Short: "Render the documentation form of a given policy set",
+		Long: `Render the provided policy set as html. By default this starts a webserver, serving the HTML documentation.
+
+Expected arguments:  <policy set location> 
+		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return fmt.Errorf("Docs only takes exactly one argument, the path for a ruleset (Got: '%s')", strings.Join(args, " "))

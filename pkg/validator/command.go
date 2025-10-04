@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
@@ -35,16 +36,13 @@ func buildContext(input []string) *ValidateContext {
 
 func NewCommand() *cobra.Command {
 
-	// validateCmd represents the validate command
 	var cmd = &cobra.Command{
 		Use:   "validate",
-		Short: "A brief description of your command",
-		Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+		Short: "Validate the given inputs based on the policy set",
+		Long: `Given a policy sets and input files, validate each policy. 
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Expected arguments:  <policy set location> <Dockerfile location> [<oci tar location>] [<docker tar location>]
+		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
 				return fmt.Errorf("Validate needs at least a set policy set and Dockerfile (Got: '%s')", strings.Join(args, " "))
@@ -56,11 +54,15 @@ to quickly create a Cobra application.`,
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := buildContext(args)
-			ruleSet, err := rules.LoadRuleset(ctx.DockerFilePath)
+			ruleSet, err := rules.LoadRuleset(ctx.RuleSetEntrypoint)
 			if err != nil {
 				panic(err)
 			}
-			validate(ctx, ruleSet)
+			// Fail code if violations were detected
+			if validate(ctx, ruleSet) {
+				os.Exit(0)
+			}
+			os.Exit(1)
 		},
 	}
 	return cmd
