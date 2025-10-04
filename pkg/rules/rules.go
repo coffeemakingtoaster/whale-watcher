@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/coffeemakingtoaster/whale-watcher/internal/environment"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/fetcher"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/util"
 	"github.com/rs/zerolog/log"
@@ -36,7 +35,7 @@ func LoadRuleset(location string) (RuleSet, error) {
 func loadRuleSet(location string) (RuleSet, error) {
 	if strings.HasPrefix(location, "http://") {
 		log.Debug().Msg("Provided ruleset location is a (unsafe) git repository!")
-		if !environment.IsUnsafeMode() {
+		if !util.IsUnsafeMode() {
 			return RuleSet{}, errors.New("Could not load ruleset from unsafe repository (unsafe mode is disabled)")
 		}
 		return loadRuleSetFromRepository(location)

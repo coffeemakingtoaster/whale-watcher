@@ -5,7 +5,7 @@ import (
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters/github"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
+	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
 )
 
@@ -33,7 +33,7 @@ func GetAdapterForRepository(repository string) (PullRequestAdapter, error) {
 	return &github.GithubPullRequestAdapter{}, errors.New("No configured vsc matched")
 }
 
-func CreatePRForFixes(violations validator.Violations, updatedDockerfilePath string) error {
+func CreatePRForFixes(violations violationTypes.Violations, updatedDockerfilePath string) error {
 	// No fixes -> No Pr
 	if len(violations.Violations) == 0 {
 		log.Debug().Msg("No violations in current run, skipping PR creation")
