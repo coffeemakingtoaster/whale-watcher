@@ -5,14 +5,14 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) violationTypes.Violations {
 	violations := violationTypes.Violations{}
-	cfg := config.GetConfig()
-	log.Info().Msg(cfg.TargetList)
+	log.Info().Msg(viper.GetString("targetlist"))
 	for _, rule := range ruleset.Rules {
-		if !cfg.AllowsTarget(rule.Target) {
+		if !config.AllowsTarget(rule.Target) {
 			log.Info().Str("id", rule.Id).Msg("Skipped because target is disallowed")
 			continue
 		}
@@ -27,7 +27,7 @@ func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, d
 			RuleId:      rule.Id,
 			Description: rule.Description,
 		}
-		if (fix.Fix != "" || rule.FixInstruction != "") && !cfg.NoFix {
+		if (fix.Fix != "" || rule.FixInstruction != "") && !viper.GetBool("nofix") {
 			violations.FixableCount++
 			violation.Fix = fix.Fix
 			err := rule.PerformFix()

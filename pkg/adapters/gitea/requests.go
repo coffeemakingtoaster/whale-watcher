@@ -5,14 +5,13 @@ import (
 	"strings"
 
 	"code.gitea.io/sdk/gitea"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/spf13/viper"
 )
 
 const prTitlePrefix = "[ww]"
 
 func newClient(username, password string) (*gitea.Client, error) {
-	cfg := config.GetConfig()
-	return gitea.NewClient(cfg.Gitea.InstanceUrl, gitea.SetBasicAuth(username, password))
+	return gitea.NewClient(viper.GetString("gitea.instanceurl"), gitea.SetBasicAuth(username, password))
 }
 
 func checkForExistingPr(repoUser, repoID, username, password string) (int64, error) {

@@ -2,70 +2,102 @@ package config
 
 import (
 	"fmt"
-	"os"
+	"reflect"
+	"strings"
 
-	"github.com/caarlos0/env/v11"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-const envPrefix = "WHALE_WATCHER_"
-
-var configPath = "./config.yaml"
-
-// TODO: Adding a function that buffers all logging events during config parsing and publishes them later (after logging level has been set)
-func init() {
-	// Disable logging at the start
-	zerolog.SetGlobalLevel(zerolog.Level(5))
-	configPathEnv := os.Getenv(fmt.Sprintf("%sCONFIG_PATH", envPrefix))
-	if len(configPathEnv) != 0 {
-		SetConfigPath(configPathEnv)
+func AddConfigFlags(cmd *cobra.Command, prefix string, val any, envPrefix string) error {
+	v := reflect.ValueOf(val)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
 	}
-	cfg := GetConfig()
-	zerolog.SetGlobalLevel(zerolog.Level(cfg.LogLevel))
+
+	t := v.Type()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fieldVal := v.Field(i)
+
+		if !fieldVal.CanInterface() {
+			continue
+		}
+
+		mapKey := field.Tag.Get("mapstructure")
+		if mapKey == "" {
+			mapKey = strings.ToLower(field.Name)
+		}
+
+		envKey := field.Tag.Get("env")
+		structEnvPrefix := field.Tag.Get("envPrefix")
+
+		// Combine prefixes (for nested structs)
+		fullKey := mapKey
+		if prefix != "" {
+			fullKey = prefix + "." + mapKey
+		}
+
+		// Compute environment variable prefix for nested structs
+		fullEnvPrefix := envPrefix
+		if structEnvPrefix != "" {
+			fullEnvPrefix = fullEnvPrefix + structEnvPrefix
+		}
+
+		// Build environment variable name
+		envVar := ""
+		if envKey != "" {
+			envVar = fullEnvPrefix + envKey
+		} else {
+			// fallback: derive from key
+			envVar = fullEnvPrefix + strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
+		}
+
+		// Normalize to safe format (e.g. MYAPP_TARGET_IMAGE)
+		envVar = strings.ToUpper(strings.ReplaceAll(envVar, ".", "_"))
+
+		description := field.Tag.Get("desc")
+
+		switch fieldVal.Kind() {
+		case reflect.Struct:
+			// Recursively register nested struct fields
+			if err := AddConfigFlags(cmd, fullKey, fieldVal.Addr().Interface(), fullEnvPrefix); err != nil {
+				return err
+			}
+			continue
+
+		case reflect.String:
+			cmd.Flags().String(fullKey, "", fmt.Sprintf("%s - (string) Env: %s", description, envVar))
+		case reflect.Bool:
+			cmd.Flags().Bool(fullKey, false, fmt.Sprintf("%s - (bool) Env: %s", description, envVar))
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			cmd.Flags().Int(fullKey, 0, fmt.Sprintf("%s - (int) Env: %s", description, envVar))
+		default:
+			continue
+		}
+
+		// Bind flag to viper
+		if err := viper.BindPFlag(fullKey, cmd.Flags().Lookup(fullKey)); err != nil {
+			return fmt.Errorf("failed to bind flag %s: %w", fullKey, err)
+		}
+
+		// Bind environment variable
+		if err := viper.BindEnv(fullKey, envVar); err != nil {
+			return fmt.Errorf("failed to bind env var %s for %s: %w", envVar, fullKey, err)
+		}
+	}
+	return nil
 }
 
-func SetConfigPath(path string) {
-	configPath = path
-}
-
-func LoadConfigFromData(data []byte) Config {
-	var cfg Config
-	err := yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		log.Error().Err(err).Msg("Could not parse config, initialising empty and trusting env fallback")
+func AllowsTarget(target string) bool {
+	val := viper.GetString("targetlist")
+	if len(val) == 0 {
+		return true
 	}
-	return handleEnvOverrides(cfg)
-}
+	return strings.Contains(val, target)
 
-func loadConfigFromFile(configPath string) Config {
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		log.Warn().Err(err).Msgf("Could not read config file %s", configPath)
-		return handleEnvOverrides(Config{})
-	}
-	return LoadConfigFromData(data)
-}
-
-func handleEnvOverrides(cfg Config) Config {
-	err := env.ParseWithOptions(&cfg, env.Options{Prefix: envPrefix})
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to read env variables for config overrides")
-	}
-	return cfg
 }
 
 func ShouldInteractWithVSC() bool {
-	cfg := GetConfig()
-	return len(cfg.Github.PAT) > 0 && len(cfg.Github.Username) > 0
-}
-
-func GetConfig() Config {
-	cfg := loadConfigFromFile(configPath)
-	err := cfg.Validate()
-	if err != nil {
-		log.Error().Err(err).Msg("Invalid config!")
-	}
-	return cfg
+	return ValidateGitea() == nil || ValidateGithub() == nil
 }

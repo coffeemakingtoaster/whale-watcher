@@ -3,8 +3,8 @@ package github
 import (
 	"errors"
 
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 type GithubPullRequestAdapter struct {
@@ -42,16 +42,15 @@ func (ghpra *GithubPullRequestAdapter) UpdatePullRequest(title, content string) 
 }
 
 func NewGithubPullRequestAdapter(repoUser, repoId string) (*GithubPullRequestAdapter, error) {
-	conf := config.GetConfig()
 
-	if len(conf.Github.PAT) == 0 || len(conf.Github.Username) == 0 {
+	if len(viper.GetString("github.pat")) == 0 || len(viper.GetString("github.pat")) == 0 {
 		return nil, errors.New("Some required github config fields not set!")
 	}
 
 	return &GithubPullRequestAdapter{
 		repoUser:         repoUser,
 		repoId:           repoId,
-		pat:              conf.Github.PAT,
-		whaleWatcherUser: conf.Github.Username,
+		pat:              viper.GetString("github.pat"),
+		whaleWatcherUser: viper.GetString("github.pat"),
 	}, nil
 }

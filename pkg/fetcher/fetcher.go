@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 func FetchContainerFiles() (string, string, string) {
@@ -29,25 +30,25 @@ func FetchContainerFiles() (string, string, string) {
 	var dockerPath string
 	var err error
 
-	cfg := config.GetConfig()
-	if cfg.Target.RepositoryURL == "" {
-		dockerfilePath = cfg.Target.DockerfilePath
+	if viper.GetString("target.repositoryurl") == "" {
+		dockerfilePath = viper.GetString("target.dockerfilepath")
 	} else {
-		dockerfilePath, err = loadDockerfileFromRepository(cfg.Target.RepositoryURL, cfg.Target.Branch, cfg.Target.DockerfilePath)
+		dockerfilePath, err = loadDockerfileFromRepository(viper.GetString("target.repositoryurl"), viper.GetString("target.branch"), viper.GetString("target.dockerfilepath"))
+
 		if err != nil {
 			log.Warn().Err(err).Msg("Could not load dockerfile from repository")
 		}
 	}
 
-	if !cfg.AllowsTarget("os") && !cfg.AllowsTarget("fs") {
+	if !config.AllowsTarget("os") && !config.AllowsTarget("fs") {
 		log.Info().Msg("Fs and Os targets disallowed, skipping image download & load")
 	} else {
-		if cfg.Target.Image == "" {
+		if viper.GetString("target.image") == "" {
 			log.Debug().Msg("Using local files for tar paths")
-			ociPath = cfg.Target.OciPath
-			dockerPath = cfg.Target.DockerPath
+			ociPath = viper.GetString("target.ocipath")
+			dockerPath = viper.GetString("target.dockerpath")
 		} else {
-			ociPath, dockerPath, err = loadImageFromRegistry(cfg.Target.Image, cfg.Target.Insecure)
+			ociPath, dockerPath, err = loadImageFromRegistry(viper.GetString("target.image"), viper.GetBool("target.insecure"))
 			if err != nil {
 				log.Warn().Err(err).Msg("Could not load image from repository")
 			}
@@ -77,7 +78,6 @@ func loadImageFromRegistry(image string, insecure bool) (string, string, error) 
 	if err != nil {
 		return "", "", err
 	}
-
 	log.Info().Str("image", image).Str("dockerTarPath", destinationDocker).Str("ociTarPath", destinationOci).Msg("Successful download")
 	return destinationOci, destinationDocker, nil
 }
