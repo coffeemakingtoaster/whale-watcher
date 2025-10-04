@@ -149,7 +149,6 @@ func addFieldFlag(flagSet *pflag.FlagSet, prefix string, field *reflect.StructFi
 
 func AllowsTarget(target string) bool {
 	allowList := viper.GetString("target_list")
-	log.Info().Str("allow", allowList).Send()
 	if len(allowList) == 0 {
 		return true
 	}
