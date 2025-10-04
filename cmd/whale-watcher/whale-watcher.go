@@ -7,7 +7,10 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/docs"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -30,9 +33,49 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+func setHelpFuncRecursive(cmd *cobra.Command, helpFunc func(*cobra.Command, []string)) {
+	cmd.SetHelpFunc(helpFunc)
+	for _, sub := range cmd.Commands() {
+		setHelpFuncRecursive(sub, helpFunc)
+	}
+}
+
+func helpFunctionOverride(cmd *cobra.Command, args []string) {
+	fmt.Println(cmd.Short)
+	fmt.Println("\nUsage:")
+	fmt.Printf("  %s [flags]\n\n", cmd.Use)
+
+	// print grouped flags
+	grouped := map[string][]*pflag.Flag{}
+
+	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+		group := f.Annotations["group"]
+		groupName := "Global Options"
+		if len(group) > 0 {
+			groupName = group[0]
+		}
+		grouped[groupName] = append(grouped[groupName], f)
+	})
+
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		group := f.Annotations["group"]
+		groupName := "Global Options"
+		if len(group) > 0 {
+			groupName = group[0]
+		}
+		grouped[groupName] = append(grouped[groupName], f)
+	})
+
+	for groupName, flags := range grouped {
+		fmt.Printf("\n%s:\n", groupName)
+		for _, f := range flags {
+			fmt.Printf("  --%-20s %s\n", f.Name, f.Usage)
+		}
+	}
+}
+
 func main() {
 	rootCmd.AddCommand(docs.NewCommand())
-
 	rootCmd.AddCommand(validator.NewCommand())
 
 	// Add flag/env for config file itself
@@ -41,7 +84,7 @@ func main() {
 	_ = viper.BindEnv("config", fmt.Sprintf("%sCONFIG_FILE", envPrefix))
 
 	// Dynamically add flags/envs for all config fields
-	if err := config.AddConfigFlags(rootCmd, "", &cfg, envPrefix); err != nil {
+	if err := config.AddConfigFlagsWithGroups(rootCmd, "", &cfg, envPrefix); err != nil {
 		panic(fmt.Sprintf("failed to add config flags: %v", err))
 	}
 
@@ -54,10 +97,12 @@ func main() {
 		viper.SetConfigFile(file)
 		viper.SetConfigType("yaml")
 
-		if err := viper.ReadInConfig(); err == nil {
-			fmt.Println("Using config file:", viper.ConfigFileUsed())
-		}
+		viper.ReadInConfig()
 	})
+
+	setHelpFuncRecursive(rootCmd, helpFunctionOverride)
+
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout}).With().Logger()
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

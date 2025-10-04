@@ -6,16 +6,72 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-func AddConfigFlags(cmd *cobra.Command, prefix string, val any, envPrefix string) error {
+// AddConfigFlagsWithGroups registers flags for each nested struct
+// as a separate flag group, and binds both Viper + environment variables.
+func AddConfigFlagsWithGroups(cmd *cobra.Command, prefix string, val any, envPrefix string) error {
 	v := reflect.ValueOf(val)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-
 	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fieldVal := v.Field(i)
+
+		if !fieldVal.CanInterface() {
+			continue
+		}
+
+		mapKey := field.Tag.Get("mapstructure")
+		if mapKey == "" {
+			mapKey = strings.ToLower(field.Name)
+		}
+		structEnvPrefix := field.Tag.Get("envPrefix")
+		fullEnvPrefix := envPrefix
+		if structEnvPrefix != "" {
+			fullEnvPrefix = envPrefix + structEnvPrefix
+		}
+
+		switch fieldVal.Kind() {
+		case reflect.Struct:
+			groupName := field.Tag.Get("group")
+
+			var err error
+
+			if len(groupName) == 0 {
+				err = AddConfigFlagsWithGroups(cmd, mapKey, fieldVal.Addr().Interface(), fullEnvPrefix)
+			} else {
+				groupFlags := pflag.NewFlagSet(groupName, pflag.ContinueOnError)
+				err = addStructFlags(groupFlags, mapKey, fieldVal.Addr().Interface(), fullEnvPrefix)
+				cmd.PersistentFlags().AddFlagSet(groupFlags)
+			}
+			if err != nil {
+				return err
+			}
+
+		default:
+			// top-level (non-struct) fields
+			if err := addFieldFlag(cmd.Flags(), prefix, &field, &fieldVal, envPrefix); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func addStructFlags(flagSet *pflag.FlagSet, prefix string, val any, envPrefix string) error {
+	v := reflect.ValueOf(val)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		fieldVal := v.Field(i)
@@ -29,63 +85,63 @@ func AddConfigFlags(cmd *cobra.Command, prefix string, val any, envPrefix string
 			mapKey = strings.ToLower(field.Name)
 		}
 
+		fullKey := prefix + "." + mapKey
 		envKey := field.Tag.Get("env")
-		structEnvPrefix := field.Tag.Get("envPrefix")
-
-		// Combine prefixes (for nested structs)
-		fullKey := mapKey
-		if prefix != "" {
-			fullKey = prefix + "." + mapKey
+		if envKey == "" {
+			envKey = strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
 		}
+		envVar := envPrefix + envKey
 
-		// Compute environment variable prefix for nested structs
-		fullEnvPrefix := envPrefix
-		if structEnvPrefix != "" {
-			fullEnvPrefix = fullEnvPrefix + structEnvPrefix
-		}
-
-		// Build environment variable name
-		envVar := ""
-		if envKey != "" {
-			envVar = fullEnvPrefix + envKey
-		} else {
-			// fallback: derive from key
-			envVar = fullEnvPrefix + strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
-		}
-
-		// Normalize to safe format (e.g. MYAPP_TARGET_IMAGE)
-		envVar = strings.ToUpper(strings.ReplaceAll(envVar, ".", "_"))
-
-		description := field.Tag.Get("desc")
-
+		// Register flag
 		switch fieldVal.Kind() {
-		case reflect.Struct:
-			// Recursively register nested struct fields
-			if err := AddConfigFlags(cmd, fullKey, fieldVal.Addr().Interface(), fullEnvPrefix); err != nil {
-				return err
-			}
-			continue
-
 		case reflect.String:
-			cmd.Flags().String(fullKey, "", fmt.Sprintf("%s - (string) Env: %s", description, envVar))
+			flagSet.String(fullKey, "", fmt.Sprintf("%s (string)", fullKey))
 		case reflect.Bool:
-			cmd.Flags().Bool(fullKey, false, fmt.Sprintf("%s - (bool) Env: %s", description, envVar))
+			flagSet.Bool(fullKey, false, fmt.Sprintf("%s (bool)", fullKey))
 		case reflect.Int, reflect.Int32, reflect.Int64:
-			cmd.Flags().Int(fullKey, 0, fmt.Sprintf("%s - (int) Env: %s", description, envVar))
-		default:
-			continue
+			flagSet.Int(fullKey, 0, fmt.Sprintf("%s (int)", fullKey))
 		}
 
-		// Bind flag to viper
-		if err := viper.BindPFlag(fullKey, cmd.Flags().Lookup(fullKey)); err != nil {
-			return fmt.Errorf("failed to bind flag %s: %w", fullKey, err)
-		}
+		flagSet.SetAnnotation(fullKey, "group", []string{flagSet.Name()})
 
-		// Bind environment variable
-		if err := viper.BindEnv(fullKey, envVar); err != nil {
-			return fmt.Errorf("failed to bind env var %s for %s: %w", envVar, fullKey, err)
-		}
+		// Bind to Viper and environment
+		_ = viper.BindPFlag(fullKey, flagSet.Lookup(fullKey))
+		_ = viper.BindEnv(fullKey, envVar)
 	}
+
+	return nil
+}
+
+func addFieldFlag(flagSet *pflag.FlagSet, prefix string, field *reflect.StructField, value *reflect.Value, envPrefix string) error {
+	mapKey := field.Tag.Get("mapstructure")
+	if mapKey == "" {
+		mapKey = strings.ToLower(field.Name)
+	}
+	fullKey := mapKey
+	if prefix != "" {
+		fullKey = prefix + "." + mapKey
+	}
+
+	envKey := field.Tag.Get("env")
+	if envKey == "" {
+		envKey = strings.ToUpper(strings.ReplaceAll(mapKey, ".", "_"))
+	}
+	envVar := envPrefix + envKey
+
+	desc := field.Tag.Get("desc")
+
+	switch value.Kind() {
+	case reflect.String:
+		flagSet.String(fullKey, "", fmt.Sprintf("%s - (string) Env: %s", desc, envVar))
+	case reflect.Bool:
+		flagSet.Bool(fullKey, false, fmt.Sprintf("%s - (bool) Env: %s", desc, envVar))
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		flagSet.Int(fullKey, 0, fmt.Sprintf("%s - (int) Env: %s", desc, envVar))
+	}
+
+	_ = viper.BindPFlag(fullKey, flagSet.Lookup(fullKey))
+	_ = viper.BindEnv(fullKey, envVar)
+
 	return nil
 }
 

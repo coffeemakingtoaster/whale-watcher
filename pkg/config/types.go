@@ -55,9 +55,9 @@ func ValidateGitea() error {
 }
 
 type Config struct {
-	Github     GithubConfig `mapstructure:"github" envPrefix:"GITHUB_"`
-	Gitea      GiteaConfig  `mapstructure:"gitea" envPrefix:"GITEA_"`
-	Target     TargetConfig `mapstructure:"target" envPrefix:"TARGET_"`
+	Github     GithubConfig `mapstructure:"github" envPrefix:"GITHUB_" group:"Github Config"`
+	Gitea      GiteaConfig  `mapstructure:"gitea" envPrefix:"GITEA_" group:"Gitea Config"`
+	Target     TargetConfig `mapstructure:"target" envPrefix:"TARGET_" group:"Target Config"`
 	TargetList string       `mapstructure:"target_list" env:"TARGET_LIST" desc:"List all allowed targets"`
 	LogLevel   int          `mapstructure:"log_level" env:"LOG_LEVEL" desc:"Set log level (1-5)"`
 	DocsURL    string       `mapstructure:"docs_url" env:"DOCS_URL" desc:"Url pointing to active deployment of policy set documentation"`
