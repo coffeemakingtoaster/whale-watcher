@@ -15,7 +15,7 @@ func NewCommand() *cobra.Command {
 	var exportPath *string
 
 	var cmd = &cobra.Command{
-		Use:   "docs",
+		Use:   "docs [flags] <policyset>",
 		Short: "Render the documentation form of a given policy set",
 		Long: `Render the provided policy set as html. By default this starts a webserver, serving the HTML documentation.
 

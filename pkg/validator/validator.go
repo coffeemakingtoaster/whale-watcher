@@ -10,7 +10,6 @@ import (
 
 func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) violationTypes.Violations {
 	violations := violationTypes.Violations{}
-	log.Info().Msg(viper.GetString("targetlist"))
 	for _, rule := range ruleset.Rules {
 		if !config.AllowsTarget(rule.Target) {
 			log.Info().Str("id", rule.Id).Msg("Skipped because target is disallowed")

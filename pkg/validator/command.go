@@ -1,8 +1,8 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
@@ -37,7 +37,7 @@ func buildContext(input []string) *ValidateContext {
 func NewCommand() *cobra.Command {
 
 	var cmd = &cobra.Command{
-		Use:   "validate",
+		Use:   "validate [flags] <policyset> <dockerfilepath> [ocitarpath] [dockertarpath]",
 		Short: "Validate the given inputs based on the policy set",
 		Long: `Given a policy sets and input files, validate each policy. 
 
@@ -48,24 +48,54 @@ Expected arguments:  <policy set location> <Dockerfile location> [<oci tar locat
 				return fmt.Errorf("Validate needs at least a set policy set and Dockerfile (Got: '%s')", strings.Join(args, " "))
 			}
 			if len(args) > 4 {
-				return fmt.Errorf("Validate only accepts 4 arguments (policy set, Dockerfile, oci tar, docker tar) (Got: '%s')", strings.Join(args, " "))
+				return fmt.Errorf("Validate only accepts a maximum 4 arguments (policy set, Dockerfile, oci tar, docker tar) (Got: '%s')", strings.Join(args, " "))
 			}
 			return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := buildContext(args)
 			ruleSet, err := rules.LoadRuleset(ctx.RuleSetEntrypoint)
 			if err != nil {
-				panic(err)
+				return err
 			}
+
+			if err = isAllowedContext(ctx, ruleSet); err != nil {
+				return err
+			}
+
 			// Fail code if violations were detected
 			if validate(ctx, ruleSet) {
-				os.Exit(0)
+				return nil
 			}
-			os.Exit(1)
+			return errors.New("Violation found")
 		},
 	}
 	return cmd
+}
+
+// Check if context and target that will be executed match
+func isAllowedContext(ctx *ValidateContext, ruleSet rules.RuleSet) error {
+	target := ruleSet.GetHighestTarget()
+
+	switch target {
+	case "os":
+		if ctx.DockerTarballPath == "" {
+			return fmt.Errorf("Highest target is %s, docker tar path needs to be specified", target)
+		}
+		fallthrough
+	case "fs":
+		if ctx.OCITarballPath == "" {
+			return fmt.Errorf("Highest target is %s, oci tar path needs to be specified", target)
+		}
+		fallthrough
+	case "command":
+		if ctx.DockerFilePath == "" {
+			return fmt.Errorf("Highest target is %s, Dockerfile path needs to be specified", target)
+		}
+	default:
+		return fmt.Errorf("Unknown target: %s", target)
+	}
+	return nil
 }
 
 func validate(ctx *ValidateContext, ruleSet rules.RuleSet) bool {
