@@ -1,4 +1,4 @@
-package display
+package docs
 
 import (
 	_ "embed"
@@ -15,9 +15,9 @@ import (
 //go:embed site.tmpl
 var siteTemplate string
 
-func ServeRules(ruleSet rules.RuleSet, export bool) {
-	if export {
-		generateHTML(ruleSet)
+func serveRules(ruleSet rules.RuleSet, onlyExport bool, exportPath string, servePort int64) {
+	if onlyExport {
+		generateHTML(ruleSet, exportPath)
 		return
 	}
 
@@ -27,8 +27,8 @@ func ServeRules(ruleSet rules.RuleSet, export bool) {
 	}
 
 	http.HandleFunc("/", serve)
-	fmt.Println("See the docs: http://localhost:3000")
-	err := http.ListenAndServe(":3000", nil)
+	fmt.Printf("See the docs: http://localhost:%d", servePort)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", servePort), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,9 +45,8 @@ func render(w io.Writer, ruleSet rules.RuleSet) {
 	}
 }
 
-func generateHTML(rulesSet rules.RuleSet) {
-	fmt.Println("Generating docs to ./index.html")
-	f, err := os.Create("./index.html")
+func generateHTML(rulesSet rules.RuleSet, exportPath string) {
+	f, err := os.Create(exportPath)
 	if err != nil {
 		panic(err)
 	}

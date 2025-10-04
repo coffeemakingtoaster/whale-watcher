@@ -3,11 +3,12 @@ package validator
 import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
 )
 
-func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) Violations {
-	violations := Violations{}
+func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) violationTypes.Violations {
+	violations := violationTypes.Violations{}
 	cfg := config.GetConfig()
 	log.Info().Msg(cfg.TargetList)
 	for _, rule := range ruleset.Rules {
@@ -22,7 +23,7 @@ func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, d
 		}
 		log.Info().Str("id", rule.Id).Msg("Violation detected")
 		violations.ViolationCount++
-		violation := Violation{
+		violation := violationTypes.Violation{
 			RuleId:      rule.Id,
 			Description: rule.Description,
 		}
