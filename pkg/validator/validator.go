@@ -1,42 +1,41 @@
 package validator
 
 import (
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
 func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) violationTypes.Violations {
 	violations := violationTypes.Violations{}
+
+	runner := runner.NewPythonRunner()
+
+	// TODO: This ignores the targetlist...like almost entirely
+	res, err := runner.Run(ruleset, ociTarPath, dockerFilePath, dockerTarPath)
+	if err != nil {
+		panic(err)
+	}
+
 	for _, rule := range ruleset.Rules {
-		if !config.AllowsTarget(rule.Target) {
-			log.Info().Str("id", rule.Id).Msg("Skipped because target is disallowed")
-			continue
-		}
 		violations.CheckedCount++
-		success, fix := rule.Validate(ociTarPath, dockerFilePath, dockerTarPath)
-		if success {
+
+		if res[rule.Id].Success {
 			continue
 		}
-		log.Info().Str("id", rule.Id).Msg("Violation detected")
-		violations.ViolationCount++
+
 		violation := violationTypes.Violation{
 			RuleId:      rule.Id,
 			Description: rule.Description,
 		}
-		if (fix.Fix != "" || rule.FixInstruction != "") && !viper.GetBool("nofix") {
+
+		if viper.GetBool("no_fix") && len(rule.FixInstruction) == 0 {
 			violations.FixableCount++
-			violation.Fix = fix.Fix
-			err := rule.PerformFix()
-			if err != nil {
-				violation.AutoFixed = false
-			} else {
-				violation.AutoFixed = true
-			}
+			violation.AutoFixed = res[rule.Id].Autofix
 		}
 		violations.Violations = append(violations.Violations, violation)
 	}
+
 	return violations
 }

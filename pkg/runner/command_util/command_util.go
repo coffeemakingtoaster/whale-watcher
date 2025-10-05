@@ -18,7 +18,7 @@ type CommandUtils struct {
 
 // Setup function used for instantiating util struct
 // This removes the need for every helper function to parse the Dockerfile to an ast
-func SetupFromPath(DockerfilePath string) CommandUtils {
+func Setup(DockerfilePath string) CommandUtils {
 	root, err := container.GetDockerfileAST(DockerfilePath)
 	if err != nil {
 		panic(err)

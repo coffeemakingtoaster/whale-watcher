@@ -102,7 +102,7 @@ func main() {
 	// Add flag/env for config file itself
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Path to config file (default: ./config.yaml)")
 	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
-	_ = viper.BindEnv("config", fmt.Sprintf("%sCONFIG_FILE", envPrefix))
+	_ = viper.BindEnv("config", fmt.Sprintf("%sCONFIG_PATH", envPrefix))
 
 	// Dynamically add flags/envs for all config fields
 	if err := config.AddConfigFlagsWithGroups(rootCmd, "", &cfg, envPrefix); err != nil {

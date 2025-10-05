@@ -2,16 +2,22 @@ package runner
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"text/template"
 
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
+//go:embed python.tmpl
+var pythonTemplate string
+
 type PythonRunner struct {
-	utilImport       *template.Template
 	exec             string
 	workingDirectory *RunnerWorkingDirectory
 }
@@ -20,27 +26,44 @@ type TemplateData struct {
 	DockerfilePath string
 	OciImage       string
 	DockerImage    string
+	Rules          []*rules.Rule
+	NoFix          bool
 }
 
-func (r *PythonRunner) RunFix(command string) {
-	log.Info().Msg("Running fix")
-	w := GetReferencingWorkingDirectoryInstance()
-	defer w.Free()
-	importTemplate := "from command_util_build import commandutil; command_util = commandutil.setup_from_path('{{ .DockerfilePath }}');from fix_util_build import fixutil; fix_util = fixutil.setup_from_path('{{ .DockerfilePath }}');"
+func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, dockerTarPath string) (map[string]RunnerResult, error) {
+	var err error
 
+	defer r.workingDirectory.Free()
+
+	r.workingDirectory.Populate(dockerFilepath, ociTarPath, dockerTarPath, ruleSet.GetHighestTarget())
 	contextData := TemplateData{
 		DockerfilePath: "./Dockerfile",
 		OciImage:       "./out.tar",
 		DockerImage:    "./out_docker.tar",
+		Rules:          ruleSet.Rules,
+		NoFix:          viper.GetBool("no_fix"),
 	}
 
-	tpl, _ := template.New("").Parse(importTemplate)
+	tpl, err := template.New("pythonExecutionContent").Parse(pythonTemplate)
+
+	if err != nil {
+		return map[string]RunnerResult{}, err
+	}
 
 	var buffer bytes.Buffer
-	tpl.Execute(&buffer, contextData)
+	err = tpl.Execute(&buffer, contextData)
+	if err != nil {
+		return map[string]RunnerResult{}, err
+	}
 
-	command = buffer.String() + "\n" + command
-	cmd := exec.Command(r.exec, "-c", command)
+	err = writeToFile("./out.py", buffer)
+
+	err = writeToFile(r.workingDirectory.GetAbsolutePath("ww.py"), buffer)
+	if err != nil {
+		return map[string]RunnerResult{}, err
+	}
+
+	cmd := exec.Command(r.exec, "ww.py")
 	cmd.Dir = r.workingDirectory.tmpDirPath
 
 	var errorOutput bytes.Buffer
@@ -49,55 +72,54 @@ func (r *PythonRunner) RunFix(command string) {
 	cmd.Stdout = &stdOutput
 	cmd.Stderr = &errorOutput
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
+		log.Error().Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
 		// signal aborted indicates an issue with the gopy build result, advancing is useless
 		if strings.Contains(err.Error(), "signal: aborted (core dumped)") {
 			panic(err)
 		}
+		return map[string]RunnerResult{}, err
 	}
+	return r.parseOutput(stdOutput.String())
 }
 
-func (r *PythonRunner) Run(contextData TemplateData, command string, util_level int) error {
-
-	defer r.workingDirectory.Free()
-
-	r.workingDirectory.Populate(contextData.DockerfilePath, contextData.OciImage, contextData.DockerImage, util_level)
-
-	contextData.DockerfilePath = "./Dockerfile"
-	contextData.OciImage = "./out.tar"
-	contextData.DockerImage = "./out_docker.tar"
-
-	var buffer bytes.Buffer
-	r.utilImport.Execute(&buffer, contextData)
-
-	command = buffer.String() + "\n" + command
-	cmd := exec.Command(r.exec, "-c", command)
-	cmd.Dir = r.workingDirectory.tmpDirPath
-	// only log panic
-	cmd.Env = append(cmd.Env, "WHALE_WATCHER_LOG_LEVEL=5")
-
-	var errorOutput bytes.Buffer
-	var stdOutput bytes.Buffer
-
-	cmd.Stdout = &stdOutput
-	cmd.Stderr = &errorOutput
-
-	err := cmd.Run()
+func writeToFile(p string, data bytes.Buffer) error {
+	f, err := os.Create(p)
 	if err != nil {
-		// If it is just an assertion error we dont need to throw it
-		if strings.Contains(err.Error(), "AssertionError") {
-			log.Error().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
-		} else {
-			log.Debug().Err(err).Str("stderr", errorOutput.String()).Str("stdout", stdOutput.String()).Send()
-		}
 		return err
 	}
-
+	defer f.Close()
+	f.WriteString(data.String())
 	return nil
 }
 
-func (r PythonRunner) ToString() string {
-	return fmt.Sprintf("Exec: %s with preamble %s", r.exec, r.utilImport.Root.String())
+func (r *PythonRunner) parseOutput(stdOut string) (map[string]RunnerResult, error) {
+
+	result := make(map[string]RunnerResult)
+
+	lines := strings.Split(stdOut, "\n")
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+		fields := strings.Split(line, "\t")
+		var key, status, autofix string
+
+		if len(fields) >= 3 {
+			key = strings.Trim(fields[0][len("WW_KEY="):], "'")
+			status = strings.TrimPrefix(fields[1], "WW_STATUS=")
+			autofix = strings.TrimPrefix(fields[2], "WW_AUTOFIX=")
+		}
+
+		if len(status) == 0 || len(key) == 0 {
+			return result, fmt.Errorf("Cannot parse line: %s", line)
+		}
+
+		result[key] = RunnerResult{
+			Autofix: autofix == "True",
+			Success: status == "True",
+		}
+	}
+	return result, nil
 }

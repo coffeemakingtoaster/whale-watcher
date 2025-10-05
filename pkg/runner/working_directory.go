@@ -2,6 +2,7 @@ package runner
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -78,15 +79,17 @@ func (rwd *RunnerWorkingDirectory) Free() bool {
 	return true
 }
 
-func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, dockerImagePath string, util_level int) {
-	var err error
-	err = rwd.extractUtils(util_level)
-	if err != nil {
-		log.Warn().Err(err).Msg("Error preparing utils")
-	}
+func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, dockerImagePath string, highestTarget string) {
 	if rwd.isPopulated {
 		return
 	}
+	var err error
+
+	err = rwd.extractUtils(highestTarget)
+	if err != nil {
+		log.Warn().Err(err).Msg("Error preparing utils")
+	}
+
 	err = addFileToWorkingDirectory(dockerFilePath, rwd.tmpDirPath, "Dockerfile")
 	if err != nil {
 		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", dockerFilePath, rwd.tmpDirPath)
@@ -130,31 +133,33 @@ func addFileToWorkingDirectory(source, workingDirectory, newName string) error {
 	return nil
 }
 
-func (rwd *RunnerWorkingDirectory) extractUtils(utilLevel int) error {
+func (rwd *RunnerWorkingDirectory) extractUtils(target string) error {
 	// These writes here could fail when using this concurrently
 	var err error
-	if utilLevel >= COMMAND_UTIL_LEVEL && rwd.current_util_level < COMMAND_UTIL_LEVEL {
-		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
-		if err != nil {
-			return err
-		}
-		rwd.current_util_level = COMMAND_UTIL_LEVEL
-	}
 
-	if utilLevel >= FS_UTIL_LEVEL && rwd.current_util_level < FS_UTIL_LEVEL {
-		err = unpackFsToDir(fsutil, rwd.tmpDirPath)
-		if err != nil {
-			return err
-		}
-		rwd.current_util_level = FS_UTIL_LEVEL
-	}
-
-	if utilLevel >= OS_UTIL_LEVEL && rwd.current_util_level < OS_UTIL_LEVEL {
+	switch target {
+	case "os":
 		err = unpackFsToDir(osutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
 		}
 		rwd.current_util_level = OS_UTIL_LEVEL
+		fallthrough
+	case "fs":
+		err = unpackFsToDir(fsutil, rwd.tmpDirPath)
+		if err != nil {
+			return err
+		}
+		rwd.current_util_level = FS_UTIL_LEVEL
+		fallthrough
+	case "cmd":
+		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
+		if err != nil {
+			return err
+		}
+		rwd.current_util_level = COMMAND_UTIL_LEVEL
+	default:
+		return fmt.Errorf("Unknown target: %s")
 	}
 
 	// no fix utils needed if we are running again or in nofix

@@ -90,10 +90,6 @@ func LoadRuleSetFromContent(data []byte) (RuleSet, error) {
 		return RuleSet{}, err
 	}
 	for _, v := range ruleSet.Rules {
-		err := v.AddRunner()
-		if err != nil {
-			return RuleSet{}, err
-		}
 		err = v.Verify()
 		if err != nil {
 			return RuleSet{}, err
@@ -101,7 +97,13 @@ func LoadRuleSetFromContent(data []byte) (RuleSet, error) {
 		if !strings.Contains(v.Instruction, "assert") {
 			log.Warn().Str("Instruction", v.Instruction).Msg("Instruction does not contain an assert. This rule therefore will never be checked properly")
 		}
+		if strings.Contains(v.Instruction, "__ww__") {
+			log.Warn().Str("Instruction", v.Instruction).Msg("Avoid using __ww__ in instructions")
+		}
 		ruleSet.targetList[v.Target] = true
+		// TODO: Maybe throw away the other ones?
+		v.FormattedFixInstruction = strings.Split(v.FixInstruction, "\n")
+		v.FormattedInstruction = strings.Split(v.Instruction, "\n")
 	}
 	return ruleSet, nil
 }
