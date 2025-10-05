@@ -63,6 +63,17 @@ func (rs *RuleSet) GetHighestTarget() string {
 	return "command"
 }
 
+func (rs *RuleSet) ReduceRulesToAllowed() {
+	reducedRules := []*Rule{}
+	for _, r := range rs.Rules {
+		if !config.AllowsTarget(r.Target) {
+			continue
+		}
+		reducedRules = append(reducedRules, r)
+	}
+	rs.Rules = reducedRules
+}
+
 // Take all rules fromt he weaker set where the current set does not have a rule yet
 // identified via ID
 func (rs *RuleSet) Swallow(weakerSet RuleSet) {

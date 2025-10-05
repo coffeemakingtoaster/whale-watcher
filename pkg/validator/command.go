@@ -60,7 +60,11 @@ Expected arguments:  <policy set location> <Dockerfile location> [<oci tar locat
 				return err
 			}
 
-			log.Info().Msg("Ruleset loaded")
+			log.Info().Int("Initial size", len(ruleSet.Rules)).Msg("Ruleset loaded")
+
+			ruleSet.ReduceRulesToAllowed()
+
+			log.Info().Int("Resulting size", len(ruleSet.Rules)).Msg("Stripped disallowed rules")
 
 			if err = isAllowedContext(ctx, ruleSet); err != nil {
 				return err

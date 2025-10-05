@@ -12,7 +12,6 @@ func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, d
 
 	runner := runner.NewPythonRunner()
 
-	// TODO: This ignores the targetlist...like almost entirely
 	res, err := runner.Run(ruleset, ociTarPath, dockerFilePath, dockerTarPath)
 	if err != nil {
 		panic(err)
