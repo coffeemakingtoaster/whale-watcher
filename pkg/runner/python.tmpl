@@ -8,15 +8,22 @@
 
 from collections import defaultdict
 from command_util_build import commandutil
-from fs_util_build import fsutil
-from os_util_build import osutil
-from fix_util_build import fixutil
-
-# All of these are lazy...so initializing them is fine
-__ww__os_util = osutil.setup('{{ .DockerImage }}')
-__ww__fs_util = fsutil.setup('{{ .OciImage }}')
 __ww__command_util = commandutil.setup('{{ .DockerfilePath }}')
+
+{{ if eq .HighestTarget "fs" "os" }}
+from fs_util_build import fsutil
+__ww__fs_util = fsutil.setup('{{ .OciImage }}')
+{{ end }}
+
+{{ if eq .HighestTarget "os" }}
+from os_util_build import osutil
+__ww__os_util = osutil.setup('{{ .DockerImage }}')
+{{ end }}
+
+{{ if .NoFix }}
+from fix_util_build import fixutil
 __ww__fix_util = fixutil.setup('{{ .DockerfilePath }}')
+{{ end }}
 
 __ww__success_per_rule_id = defaultdict(lambda: false)
 __ww__autofix_per_rule_id = defaultdict(lambda: false)
@@ -40,7 +47,7 @@ def fix_{{ $index }}{}:
 try:
 	validate_{{ $index }}()
 except AssertionError as ae:
-	print(f"WW_KEY='{{ $element.Id }}'\t'WW_ASSERT_ERROR={ae}")
+	#print(f"WW_KEY='{{ $element.Id }}'\t'WW_ASSERT_ERROR={ae}")
 	__ww__success_per_rule_id["{{ $element.Id }}"] = False
 	{{ if and $element.FixInstruction .NoFix  }}try:
 		fix_{{ $index }}()

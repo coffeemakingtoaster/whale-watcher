@@ -28,6 +28,7 @@ type TemplateData struct {
 	DockerImage    string
 	Rules          []*rules.Rule
 	NoFix          bool
+	HighestTarget  string
 }
 
 func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, dockerTarPath string) (map[string]RunnerResult, error) {
@@ -42,6 +43,7 @@ func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, do
 		DockerImage:    "./out_docker.tar",
 		Rules:          ruleSet.Rules,
 		NoFix:          viper.GetBool("no_fix"),
+		HighestTarget:  ruleSet.GetHighestTarget(),
 	}
 
 	tpl, err := template.New("pythonExecutionContent").Parse(pythonTemplate)

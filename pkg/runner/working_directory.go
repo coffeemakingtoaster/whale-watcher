@@ -152,14 +152,14 @@ func (rwd *RunnerWorkingDirectory) extractUtils(target string) error {
 		}
 		rwd.current_util_level = FS_UTIL_LEVEL
 		fallthrough
-	case "cmd":
+	case "command":
 		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
 		}
 		rwd.current_util_level = COMMAND_UTIL_LEVEL
 	default:
-		return fmt.Errorf("Unknown target: %s")
+		return fmt.Errorf("Unknown target: %s", target)
 	}
 
 	// no fix utils needed if we are running again or in nofix
