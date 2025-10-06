@@ -1,30 +1,27 @@
-{{ define "make_imports_available"}}
-	{{ if eq . "fix" }} fix_util = __ww__fix_util{{ else }}
+{{- define "make_imports_available"}}
+	{{- if eq . "fix" }} fix_util = __ww__fix_util{{ else }}
 	command_util = __ww__command_util
-	{{ if eq . "fs" "os" }}fs_util = __ww__fs_util{{ end }}
-	{{ if eq . "os" }}os_util = __ww__os_util{{ end }}
-	{{ end }}
-{{ end }}
+	{{ if eq . "fs" "os" }}fs_util = __ww__fs_util{{- end }}
+	{{ if eq . "os" }}os_util = __ww__os_util{{- end }}
+	{{- end }}
+{{- end }}
 
 from collections import defaultdict
 from command_util_build import commandutil
 __ww__command_util = commandutil.setup('{{ .DockerfilePath }}')
 
-{{ if eq .HighestTarget "fs" "os" }}
+{{- if eq .HighestTarget "fs" "os" }}
 from fs_util_build import fsutil
 __ww__fs_util = fsutil.setup('{{ .OciImage }}')
-{{ end }}
-
-{{ if eq .HighestTarget "os" }}
+{{- end }}
+{{- if eq .HighestTarget "os" }}
 from os_util_build import osutil
 __ww__os_util = osutil.setup('{{ .DockerImage }}')
-{{ end }}
-
-{{ if .NoFix }}
+{{- end }}
+{{- if .NoFix }}
 from fix_util_build import fixutil
 __ww__fix_util = fixutil.setup('{{ .DockerfilePath }}')
-{{ end }}
-
+{{- end }}
 __ww__success_per_rule_id = defaultdict(lambda: false)
 __ww__autofix_per_rule_id = defaultdict(lambda: false)
 
@@ -37,17 +34,16 @@ def validate_{{ $index }}():
 	{{ range $element.FormattedInstruction }}
 	{{ . }}{{ end }}
 
-{{ if and $element.FixInstruction .NoFix }}
+{{- if and $element.FixInstruction .NoFix }}
 def fix_{{ $index }}{}:
 	{{ template "make_imports_available" "fix" }}
 	{{ range $element.FormattedFixInstruction }}
 	{{ . }}{{ end }}
-{{end}}
+{{- end }}
 
 try:
 	validate_{{ $index }}()
 except AssertionError as ae:
-	#print(f"WW_KEY='{{ $element.Id }}'\t'WW_ASSERT_ERROR={ae}")
 	__ww__success_per_rule_id["{{ $element.Id }}"] = False
 	{{ if and $element.FixInstruction .NoFix  }}try:
 		fix_{{ $index }}()
@@ -59,7 +55,7 @@ except AssertionError as ae:
 except Exception as e:
 	__ww__success_per_rule_id["{{ .Id }}"] = False
 	print(f"WW_KEY='{{ $element.Id }}'\tWW_ERROR={e}")
-{{ end }}
+{{- end }}
 
 for key in __ww__success_per_rule_id.keys():
 	print(f"WW_KEY='{key}'\tWW_STATUS={__ww__success_per_rule_id[key]}\tWW_AUTOFIX={__ww__autofix_per_rule_id[key]}")

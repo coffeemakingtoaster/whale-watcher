@@ -1,8 +1,8 @@
 package validator
 
 import (
-	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
@@ -72,9 +72,10 @@ Expected arguments:  <policy set location> <Dockerfile location> [<oci tar locat
 
 			// Fail code if violations were detected
 			if validate(ctx, ruleSet) {
-				return nil
+				os.Exit(0)
 			}
-			return errors.New("Violation found")
+			os.Exit(1)
+			return nil
 		},
 	}
 	return cmd
