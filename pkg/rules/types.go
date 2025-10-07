@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
-	"github.com/rs/zerolog/log"
 )
 
 var allowedCategories = []string{"negative", "positive"}
@@ -30,42 +28,15 @@ type RuleSet struct {
 }
 
 type Rule struct {
-	Category        string `yaml:"category"`
-	Instruction     string `yaml:"instruction"`
-	Description     string `yaml:"description"`
-	LongDescription string `yaml:"long_description"`
-	Id              string `yaml:"id"`
-	Target          string `yaml:"target"`
-	Runner          runner.Runner
-	FixInstruction  string `yaml:"fix_instruction"`
-}
-
-func (r *Rule) AddRunner() error {
-	var err error
-	r.Runner, err = runner.NewPythonRunner(r.Target)
-	return err
-}
-
-func (r *Rule) GetUtilLevel() int {
-	switch r.Target {
-	case "command":
-		return runner.COMMAND_UTIL_LEVEL
-	case "fs":
-		return runner.FS_UTIL_LEVEL
-	case "os":
-		return runner.OS_UTIL_LEVEL
-	default:
-		log.Warn().Str("target", r.Target).Msgf("Unknown target, falling back to os")
-		return runner.OS_UTIL_LEVEL
-	}
-}
-
-func (r *Rule) Validate(ociTarPath, dockerFilepath, dockerTarPath string) (bool, ViolationInfo) {
-	err := r.Runner.Run(runner.TemplateData{DockerfilePath: dockerFilepath, OciImage: ociTarPath, DockerImage: dockerTarPath}, r.Instruction, r.GetUtilLevel())
-	if err != nil {
-		return false, ViolationInfo{Details: err.Error()}
-	}
-	return true, ViolationInfo{}
+	Category                string `yaml:"category"`
+	Instruction             string `yaml:"instruction"`
+	Description             string `yaml:"description"`
+	LongDescription         string `yaml:"long_description"`
+	Id                      string `yaml:"id"`
+	Target                  string `yaml:"target"`
+	FixInstruction          string `yaml:"fix_instruction"`
+	FormattedFixInstruction []string
+	FormattedInstruction    []string
 }
 
 // Cleanup if this was loaded from git
@@ -90,6 +61,17 @@ func (rs *RuleSet) GetHighestTarget() string {
 		}
 	}
 	return "command"
+}
+
+func (rs *RuleSet) ReduceRulesToAllowed() {
+	reducedRules := []*Rule{}
+	for _, r := range rs.Rules {
+		if !config.AllowsTarget(r.Target) {
+			continue
+		}
+		reducedRules = append(reducedRules, r)
+	}
+	rs.Rules = reducedRules
 }
 
 // Take all rules fromt he weaker set where the current set does not have a rule yet
@@ -122,14 +104,6 @@ func (r *Rule) Verify() error {
 	if err := isInAllowed(r.Target, allowedTargets); err != nil {
 		return fmt.Errorf("Target: %s", err.Error())
 	}
-	return nil
-}
-
-func (r *Rule) PerformFix() error {
-	if r.FixInstruction == "" {
-		return errors.New("No fixinstruction present")
-	}
-	r.Runner.RunFix(r.FixInstruction)
 	return nil
 }
 

@@ -8,3 +8,4 @@ target:
 github:
   pat: # not needed
   username: # not needed
+no_fix: true

@@ -241,3 +241,4 @@ config.yaml
 *.db
 reauthor.sh
 index.html
+out.py

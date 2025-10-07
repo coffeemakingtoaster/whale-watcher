@@ -1,8 +1,8 @@
 package validator
 
 import (
-	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
@@ -12,6 +12,7 @@ import (
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type ValidateContext struct {
@@ -59,15 +60,22 @@ Expected arguments:  <policy set location> <Dockerfile location> [<oci tar locat
 				return err
 			}
 
+			log.Info().Int("Initial size", len(ruleSet.Rules)).Msg("Ruleset loaded")
+
+			ruleSet.ReduceRulesToAllowed()
+
+			log.Info().Int("Resulting size", len(ruleSet.Rules)).Msg("Stripped disallowed rules")
+
 			if err = isAllowedContext(ctx, ruleSet); err != nil {
 				return err
 			}
 
 			// Fail code if violations were detected
 			if validate(ctx, ruleSet) {
-				return nil
+				os.Exit(0)
 			}
-			return errors.New("Violation found")
+			os.Exit(1)
+			return nil
 		},
 	}
 	return cmd
@@ -133,7 +141,11 @@ func validate(ctx *ValidateContext, ruleSet rules.RuleSet) bool {
 func getViolations(runContext *ValidateContext, ruleSet rules.RuleSet) violationTypes.Violations {
 	// TODO: These paths are passed down way to far without any validation
 	violations := ValidateRuleset(ruleSet, runContext.OCITarballPath, runContext.DockerFilePath, runContext.DockerTarballPath)
-	log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
+	if viper.GetBool("no_fix") {
+		log.Info().Msgf("Total: %d Violations: %d", violations.CheckedCount, violations.ViolationCount)
+	} else {
+		log.Info().Msgf("Total: %d Violations: %d Fixable: %d", violations.CheckedCount, violations.ViolationCount, violations.FixableCount)
+	}
 	for _, violation := range violations.Violations {
 		log.Warn().Str("ruleId", violation.RuleId).Str("problem", violation.Description).Send()
 	}
