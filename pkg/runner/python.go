@@ -58,8 +58,6 @@ func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, do
 		return map[string]RunnerResult{}, err
 	}
 
-	err = writeToFile("./out.py", buffer)
-
 	err = writeToFile(r.workingDirectory.GetAbsolutePath("ww.py"), buffer)
 	if err != nil {
 		return map[string]RunnerResult{}, err
