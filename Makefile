@@ -138,7 +138,7 @@ builder_clean:
 
 verify: export WHALE_WATCHER_CONFIG_PATH=./testdata/verify.config.yaml
 
-verify: all oci-export docker-export
+verify: all oci-export docker-export test
  	# Verify util signature, not actually perform rule validation
 	# Use remote ruleset
 	@echo "\n$(BLUE)$(DELIM) Verifying local ruleset $(DELIM)$(RESET)"
