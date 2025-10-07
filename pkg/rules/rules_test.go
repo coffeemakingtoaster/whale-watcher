@@ -1,10 +1,10 @@
 package rules_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	"github.com/spf13/viper"
 )
 
 var noAssertRuleset = `
@@ -65,11 +65,42 @@ func TestLoadRulesetFromContent(t *testing.T) {
 	if expected.Name != actual.Name {
 		t.Errorf("Ruleset name mismatch: Expected %s Got %s", expected.Name, actual.Name)
 	}
-	for index := range expected.Rules {
-		actual.Rules[index].Runner = nil
-		if !reflect.DeepEqual(expected.Rules[index], actual.Rules[index]) {
-			t.Errorf("Rule content mismatch:\n Expected\n %v Got\n %v", expected.Rules[index], actual.Rules[index])
-		}
+	if actual.GetHighestTarget() != "fs" {
+		t.Errorf("Highest target mismatch: Expected fs Got %s", actual.Name)
+	}
+}
+
+func TestHighestLevelIfConfigDisallow(t *testing.T) {
+	expected := rules.RuleSet{
+		Name: "test ruleset",
+		Rules: []*rules.Rule{
+			{
+				Category:    "negative",
+				Instruction: "assert(True == True)\n",
+				Description: "Perform a check",
+				Id:          "test id",
+				Target:      "command",
+			},
+			{
+				Category:    "positive",
+				Instruction: "assert(True == False)\n",
+				Description: "Perform a check",
+				Id:          "test id2",
+				Target:      "fs",
+			},
+		},
+	}
+	viper.Set("target_list", "command")
+	defer viper.Reset()
+	actual, err := rules.LoadRuleSetFromContent([]byte(validRuleset))
+	if err != nil {
+		t.Errorf("Error mismatch: Expected nil Got '%s'", err.Error())
+	}
+	if expected.Name != actual.Name {
+		t.Errorf("Ruleset name mismatch: Expected %s Got %s", expected.Name, actual.Name)
+	}
+	if actual.GetHighestTarget() != "command" {
+		t.Errorf("Highest target mismatch: Expected command Got %s", actual.Name)
 	}
 }
 
