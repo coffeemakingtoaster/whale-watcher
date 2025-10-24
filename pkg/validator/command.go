@@ -1,9 +1,9 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
@@ -29,28 +29,28 @@ func buildContext(input []string) *ValidateContext {
 
 	return &ValidateContext{
 		RuleSetEntrypoint: input[0],
-		DockerFilePath:    input[1],
-		OCITarballPath:    input[2],
-		DockerTarballPath: input[3],
+		DockerFilePath:    viper.GetString("target.dockerfile"),
+		OCITarballPath:    viper.GetString("target.ocipath"),
+		DockerTarballPath: viper.GetString("target.dockerpath"),
 	}
 }
 
 func NewCommand() *cobra.Command {
 
 	var cmd = &cobra.Command{
-		Use:   "validate [flags] <policyset> <dockerfilepath> [ocitarpath] [dockertarpath]",
-		Short: "Validate the given inputs based on the policy set",
-		Long: `Given a policy sets and input files, validate each policy. 
+		Use:   "validate [flags] <policyset>",
+		Short: "Validate the given inputs based on the policy set", Long: `Given a policy sets and input files, validate each policy. 
 
-Expected arguments:  <policy set location> <Dockerfile location> [<oci tar location>] [<docker tar location>]
+Expected arguments:  <policy set location> 
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 2 {
-				return fmt.Errorf("Validate needs at least a set policy set and Dockerfile (Got: '%s')", strings.Join(args, " "))
+			if len(args) > 1 {
+				return errors.New("Validate only accepts the ruleset location as an input")
 			}
-			if len(args) > 4 {
-				return fmt.Errorf("Validate only accepts a maximum 4 arguments (policy set, Dockerfile, oci tar, docker tar) (Got: '%s')", strings.Join(args, " "))
+			if len(args) == 0 {
+				return errors.New("Validate requires the ruleset location as an input")
 			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -78,6 +78,8 @@ Expected arguments:  <policy set location> <Dockerfile location> [<oci tar locat
 			return nil
 		},
 	}
+	var cfg config.Config
+	config.AddConfigFlagsWithGroups(cmd, "", &cfg, "")
 	return cmd
 }
 

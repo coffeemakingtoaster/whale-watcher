@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/consts"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/docs"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/validator"
 	"github.com/rs/zerolog"
@@ -17,8 +18,6 @@ import (
 
 var cfg config.Config
 var cfgFile string
-
-var envPrefix = "WHALE_WATCHER_"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -102,10 +101,10 @@ func main() {
 	// Add flag/env for config file itself
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Path to config file (default: ./config.yaml)")
 	_ = viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
-	_ = viper.BindEnv("config", fmt.Sprintf("%sCONFIG_PATH", envPrefix))
+	_ = viper.BindEnv("config", fmt.Sprintf("%sCONFIG_PATH", consts.ENV_PREFIX))
 
 	// Dynamically add flags/envs for all config fields
-	if err := config.AddConfigFlagsWithGroups(rootCmd, "", &cfg, envPrefix); err != nil {
+	if err := config.AddConfigFlagsWithGroups(rootCmd, "", &cfg, ""); err != nil {
 		panic(fmt.Sprintf("failed to add config flags: %v", err))
 	}
 

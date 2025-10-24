@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/consts"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -13,6 +14,9 @@ import (
 // AddConfigFlagsWithGroups registers flags for each nested struct
 // as a separate flag group, and binds both Viper + environment variables.
 func AddConfigFlagsWithGroups(cmd *cobra.Command, prefix string, val any, envPrefix string) error {
+	if len(envPrefix) == 0 {
+		envPrefix = consts.ENV_PREFIX
+	}
 	v := reflect.ValueOf(val)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -24,6 +28,12 @@ func AddConfigFlagsWithGroups(cmd *cobra.Command, prefix string, val any, envPre
 		fieldVal := v.Field(i)
 
 		if !fieldVal.CanInterface() {
+			continue
+		}
+
+		relevantTo := field.Tag.Get("relevant_to")
+
+		if !isRelevant(cmd, relevantTo) {
 			continue
 		}
 
@@ -157,4 +167,15 @@ func AllowsTarget(target string) bool {
 
 func ShouldInteractWithVSC() bool {
 	return ValidateGitea() == nil || ValidateGithub() == nil
+}
+
+func isRelevant(cmd *cobra.Command, relevantTo string) bool {
+	if len(relevantTo) == 0 {
+		return true
+	}
+	// global command
+	if len(cmd.CommandPath()) == 0 {
+		return false
+	}
+	return strings.HasSuffix(relevantTo, cmd.CommandPath()) || strings.Contains(relevantTo, fmt.Sprintf("%s,", cmd.CommandPath()))
 }
