@@ -78,6 +78,8 @@ Expected arguments:  <policy set location>
 			return nil
 		},
 	}
+	var cfg config.Config
+	config.AddConfigFlagsWithGroups(cmd, "", &cfg, "")
 	return cmd
 }
 
