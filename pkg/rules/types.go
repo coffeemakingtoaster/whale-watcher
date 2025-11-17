@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/targets"
 )
 
 var allowedCategories = []string{"negative", "positive"}
-var allowedTargets = []string{"command", "os", "fs"}
+var allowedTargets = []string{targets.COMMAND_UTIL_VALUE, targets.FS_UTIL_VALUE, targets.OS_UTIL_VALUE}
 
 type ViolationInfo struct {
 	Details string
@@ -55,12 +56,12 @@ func (rs *RuleSet) updateIdList() {
 
 // Considers currently target allowlist in config
 func (rs *RuleSet) GetHighestTarget() string {
-	for _, target := range []string{"os", "fs"} {
+	for _, target := range []string{targets.OS_UTIL_VALUE, targets.FS_UTIL_VALUE} {
 		if val, ok := rs.targetList[target]; ok && val && config.AllowsTarget(target) {
 			return target
 		}
 	}
-	return "command"
+	return targets.COMMAND_UTIL_VALUE
 }
 
 func (rs *RuleSet) ReduceRulesToAllowed() {

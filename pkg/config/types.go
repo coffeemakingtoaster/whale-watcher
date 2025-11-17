@@ -7,13 +7,13 @@ import (
 )
 
 type Config struct {
-	Github     GithubConfig `mapstructure:"github" envPrefix:"GITHUB_" group:"Github Config" relevant_to:"validate"`
-	Gitea      GiteaConfig  `mapstructure:"gitea" envPrefix:"GITEA_" group:"Gitea Config" relevant_to:"validate"`
-	Target     TargetConfig `mapstructure:"target" envPrefix:"TARGET_" group:"Target Config" relevant_to:"validate"`
-	TargetList string       `mapstructure:"target_list" env:"TARGET_LIST" desc:"List all allowed targets" relevant_to:"validate"`
-	LogLevel   int          `mapstructure:"log_level" env:"LOG_LEVEL" desc:"Set log level (1-5)"`
-	DocsURL    string       `mapstructure:"docs_url" env:"DOCS_URL" desc:"Url pointing to active deployment of policy set documentation" relevant_to:"validate"`
-	NoFix      bool         `mapstructure:"no_fix" env:"NO_FIX" desc:"Disable the fixing functionality for detected violations" relevant_to:"validate"`
+	Github        GithubConfig `mapstructure:"github" envPrefix:"GITHUB_" group:"Github Config" relevant_to:"validate"`
+	Gitea         GiteaConfig  `mapstructure:"gitea" envPrefix:"GITEA_" group:"Gitea Config" relevant_to:"validate"`
+	Target        TargetConfig `mapstructure:"target" envPrefix:"TARGET_" group:"Target Config" relevant_to:"validate"`
+	HighestTarget string       `mapstructure:"highest_target" env:"HIGHEST_TARGET" desc:"Provide the highest allowed target" relevant_to:"validate"`
+	LogLevel      int          `mapstructure:"log_level" env:"LOG_LEVEL" desc:"Set log level (1-5)"`
+	DocsURL       string       `mapstructure:"docs_url" env:"DOCS_URL" desc:"Url pointing to active deployment of policy set documentation" relevant_to:"validate"`
+	NoFix         bool         `mapstructure:"no_fix" env:"NO_FIX" desc:"Disable the fixing functionality for detected violations" relevant_to:"validate"`
 }
 
 type GithubConfig struct {

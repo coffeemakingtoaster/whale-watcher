@@ -66,7 +66,7 @@ func TestLoadRulesetFromContent(t *testing.T) {
 		t.Errorf("Ruleset name mismatch: Expected %s Got %s", expected.Name, actual.Name)
 	}
 	if actual.GetHighestTarget() != "fs" {
-		t.Errorf("Highest target mismatch: Expected fs Got %s", actual.Name)
+		t.Errorf("Highest target mismatch: Expected fs Got %s", actual.GetHighestTarget())
 	}
 }
 
@@ -90,7 +90,7 @@ func TestHighestLevelIfConfigDisallow(t *testing.T) {
 			},
 		},
 	}
-	viper.Set("target_list", "command")
+	viper.Set("highest_target", "command")
 	defer viper.Reset()
 	actual, err := rules.LoadRuleSetFromContent([]byte(validRuleset))
 	if err != nil {
@@ -100,7 +100,7 @@ func TestHighestLevelIfConfigDisallow(t *testing.T) {
 		t.Errorf("Ruleset name mismatch: Expected %s Got %s", expected.Name, actual.Name)
 	}
 	if actual.GetHighestTarget() != "command" {
-		t.Errorf("Highest target mismatch: Expected command Got %s", actual.Name)
+		t.Errorf("Highest target mismatch: Expected command Got %s", actual.GetHighestTarget())
 	}
 }
 
@@ -112,7 +112,7 @@ func TestVerifyInvalidRuleset(t *testing.T) {
 			Description: "Perform a check",
 			Target:      "fs",
 		},
-		"Target: Invalid value invalid (Allowed: [\"command\" \"os\" \"fs\"])": {
+		"Target: Invalid value invalid (Allowed: [\"command\" \"fs\" \"os\"])": {
 			Category:    "positive",
 			Instruction: "assert(True == False)",
 			Description: "Perform a check",
