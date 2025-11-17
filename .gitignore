@@ -1,4 +1,4 @@
-# Created by https://www.toptal.com/developers/gitignore/api/go,vim,linux,python
+# Created by https://www.toptal.com/developers/gitignore/api/go,vim,linux,pythontargets
 # Edit at https://www.toptal.com/developers/gitignore?templates=go,vim,linux,python
 
 ### Go ###
@@ -114,7 +114,6 @@ docs/_build/
 
 # PyBuilder
 .pybuilder/
-target/
 
 # Jupyter Notebook
 .ipynb_checkpoints

@@ -9,6 +9,7 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/targets"
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -88,17 +89,17 @@ func isAllowedContext(ctx *ValidateContext, ruleSet rules.RuleSet) error {
 	target := ruleSet.GetHighestTarget()
 
 	switch target {
-	case "os":
+	case targets.OS_UTIL_VALUE:
 		if ctx.DockerTarballPath == "" {
 			return fmt.Errorf("Highest target is %s, docker tar path needs to be specified", target)
 		}
 		fallthrough
-	case "fs":
+	case targets.FS_UTIL_VALUE:
 		if ctx.OCITarballPath == "" {
 			return fmt.Errorf("Highest target is %s, oci tar path needs to be specified", target)
 		}
 		fallthrough
-	case "command":
+	case targets.COMMAND_UTIL_VALUE:
 		if ctx.DockerFilePath == "" {
 			return fmt.Errorf("Highest target is %s, Dockerfile path needs to be specified", target)
 		}

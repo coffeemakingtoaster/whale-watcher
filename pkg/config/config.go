@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/consts"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/targets"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -157,12 +158,10 @@ func addFieldFlag(flagSet *pflag.FlagSet, prefix string, field *reflect.StructFi
 }
 
 func AllowsTarget(target string) bool {
-	allowList := viper.GetString("target_list")
-	if len(allowList) == 0 {
-		return true
-	}
-	return strings.Contains(allowList, target)
-
+	highestTarget := viper.GetString("highest_target")
+	providedTargetScore := targets.GetTargetLevel(target)
+	highestTargetScore := targets.GetTargetLevel(highestTarget)
+	return providedTargetScore <= highestTargetScore
 }
 
 func ShouldInteractWithVSC() bool {

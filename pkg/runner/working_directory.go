@@ -10,14 +10,9 @@ import (
 	"sync"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/targets"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-)
-
-const (
-	COMMAND_UTIL_LEVEL = iota
-	FS_UTIL_LEVEL
-	OS_UTIL_LEVEL
 )
 
 //go:embed _fs_util_build/*
@@ -138,26 +133,26 @@ func (rwd *RunnerWorkingDirectory) extractUtils(target string) error {
 	var err error
 
 	switch target {
-	case "os":
+	case targets.OS_UTIL_VALUE:
 		err = unpackFsToDir(osutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
 		}
-		rwd.current_util_level = OS_UTIL_LEVEL
+		rwd.current_util_level = targets.OS_UTIL_LEVEL
 		fallthrough
-	case "fs":
+	case targets.FS_UTIL_VALUE:
 		err = unpackFsToDir(fsutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
 		}
-		rwd.current_util_level = FS_UTIL_LEVEL
+		rwd.current_util_level = targets.FS_UTIL_LEVEL
 		fallthrough
-	case "command":
+	case targets.COMMAND_UTIL_VALUE:
 		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
 		if err != nil {
 			return err
 		}
-		rwd.current_util_level = COMMAND_UTIL_LEVEL
+		rwd.current_util_level = targets.COMMAND_UTIL_LEVEL
 	default:
 		return fmt.Errorf("Unknown target: %s", target)
 	}
