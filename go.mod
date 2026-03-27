@@ -1,6 +1,6 @@
 module github.com/coffeemakingtoaster/whale-watcher
 
-go 1.24.3
+go 1.25.5
 
 require (
 	code.gitea.io/sdk/gitea v0.21.0
@@ -20,6 +20,7 @@ require (
 )
 
 require (
+	codeberg.org/coffeemakingtoaster/pyt v0.0.0-20260320221240-dca66df6446f // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/42wim/httpsig v1.2.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect

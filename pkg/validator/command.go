@@ -8,7 +8,7 @@ import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/adapters"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	workingdirectory "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/working_directory"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/targets"
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/rs/zerolog/log"
@@ -112,7 +112,7 @@ func isAllowedContext(ctx *ValidateContext, ruleSet rules.RuleSet) error {
 func validate(ctx *ValidateContext, ruleSet rules.RuleSet) bool {
 	var err error
 	// Get ref to prevent directory cleanup
-	ref := runner.GetReferencingWorkingDirectoryInstance()
+	ref := workingdirectory.GetReferencingWorkingDirectoryInstance()
 	// Attempt clean exit, force exit if needed
 	defer func() {
 		if !ref.Free() {

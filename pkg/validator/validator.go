@@ -2,7 +2,7 @@ package validator
 
 import (
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
-	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	pythonRunner "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/python"
 	violationTypes "github.com/coffeemakingtoaster/whale-watcher/pkg/validator/violations"
 	"github.com/spf13/viper"
 )
@@ -10,7 +10,7 @@ import (
 func ValidateRuleset(ruleset rules.RuleSet, ociTarPath, dockerFilePath string, dockerTarPath string) violationTypes.Violations {
 	violations := violationTypes.Violations{}
 
-	runner := runner.NewPythonRunner()
+	runner := pythonRunner.NewPythonRunner()
 
 	res, err := runner.Run(ruleset, ociTarPath, dockerFilePath, dockerTarPath)
 	if err != nil {

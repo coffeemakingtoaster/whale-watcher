@@ -1,4 +1,4 @@
-package runner
+package pythonRunner
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"text/template"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner"
+	workingdirectory "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/working_directory"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -19,7 +21,14 @@ var pythonTemplate string
 
 type PythonRunner struct {
 	exec             string
-	workingDirectory *RunnerWorkingDirectory
+	workingDirectory *workingdirectory.RunnerWorkingDirectory
+}
+
+func NewPythonRunner() *PythonRunner {
+	return &PythonRunner{
+		exec:             "python3",
+		workingDirectory: workingdirectory.GetReferencingWorkingDirectoryInstance(),
+	}
 }
 
 type TemplateData struct {
@@ -31,7 +40,7 @@ type TemplateData struct {
 	HighestTarget  string
 }
 
-func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, dockerTarPath string) (map[string]RunnerResult, error) {
+func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, dockerTarPath string) (map[string]runner.RunnerResult, error) {
 	var err error
 
 	defer r.workingDirectory.Free()
@@ -49,22 +58,22 @@ func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, do
 	tpl, err := template.New("pythonExecutionContent").Parse(pythonTemplate)
 
 	if err != nil {
-		return map[string]RunnerResult{}, err
+		return map[string]runner.RunnerResult{}, err
 	}
 
 	var buffer bytes.Buffer
 	err = tpl.Execute(&buffer, contextData)
 	if err != nil {
-		return map[string]RunnerResult{}, err
+		return map[string]runner.RunnerResult{}, err
 	}
 
 	err = writeToFile(r.workingDirectory.GetAbsolutePath("ww.py"), buffer)
 	if err != nil {
-		return map[string]RunnerResult{}, err
+		return map[string]runner.RunnerResult{}, err
 	}
 
 	cmd := exec.Command(r.exec, "ww.py")
-	cmd.Dir = r.workingDirectory.tmpDirPath
+	cmd.Dir = r.workingDirectory.TmpDirPath
 
 	var errorOutput bytes.Buffer
 	var stdOutput bytes.Buffer
@@ -79,7 +88,7 @@ func (r *PythonRunner) Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, do
 		if strings.Contains(err.Error(), "signal: aborted (core dumped)") {
 			panic(err)
 		}
-		return map[string]RunnerResult{}, err
+		return map[string]runner.RunnerResult{}, err
 	}
 	return r.parseOutput(stdOutput.String())
 }
@@ -94,9 +103,9 @@ func writeToFile(p string, data bytes.Buffer) error {
 	return nil
 }
 
-func (r *PythonRunner) parseOutput(stdOut string) (map[string]RunnerResult, error) {
+func (r *PythonRunner) parseOutput(stdOut string) (map[string]runner.RunnerResult, error) {
 
-	result := make(map[string]RunnerResult)
+	result := make(map[string]runner.RunnerResult)
 
 	lines := strings.Split(stdOut, "\n")
 	for _, line := range lines {
@@ -116,7 +125,7 @@ func (r *PythonRunner) parseOutput(stdOut string) (map[string]RunnerResult, erro
 			return result, fmt.Errorf("Cannot parse line: %s", line)
 		}
 
-		result[key] = RunnerResult{
+		result[key] = runner.RunnerResult{
 			Autofix: autofix == "True",
 			Success: status == "True",
 		}

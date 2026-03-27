@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/coffeemakingtoaster/dockerfile-parser/pkg/ast"
-	commandutil "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/command_util"
+	commandutil "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/utils/command_util"
 )
 
 var sampleDockerfile = []string{

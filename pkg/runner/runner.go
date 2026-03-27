@@ -1,6 +1,8 @@
 package runner
 
-import "github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+import (
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/rules"
+)
 
 type RunnerResult struct {
 	Autofix bool
@@ -9,12 +11,4 @@ type RunnerResult struct {
 
 type Runner interface {
 	Run(ruleSet rules.RuleSet, ociTarPath, dockerFilepath, dockerTarPath string) (map[string]RunnerResult, error)
-}
-
-func NewPythonRunner() Runner {
-	runner := &PythonRunner{
-		exec:             "python3",
-		workingDirectory: GetReferencingWorkingDirectoryInstance(),
-	}
-	return runner
 }

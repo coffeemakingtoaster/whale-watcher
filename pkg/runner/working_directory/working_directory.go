@@ -1,4 +1,4 @@
-package runner
+package workingdirectory
 
 import (
 	"embed"
@@ -10,27 +10,16 @@ import (
 	"sync"
 
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/config"
+	"github.com/coffeemakingtoaster/whale-watcher/pkg/runner/utils"
 	"github.com/coffeemakingtoaster/whale-watcher/pkg/targets"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
-//go:embed _fs_util_build/*
-var fsutil embed.FS
-
-//go:embed _os_util_build/*
-var osutil embed.FS
-
-//go:embed _command_util_build/*
-var cmdutil embed.FS
-
-//go:embed _fix_util_build/*
-var fixutil embed.FS
-
 var lock = &sync.Mutex{}
 
 type RunnerWorkingDirectory struct {
-	tmpDirPath         string
+	TmpDirPath         string
 	refCount           int
 	isPopulated        bool
 	current_util_level int
@@ -55,7 +44,7 @@ func GetReferencingWorkingDirectoryInstance() *RunnerWorkingDirectory {
 }
 
 func (rwd *RunnerWorkingDirectory) GetAbsolutePath(path string) string {
-	return filepath.Join(rwd.tmpDirPath, path)
+	return filepath.Join(rwd.TmpDirPath, path)
 }
 
 func (rwd *RunnerWorkingDirectory) Free() bool {
@@ -64,9 +53,9 @@ func (rwd *RunnerWorkingDirectory) Free() bool {
 		log.Debug().Msgf("Free was called for working directory but ref count has not hit 0")
 		return false
 	}
-	err := os.RemoveAll(rwd.tmpDirPath)
+	err := os.RemoveAll(rwd.TmpDirPath)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.tmpDirPath)
+		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.TmpDirPath)
 		return false
 	}
 	log.Debug().Msgf("Working directory cleaned up (ref count was 0)")
@@ -85,22 +74,22 @@ func (rwd *RunnerWorkingDirectory) Populate(dockerFilePath, ociImagePath, docker
 		log.Warn().Err(err).Msg("Error preparing utils")
 	}
 
-	err = addFileToWorkingDirectory(dockerFilePath, rwd.tmpDirPath, "Dockerfile")
+	err = addFileToWorkingDirectory(dockerFilePath, rwd.TmpDirPath, "Dockerfile")
 	if err != nil {
-		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", dockerFilePath, rwd.tmpDirPath)
+		log.Warn().Err(err).Msgf("Could not add %s to working directory %s", dockerFilePath, rwd.TmpDirPath)
 		return
 	}
 	if !config.AllowsTarget("fs") && !config.AllowsTarget("os") {
 		log.Info().Msg("Not adding container artifacts to working directory as they are not needed for allowed targets")
 	} else {
-		err = addFileToWorkingDirectory(ociImagePath, rwd.tmpDirPath, "out.tar")
+		err = addFileToWorkingDirectory(ociImagePath, rwd.TmpDirPath, "out.tar")
 		if err != nil {
-			log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.tmpDirPath)
+			log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.TmpDirPath)
 			return
 		}
-		err = addFileToWorkingDirectory(dockerImagePath, rwd.tmpDirPath, "out_docker.tar")
+		err = addFileToWorkingDirectory(dockerImagePath, rwd.TmpDirPath, "out_docker.tar")
 		if err != nil {
-			log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.tmpDirPath)
+			log.Warn().Err(err).Msgf("Could not add %s to working directory %s", ociImagePath, rwd.TmpDirPath)
 			return
 		}
 	}
@@ -134,21 +123,21 @@ func (rwd *RunnerWorkingDirectory) extractUtils(target string) error {
 
 	switch target {
 	case targets.OS_UTIL_VALUE:
-		err = unpackFsToDir(osutil, rwd.tmpDirPath)
+		err = unpackFsToDir(utils.Osutil, rwd.TmpDirPath)
 		if err != nil {
 			return err
 		}
 		rwd.current_util_level = targets.OS_UTIL_LEVEL
 		fallthrough
 	case targets.FS_UTIL_VALUE:
-		err = unpackFsToDir(fsutil, rwd.tmpDirPath)
+		err = unpackFsToDir(utils.Fsutil, rwd.TmpDirPath)
 		if err != nil {
 			return err
 		}
 		rwd.current_util_level = targets.FS_UTIL_LEVEL
 		fallthrough
 	case targets.COMMAND_UTIL_VALUE:
-		err = unpackFsToDir(cmdutil, rwd.tmpDirPath)
+		err = unpackFsToDir(utils.Cmdutil, rwd.TmpDirPath)
 		if err != nil {
 			return err
 		}
@@ -162,7 +151,7 @@ func (rwd *RunnerWorkingDirectory) extractUtils(target string) error {
 		return nil
 	}
 
-	return unpackFsToDir(fixutil, rwd.tmpDirPath)
+	return unpackFsToDir(utils.Fixutil, rwd.TmpDirPath)
 }
 
 func newRunnerWorkingDirectory() (*RunnerWorkingDirectory, error) {
@@ -172,7 +161,7 @@ func newRunnerWorkingDirectory() (*RunnerWorkingDirectory, error) {
 	}
 
 	return &RunnerWorkingDirectory{
-		tmpDirPath:         dirPath,
+		TmpDirPath:         dirPath,
 		refCount:           0,
 		current_util_level: -1,
 	}, nil
@@ -235,9 +224,9 @@ func unpackFsToDir(toUnpack embed.FS, dirPath string) error {
 
 func (rwd *RunnerWorkingDirectory) ForceFree() {
 	log.Warn().Int("Dangling references", rwd.refCount).Msg("Forced working directory cleanup! This likely indicated that something went (very) wrong.")
-	err := os.RemoveAll(rwd.tmpDirPath)
+	err := os.RemoveAll(rwd.TmpDirPath)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.tmpDirPath)
+		log.Warn().Err(err).Msgf("Failed to cleanup working directory for runner at %s", rwd.TmpDirPath)
 		return
 	}
 	instance = nil

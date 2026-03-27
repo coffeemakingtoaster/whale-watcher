@@ -1,7 +1,7 @@
 # Define common paths
 BUILD_DIR = ./build
 CMD_DIR = ./cmd/whale-watcher
-PKG_DIR = ./pkg/runner
+PKG_DIR = ./pkg/runner/utils
 
 # ANSI color codes
 RED = \033[31m

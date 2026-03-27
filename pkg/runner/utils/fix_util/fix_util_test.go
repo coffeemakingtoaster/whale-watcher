@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	fixutil "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/fix_util"
+	fixutil "github.com/coffeemakingtoaster/whale-watcher/pkg/runner/utils/fix_util"
 )
 
 var sampleDockerfile = []string{
